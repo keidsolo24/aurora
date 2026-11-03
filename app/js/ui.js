@@ -222,7 +222,7 @@ document.addEventListener('focusin', e => {
 /* ---------- video manual ---------- */
 function playTutorial() {
   const L2 = $('#vlayer');
-  L2.innerHTML = '<button class="cb frost x press" data-a="closeVideo" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button><video src="tutorial.mp4" poster="tutorial-poster.jpg" controls playsinline autoplay preload="auto"></video>';
+  L2.innerHTML = '<button class="cb frost x press" data-a="closeVideo" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button><video src="tutorial.mp4?v=2" poster="tutorial-poster.jpg?v=2" controls playsinline autoplay preload="auto"></video>';
   L2.classList.add('on');
   const v = $('video', L2); v.play && v.play().catch(() => {});
   v.onended = () => setTimeout(() => ACT.closeVideo(), 600);
@@ -232,7 +232,7 @@ ACT.tutorial = () => playTutorial();
 function playIntro(onDone) {
   const L2 = $('#vlayer'); const cs = lang() === 'cs';
   L2.classList.add('on', 'intro'); L2.classList.remove('fade', 'playing');
-  L2.innerHTML = '<video src="tutorial.mp4" poster="tutorial-poster.jpg" muted playsinline preload="auto"></video>'
+  L2.innerHTML = '<video src="tutorial.mp4?v=2" poster="tutorial-poster.jpg?v=2" muted playsinline preload="auto"></video>'
     + '<button class="splash" data-a="introStart" aria-label="Start"><img src="logo.svg" alt="aurora"><span class="hint frost">' + esc(cs ? 'Klepni a začni' : 'Tap to begin') + '</span></button>'
     + '<button class="chip frost press skip" data-a="skipIntro">' + esc(cs ? 'Přeskočit' : 'Skip') + '</button>';
   const v = $('video', L2); let done = false;

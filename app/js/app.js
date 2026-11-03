@@ -161,7 +161,7 @@ async function boot() {
   if (q.has('sample') && !S.onboarded) { S = await sampleState({ lang: q.get('lang') || S.lang }); save(); renderHome(); }
   if (typeof deskCheck === 'function') deskCheck();
   if (S.wall === 'ember' || S.wall === 'night') { S.wall = 'aurora'; save(); applyLook(); }
-  const startOnb = () => { if (!S.onboarded && !q.get('join')) { showWelcome(); playIntro(); } };
+  const startOnb = () => { if (!S.onboarded && !q.get('join')) { showWelcome(); const rv = () => { const w = $('#welcome'); if (w) { w.classList.remove('reveal'); void w.offsetWidth; w.classList.add('reveal'); } }; if (document.getElementById('launch')) addEventListener('aurlaunch', rv, { once: true }); else rv(); } };
   if (!q.get('join') && typeof needInstall === 'function' && needInstall()) showInstall(startOnb); else startOnb();
   if (q.get('tab') && RENDER[q.get('tab')]) go(q.get('tab'));
   if ((q.get('item') || q.get('card')) && S.onboarded) { const href = location.href; setTimeout(() => openDeepLink(href), 300); }

@@ -16,10 +16,35 @@
 <link rel="icon" href="icon-192.png">
 <link rel="preload" href="fonts/inter-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app.css?v=18">
-<link rel="stylesheet" href="desktop.css?v=18">
+<link rel="stylesheet" href="app.css?v=181">
+<link rel="stylesheet" href="desktop.css?v=181">
+<style>#launch{position:fixed;inset:0;z-index:200;background:#86c9de center/cover no-repeat;transition:opacity .65s cubic-bezier(.2,.8,.2,1),filter .65s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);cursor:pointer}#launch video{width:100%;height:100%;object-fit:cover;display:block}#launch.out{opacity:0;filter:blur(14px);transform:scale(1.04);pointer-events:none}@media (prefers-reduced-motion:reduce){#launch{transition:opacity .25s}#launch.out{filter:none;transform:none}}</style>
 </head>
 <body>
+<div id="launch" aria-hidden="true"><video muted playsinline preload="auto"></video></div>
+<script>(function () {
+  var L = document.getElementById('launch'); if (!L) return;
+  var V = L.querySelector('video');
+  var base = '' + (innerWidth > innerHeight ? 'launch-land' : 'launch-portrait');
+  L.style.backgroundImage = 'url(' + base + '-first.jpg)';
+  var last = 0, ver = '';
+  try { last = +localStorage.getItem('aur' + 'Seen') || 0; ver = localStorage.getItem('aur' + 'V') || ''; } catch (e) {}
+  var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var full = !RM && (Date.now() - last > 36e5 || ver !== '18.1');
+  var ended = false;
+  function done() { if (ended) return; ended = true; L.classList.add('out'); try { dispatchEvent(new Event('aurlaunch')); } catch (e) {} setTimeout(function () { L.remove(); }, 700); }
+  function quick() { if (V) V.remove(); L.style.backgroundImage = 'url(' + base + '-last.jpg)'; setTimeout(done, RM ? 120 : 380); }
+  function mark() { try { localStorage.setItem('aur' + 'Seen', Date.now()); localStorage.setItem('aur' + 'V', '18.1'); } catch (e) {} }
+  window.__launchDone = done;
+  mark(); document.addEventListener('visibilitychange', function () { if (document.hidden) mark(); }); addEventListener('pagehide', mark);
+  L.addEventListener('click', done);
+  if (full) {
+    V.src = base + '.mp4';
+    V.addEventListener('ended', done); V.addEventListener('error', quick);
+    var p = V.play(); if (p && p.catch) p.catch(quick);
+    setTimeout(done, 4200);
+  } else quick();
+})();</script>
 <div id="bg" aria-hidden="true"><img class="wall" id="wallImg" src="wall.jpg" alt=""><div class="dim" id="wallDim"></div><div class="aura"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div></div>
 <main id="app">
   <section class="scr" id="s-home" aria-label="Home"></section>
@@ -43,15 +68,15 @@
 <input type="file" id="fileIn" accept="image/*,video/*" hidden>
 <input type="file" id="wallIn" accept="image/*" hidden>
 <input type="file" id="restoreIn" accept="application/json,.json" hidden>
-<script src="js/core.js?v=18"></script>
-<script src="js/ui.js?v=18"></script>
-<script src="js/screens.js?v=18"></script>
-<script src="js/sheets.js?v=18"></script>
-<script src="js/push.js?v=18"></script>
-<script src="js/sync.js?v=18"></script>
-<script src="js/spolu.js?v=18"></script>
-<script src="js/beta.js?v=18"></script>
-<script src="js/app.js?v=18"></script>
-<script src="js/desktop.js?v=18"></script>
+<script src="js/core.js?v=181"></script>
+<script src="js/ui.js?v=181"></script>
+<script src="js/screens.js?v=181"></script>
+<script src="js/sheets.js?v=181"></script>
+<script src="js/push.js?v=181"></script>
+<script src="js/sync.js?v=181"></script>
+<script src="js/spolu.js?v=181"></script>
+<script src="js/beta.js?v=181"></script>
+<script src="js/app.js?v=181"></script>
+<script src="js/desktop.js?v=181"></script>
 </body>
 </html>
