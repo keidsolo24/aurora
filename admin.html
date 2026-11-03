@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Aurora · feedback</title>
+<link rel="icon" href="app/icon-192.png">
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:800;font-display:swap;src:url(app/fonts/bricolage-grotesque-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(app/fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(app/fonts/inter-latin-600-normal.woff2) format('woff2')}
+:root{--ink:#f3ead8;--ink2:rgba(243,234,216,.74);--ink3:rgba(243,234,216,.55);--bg:#0b1320}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh;color:var(--ink);font:400 15px/1.5 Inter,system-ui,sans-serif;background:var(--bg) url(app/wall-desk.jpg) center/cover fixed;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:rgba(8,14,24,.72);z-index:-1}
+.g{background:rgba(16,26,40,.55);-webkit-backdrop-filter:blur(24px) saturate(125%);backdrop-filter:blur(24px) saturate(125%);box-shadow:inset 0 0 0 1px rgba(243,234,216,.12),inset 0 1px 0 rgba(255,255,255,.07)}
+.wrap{max-width:860px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px 60px}
+h1{font:800 44px/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.035em;margin:18px 0 6px}
+.sub{color:var(--ink2);margin:0 0 22px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+button,input{font:inherit;color:inherit}
+.chip{height:40px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:600;font-size:14px}
+.chip.on{background:var(--ink);color:#0e1a2b}
+.login{border-radius:26px;padding:22px;display:flex;flex-direction:column;gap:12px;max-width:440px}
+.login input{height:48px;border-radius:16px;border:0;padding:0 16px;background:rgba(243,234,216,.08);outline:0}
+.login button{height:48px;border-radius:999px;border:0;background:var(--ink);color:#0e1a2b;font-weight:600;cursor:pointer}
+.err{color:#ffb4a6;min-height:1.4em}
+.list{display:flex;flex-direction:column;gap:12px}
+.it{border-radius:24px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;transition:opacity .3s}
+.it.done{opacity:.5}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k{font:600 11px/1 Inter;letter-spacing:.1em;padding:6px 9px;border-radius:999px;text-transform:uppercase}
+.k.bug{background:rgba(255,92,92,.18);color:#ffb4a6}.k.idea{background:rgba(91,191,220,.18);color:#a9e1f0}.k.love{background:rgba(240,164,75,.2);color:#f6c88f}
+.who{font-weight:600}.when{color:var(--ink3);font-size:13px;margin-left:auto}
+.txt{white-space:pre-wrap;font-size:16px;line-height:1.55}
+.img{max-width:260px;border-radius:14px;cursor:zoom-in;display:block}
+.meta{color:var(--ink3);font-size:12.5px;line-height:1.45}
+.act{display:flex;gap:8px}
+.act button{height:36px;padding:0 14px;border-radius:999px;border:0;background:rgba(243,234,216,.1);cursor:pointer;font-size:13px;font-weight:600}
+.empty{color:var(--ink2);padding:40px 0;text-align:center}
+#big{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
+#big img{max-width:100%;max-height:100%;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img src="app/logo.svg" alt="aurora" style="height:26px">
+  <h1>Feedback z bety</h1>
+  <p class="sub" id="sub">Zprávy od testerů, nejnovější nahoře.</p>
+  <div id="login" class="login g" hidden>
+    <label for="key">Admin klíč <span style="color:var(--ink3)">(proměnná ADMIN_KEY ve Workeru)</span></label>
+    <input id="key" type="password" autocomplete="off">
+    <button id="go">Zobrazit</button>
+    <div class="err" id="err"></div>
+  </div>
+  <div id="main" hidden>
+    <div class="bar" id="bar"></div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+<div id="big"><img alt=""></div>
+<script>
+const SERVER = 'https://calm-brook-f448.keidaurora.workers.dev';
+const KINDS = { all: 'Vše', open: 'Nevyřešené', bug: 'Chyby', idea: 'Nápady', love: 'Pochvaly' };
+const LBL = { bug: 'Chyba', idea: 'Nápad', love: 'Pochvala' };
+let items = [], filter = 'open', key = '';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+try { key = localStorage.getItem('aurAdminKey') || ''; } catch (e) {}
+async function api(path, body) { const r = await fetch(SERVER + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.assign({ key }, body || {})) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j; }
+async function load() {
+  if (!key) { $('#login').hidden = false; $('#main').hidden = true; return; }
+  $('#err').textContent = '';
+  try { const j = await api('/fb/list'); items = j.items || []; try { localStorage.setItem('aurAdminKey', key); } catch (e) {} $('#login').hidden = true; $('#main').hidden = false; draw(); }
+  catch (e) { $('#login').hidden = false; $('#main').hidden = true; $('#err').textContent = e.message === 'forbidden' ? 'Špatný klíč.' : (key ? 'Server neodpovídá: ' + e.message : ''); }
+}
+function ago(at) { const d = new Date(at); return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) + ' ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); }
+function device(m) { const ua = m.ua || ''; const os = /iPhone/.test(ua) ? 'iPhone' : /iPad|Macintosh.*Mobile/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'zařízení'; return os + ' · ' + (m.w || '?') + '×' + (m.h || '?') + (m.standalone ? ' · z plochy' : ' · v prohlížeči') + (m.push ? ' · notifikace zap.' : ''); }
+function draw() {
+  const n = k => k === 'all' ? items.length : k === 'open' ? items.filter(i => !i.done).length : items.filter(i => i.kind === k).length;
+  $('#bar').innerHTML = Object.entries(KINDS).map(([k, l]) => '<button class="chip g' + (filter === k ? ' on' : '') + '" data-f="' + k + '">' + l + ' · ' + n(k) + '</button>').join('') + '<button class="chip g" id="reload" style="margin-left:auto">Obnovit</button>';
+  const show = items.filter(i => filter === 'all' ? true : filter === 'open' ? !i.done : i.kind === filter);
+  $('#list').innerHTML = show.length ? show.map(i => { let m = {}; try { m = JSON.parse(i.meta || '{}'); } catch (e) {}
+    return '<article class="it g' + (i.done ? ' done' : '') + '"><div class="top"><span class="k ' + esc(i.kind) + '">' + esc(LBL[i.kind] || i.kind) + '</span><span class="who">' + esc(i.name || 'Anonym') + '</span><span class="when">' + ago(i.at) + '</span></div>'
+      + '<div class="txt">' + esc(i.text) + '</div>' + (i.img ? '<img class="img" src="' + esc(i.img) + '" alt="Screenshot od testera">' : '')
+      + '<div class="meta">v' + esc(i.ver) + ' · ' + esc(device(m)) + (m.cards != null ? ' · ' + m.cards + ' karet, ' + m.items + ' položek' + (m.shared ? ', ' + m.shared + '× Spolu' : '') : '') + '</div>'
+      + '<div class="act"><button data-done="' + i.id + '" data-v="' + (i.done ? 0 : 1) + '">' + (i.done ? 'Vrátit mezi nevyřešené' : 'Hotovo, vyřešeno') + '</button></div></article>'; }).join('') : '<div class="empty">Nic tu není.</div>';
+  $('#sub').textContent = items.length + ' zpráv celkem · ' + items.filter(i => !i.done).length + ' nevyřešených';
+}
+document.addEventListener('click', async e => {
+  const f = e.target.closest('[data-f]'); if (f) { filter = f.dataset.f; draw(); return; }
+  if (e.target.id === 'reload') { load(); return; }
+  const d = e.target.closest('[data-done]'); if (d) { const id = +d.dataset.done, v = +d.dataset.v; await api('/fb/done', { id, done: v }); const it = items.find(x => x.id === id); if (it) it.done = v; draw(); return; }
+  if (e.target.classList.contains('img')) { $('#big img').src = e.target.src; $('#big').style.display = 'flex'; return; }
+  if (e.target.closest('#big')) $('#big').style.display = 'none';
+});
+$('#go').onclick = () => { key = $('#key').value.trim(); load(); };
+$('#key').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+load();
+</script>
+</body>
+</html>
