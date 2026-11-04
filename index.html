@@ -9,7 +9,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Aurora · Vize. Plán. Krok.">
 <meta property="og:description" content="Postav si svůj svět. Den po dni. Jsi pozvaný do soukromé bety.">
-<meta property="og:image" content="https://keidsolo24.github.io/aurora/assets/og.jpg">
+<meta property="og:image" content="https://keidsolo24.github.io/aurora/assets/og.jpg?v=19">
 <meta property="og:url" content="https://keidsolo24.github.io/aurora/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="app/icon-192.png">
@@ -202,34 +202,43 @@ a{color:inherit}
 .end img.icon{width:96px;height:96px;border-radius:24px;box-shadow:0 30px 60px rgba(2,6,14,.5)}
 .end h2{font-size:clamp(52px,9vw,120px)}
 footer{padding:0 0 calc(30px + env(safe-area-inset-bottom))}
-footer .wrap{display:flex;justify-content:space-between;gap:16px;color:var(--ink3);font-size:13px;border-top:1px solid rgba(243,234,216,.1);padding-top:22px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--ink3);font-size:13px;border-top:1px solid rgba(243,234,216,.1);padding-top:22px}
 @media (prefers-reduced-motion:reduce){.hero .float,.hero .scroll i::after{animation:none}.hero h1 .ln span{transition:none;transform:none}}
-#launch{position:fixed;inset:0;z-index:200;background:#86c9de center/cover no-repeat;transition:opacity .65s cubic-bezier(.2,.8,.2,1),filter .65s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);cursor:pointer}#launch video{width:100%;height:100%;object-fit:cover;display:block}#launch.out{opacity:0;filter:blur(14px);transform:scale(1.04);pointer-events:none}@media (prefers-reduced-motion:reduce){#launch{transition:opacity .25s}#launch.out{filter:none;transform:none}}
+#launch{position:fixed;inset:0;z-index:200;background:#86c9de center/cover no-repeat;transition:opacity .65s cubic-bezier(.2,.8,.2,1),filter .65s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);cursor:pointer}#launch video{width:100%;height:100%;object-fit:cover;display:block}#launch.out{opacity:0;filter:blur(14px);transform:scale(1.04);pointer-events:none}@media (prefers-reduced-motion:reduce){#launch{transition:opacity .25s}#launch.out{filter:none;transform:none}}#launch .tap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);display:flex;justify-content:center;pointer-events:none}#launch .tap span{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 22px;border-radius:999px;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;color:#fff;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 10px 30px rgba(0,40,70,.18);opacity:0;transform:translateY(10px) scale(.98);transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1)}#launch .tap i{width:8px;height:8px;border-radius:4px;background:#fff;box-shadow:0 0 12px #fff}#launch.wait .tap span{opacity:1;transform:none}#launch.wait .tap i{animation:lTap 2.2s ease-in-out infinite}@keyframes lTap{50%{opacity:.35;transform:scale(.7)}}#launch:focus{outline:none}#launch:focus-visible .tap span{box-shadow:inset 0 0 0 2px #fff}@media (prefers-reduced-motion:reduce){#launch.wait .tap i{animation:none}}
+footer .sig{width:26px;height:26px;opacity:.75}
 </style>
 </head>
 <body>
-<div id="launch" aria-hidden="true"><video muted playsinline preload="auto"></video></div>
+<div id="launch" aria-hidden="true"><video muted playsinline preload="auto"></video><div class="tap"><span><i></i><b>Klepni pro vstup</b></span></div></div>
 <script>(function () {
   var L = document.getElementById('launch'); if (!L) return;
-  var V = L.querySelector('video');
-  var base = 'app/' + (innerWidth > innerHeight ? 'launch-land' : 'launch-portrait');
+  var V = L.querySelector('video'), T = L.querySelector('.tap span b');
+  var wide = innerWidth > innerHeight, base = 'app/' + (wide ? 'launch-land' : 'launch-portrait');
+  if (T && matchMedia('(hover: hover) and (pointer: fine)').matches) T.textContent = 'Klikni pro vstup';
   L.style.backgroundImage = 'url(' + base + '-first.jpg)';
   var last = 0, ver = '';
   try { last = +localStorage.getItem('aurWeb' + 'Seen') || 0; ver = localStorage.getItem('aurWeb' + 'V') || ''; } catch (e) {}
   var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var full = !RM && (!sessionStorage.getItem('aurWebIntro'));
-  var ended = false;
-  function done() { if (ended) return; ended = true; L.classList.add('out'); try { dispatchEvent(new Event('aurlaunch')); } catch (e) {} setTimeout(function () { L.remove(); }, 700); }
+  var full = !sessionStorage.getItem('aurWebIntro');
+  var ended = false, waiting = false;
+  function done() { if (ended) return; ended = true; L.classList.add('out'); L.classList.remove('wait'); try { dispatchEvent(new Event('aurlaunch')); } catch (e) {} removeEventListener('keydown', key); setTimeout(function () { L.remove(); }, 700); }
+  /* full intro: it stays on the logo until the person taps */
+  function wait(stillToo) { if (ended || waiting) return; waiting = true; if (stillToo || !V || V.readyState < 2) { L.style.backgroundImage = 'url(' + base + '-last.jpg)'; if (V) V.style.opacity = '0'; }
+    L.classList.add('wait'); L.setAttribute('role', 'button'); L.setAttribute('aria-hidden', 'false'); L.setAttribute('aria-label', T ? T.textContent : 'Vstoupit'); L.tabIndex = 0; try { L.focus({ preventScroll: true }); } catch (e) {} }
   function quick() { if (V) V.remove(); L.style.backgroundImage = 'url(' + base + '-last.jpg)'; setTimeout(done, RM ? 120 : 380); }
-  function mark() { try { localStorage.setItem('aurWeb' + 'Seen', Date.now()); localStorage.setItem('aurWeb' + 'V', '1'); } catch (e) {} }
+  function key(e) { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); done(); } }
+  function mark() { try { localStorage.setItem('aurWeb' + 'Seen', Date.now()); localStorage.setItem('aurWeb' + 'V', '19'); } catch (e) {} }
   window.__launchDone = done;
   try { sessionStorage.setItem('aurWebIntro', '1'); } catch (e) {}
   L.addEventListener('click', done);
   if (full) {
+    addEventListener('keydown', key);
+    if (RM) { wait(true); return; }
     V.src = base + '.mp4';
-    V.addEventListener('ended', done); V.addEventListener('error', quick);
-    var p = V.play(); if (p && p.catch) p.catch(quick);
-    setTimeout(done, 4200);
+    V.addEventListener('ended', function () { wait(false); });
+    V.addEventListener('error', function () { wait(true); });
+    var p = V.play(); if (p && p.catch) p.catch(function () { wait(true); });
+    setTimeout(function () { wait(V.paused && V.currentTime < 3); }, 5200);
   } else quick();
 })();</script>
 <a class="skip" href="#main">Přeskočit na obsah</a>
@@ -252,7 +261,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;color:var(--ink
         <p class="eyebrow rv" style="--d:.15s">Soukromá beta · pro pár lidí</p>
         <h1 class="d"><span class="ln"><span style="--d:.2s">Vize.</span></span><span class="ln"><span style="--d:.34s">Plán.</span></span><span class="ln"><span style="--d:.48s" class="accent">Krok.</span></span></h1>
         <p class="tag rv" style="--d:.7s">Postav si svůj svět.<br>Den po dni.</p>
-        <p class="lead rv" style="--d:.82s">Aurora spojí návyky, projekty a celý tvůj den do jednoho kruhu. Bez účtu, bez reklam. Data máš u sebe.</p>
+        <p class="lead rv" style="--d:.82s">Aurora spojí návyky, projekty a celý tvůj den na jedno místo. Bez účtu, bez reklam. Data máš u sebe.</p>
         <div class="ctas rv" style="--d:.94s">
           <a class="btn cr" href="app/">Vyzkoušet Auroru</a>
           <a class="btn gl g" href="#iphone">Jak na iPhone</a>
@@ -275,9 +284,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;color:var(--ink
         <div class="story">
           <article class="feat" data-i="0">
             <span class="num rv">01 · DNES</span>
-            <h3 class="d rv" style="--d:.06s">Celý den<br>v jednom kruhu.</h3>
-            <p class="lead rv" style="--d:.12s">Ciferník od šesti do půlnoci ukáže, co je teď a co přijde. Jedno klepnutí a máš hotovo.</p>
-            <div class="ph rv" style="--d:.2s"><div class="phone"><img src="assets/shot-home.jpg" alt="Obrazovka Dnes s ciferníkem dne" loading="lazy" width="900" height="1947"><i class="gl"></i></div></div>
+            <h3 class="d rv" style="--d:.06s">Celý den<br>jedním tahem.</h3>
+            <p class="lead rv" style="--d:.12s">Oblouk od šesti do půlnoci ukáže, co je teď a co přijde. Pod ním přehled dne. Jedno klepnutí a máš hotovo.</p>
+            <div class="ph rv" style="--d:.2s"><div class="phone"><img src="assets/shot-home.jpg" alt="Obrazovka Dnes s obloukem dne" loading="lazy" width="900" height="1947"><i class="gl"></i></div></div>
           </article>
           <article class="feat" data-i="1">
             <span class="num rv">02 · KARTY</span>
@@ -373,7 +382,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;color:var(--ink
     </div>
   </section>
 </main>
-<footer><div class="wrap"><span>Aurora · soukromá beta</span><span>2026</span></div></footer>
+<footer><div class="wrap"><span>Aurora · soukromá beta</span><span>2026</span><img class="sig" src="app/sig.png" alt="" width="26" height="26"></div></footer>
 
 <script>
 (() => {

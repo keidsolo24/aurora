@@ -120,7 +120,7 @@ function chEnts(ch) {
   m.set('u:' + me, { name: (S.name || '').trim() || '?', joined: mine.joined || ch.joined || Date.now() });
   if (ch.owner === me) m.set('o:owner', { id: me });
   for (const r of ch.rm || []) m.set('r:' + r, { by: me });
-  for (const a of (ch.act || []).filter(a => a.who === me).slice(-15)) m.set('a:' + me + '.' + a.id, { id: a.id, who: me, k: a.k, t: a.t, ts: a.ts });
+  for (const a of (ch.act || []).filter(a => a.who === me).slice(-15)) m.set('a:' + me + '.' + a.id, a.iid ? { id: a.id, who: me, k: a.k, t: a.t, ts: a.ts, iid: a.iid } : { id: a.id, who: me, k: a.k, t: a.t, ts: a.ts });
   for (const k of ch.keys || []) m.set('k:' + k.sp, k);
   return m;
 }
@@ -377,6 +377,7 @@ async function shareItem(it) {
   if (it.ish && chBySp(it.ish)) return chBySp(it.ish);
   const ch = await newSpace('item', it.id);
   it.ish = ch.sp; save();
+  ch.act.push({ id: uid(), who: meId(), k: 'add', t: it.t, ts: Date.now(), iid: it.id }); // news for whoever joins
   await chSync(ch);
   return ch;
 }
@@ -619,11 +620,22 @@ function spoluPeople(c) {
     + '<div class="muted" style="font:400 12.5px/1.45 Inter;margin:10px 4px 0">' + esc(cs ? 'Všichni vidíte všechno v této kartě: úkoly, plán, poznámku, fotky a kdo co splnil. Nic jiného z vaší Aurory.' : 'Everyone sees everything in this card: tasks, plan, note, photos and who did what. Nothing else.') + '</div></div>';
 }
 
+/* iOS keeps Safari and the Home Screen app apart: a link opened in Safari would join here, not in the app */
+function safariJoinHint(code) {
+  const cs = lang() === 'cs'; const nice = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^(.{4})(.{4}).*$/, '$1-$2');
+  openSheet({ title: cs ? 'Máš Auroru na ploše?' : 'Is Aurora on your Home Screen?', cls: 'sjhint', body:
+    '<div class="sjh"><img src="icon-192.png" alt="" width="72" height="72"><p>' + esc(cs ? 'Pozvánka se otevřela v Safari. Safari a appka z plochy mají každá svoje data, tak ji otevři v appce:' : 'The invite opened in Safari. Safari and the Home Screen app keep separate data, so open it in the app:') + '</p>'
+    + '<ol><li>' + esc(cs ? 'Otevři Auroru z plochy' : 'Open Aurora from your Home Screen') + '</li><li>' + esc(cs ? 'Nastavení → Pozvánka do karty' : 'Settings → Card invitation') + '</li><li>' + esc(cs ? 'Zadej kód' : 'Enter the code') + ' <b class="sjc">' + esc(nice) + '</b></li></ol>'
+    + '<button class="pbtn cr press" data-a="sjCopy" data-k="' + esc(nice) + '">' + ico('copy', 16, 2.2) + esc(cs ? 'Zkopírovat kód' : 'Copy the code') + '</button>'
+    + '<button class="sjno press" data-a="sjHere" data-k="' + esc(code) + '">' + esc(cs ? 'Nemám ji na ploše, pokračovat tady' : 'I do not have it, continue here') + '</button></div>' });
+}
+ACT.sjCopy = async el => { const cs = lang() === 'cs'; try { await navigator.clipboard.writeText(el.dataset.k); toast(esc(cs ? 'Kód zkopírovaný. Teď otevři Auroru z plochy.' : 'Code copied. Now open Aurora from your Home Screen.')); } catch (e) { toast(esc(el.dataset.k)); } };
+ACT.sjHere = el => { const c = el.dataset.k; closeSheet(true); setTimeout(() => openJoin(c), 320); };
 /* boot: invitation link, keep shared cards fresh */
 function spoluBoot() {
   if (!S.shared) S.shared = [];
   const q = new URLSearchParams(location.search); const code = q.get('join');
-  if (code) { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(() => openJoin(code), S.onboarded ? 600 : 1400); }
+  if (code) { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(() => (typeof isIOS === 'function' && isIOS() && !isStandalone() ? safariJoinHint(code) : openJoin(code)), S.onboarded ? 600 : 1400); }
   if (chs().length) setTimeout(spoluSyncAll, 1200);
   clearInterval(SP.iv); SP.iv = setInterval(() => { if (!document.hidden && chs().length) spoluSyncAll(); }, 30000);
 }

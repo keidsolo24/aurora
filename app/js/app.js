@@ -83,10 +83,10 @@ function showWelcome() {
     const old = await oldAuroraExists(); const cs = lang() === 'cs';
     const nm = 17 * 60 + 20;
     const arcs = [{ s: 14 * 60, e: 15 * 60, c: '#f0a44b', st: 'done' }, { s: 18 * 60, e: 18 * 60 + 45, c: '#3fbf7f', st: 'next' }, { s: 19 * 60, e: 20 * 60, c: '#6f8cff', st: 'later' }, { s: 20 * 60 + 30, e: 21 * 60, c: '#9fb3c4', st: 'later' }];
-    const dial = dialSVG(arcs, nm).replace(/data-a="peek"/g, 'data-a="wPeek"');
-    w.innerHTML = '<div class="wtop"><img class="wmini" src="logo.svg" alt="aurora"><span style="flex:1"></span><button class="chip frost press" data-a="tutorial">' + ico('play', 14, 2) + 'Video 49 s' + '</button><button class="chip frost press" data-a="wLang" data-k="' + (cs ? 'en' : 'cs') + '">' + (cs ? 'EN' : 'CZ') + '</button></div>'
+    const dial = arcSVG({ nm, arcs }).replace(/data-a="peek"/g, 'data-a="wPeek"');
+    w.innerHTML = '<div class="wtop"><img class="wmini" src="logo.svg" alt="aurora"><span style="flex:1"></span><button class="chip frost press" data-a="tutorial">' + ico('play', 14, 2) + 'Video 50 s' + '</button><button class="chip frost press" data-a="wLang" data-k="' + (cs ? 'en' : 'cs') + '">' + (cs ? 'EN' : 'CZ') + '</button></div>'
       + '<div class="wsl" id="wsl">'
-      + '<section class="ws"><div class="dialw wdemo">' + dial + '<span class="orb" style="pointer-events:none"><span class="n" id="wOrbN">0:40</span><span class="s" id="wOrbS">' + esc(cs ? 'do Lekce 4' : 'to Lesson 4') + '</span></span><span class="wtap chip frost" id="wTap">' + esc(cs ? 'Klepni na oblouk' : 'Tap an arc') + '</span></div><h1>' + (cs ? 'Tvůj den.<br>Jeden kruh.' : 'Your day.<br>One circle.') + '</h1><p>' + esc(cs ? 'Oblouky jsou tvoje věci v barvě karty. Svítí jen to, co je teď a co je další.' : 'Arcs are your things in their card colour. Only now and next glow.') + '</p></section>'
+      + '<section class="ws"><div class="harcw wdemo19">' + dial + '<span class="hctr" style="pointer-events:none"><span class="hk">' + esc(cs ? 'další' : 'next') + '</span><span class="ht" id="wOrbN">' + esc(cs ? 'Lekce 4' : 'Lesson 4') + '</span><span class="hs" id="wOrbS">' + esc(cs ? 'v 18:00 · Učit se' : 'at 6pm · Study') + '</span></span><span class="wtap chip frost" id="wTap">' + esc(cs ? 'Klepni na oblouk' : 'Tap an arc') + '</span></div><h1>' + (cs ? 'Tvůj den.<br>Jedním tahem.' : 'Your day.<br>In one stroke.') + '</h1><p>' + esc(cs ? 'Oblouk je tvůj den od rána do půlnoci. Barevné kousky jsou tvoje věci, svítí to, co je teď a co je další.' : 'The arc is your day from morning to midnight. The coloured bits are your things; now and next glow.') + '</p></section>'
       + '<section class="ws"><h2 class="wbig">' + (cs ? 'Jak ti mám<br>říkat?' : 'What should<br>I call you?') + '</h2><div class="fld frost namef"><input id="wName" placeholder="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" aria-label="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" autocomplete="given-name" value="' + esc(S.name || '') + '" enterkeyhint="done"></div>'
       + '<p class="wsub">' + esc(cs ? 'Hned potom založíš první kartu: návyk nebo projekt. Zbytek přidáš přes +.' : 'Next you create your first card: a habit or a project. Add the rest with +.') + '</p>'
       + (old ? '<button class="chip frost press wold" data-a="wImport">' + ico('import', 15, 2) + esc(cs ? 'Načíst moje data ze staré Aurory' : 'Load my data from old Aurora') + '</button>' : '') + '<button class="chip frost press wold" data-a="wSync">' + ico('sync', 15, 2) + esc(cs ? 'Už mám Auroru jinde · propojit' : 'I use Aurora elsewhere · link') + '</button><button class="chip frost press wold" style="margin-top:8px" data-a="wInvite">' + ico('users', 15, 2) + esc(cs ? 'Mám pozvánku do karty' : 'I have a card invitation') + '</button></section>'
@@ -101,7 +101,7 @@ function showWelcome() {
 ACT.wPeek = el => {
   const k = +el.dataset.k, cs = lang() === 'cs'; const [a, b] = (WDEMO[cs ? 'cs' : 'en'][k] || '').split(' · ');
   const n = $('#wOrbN'), s = $('#wOrbS'); if (!n) return;
-  n.textContent = a; n.classList.add('wsm'); s.textContent = b;
+  n.textContent = a; n.classList.add('wsm'); s.textContent = b; const kk = $('#welcome .hk'); if (kk) kk.textContent = '';
   $$('#welcome .arcI').forEach((p, j) => p.classList.toggle('peek', j === k));
   const tp = $('#wTap'); if (tp) tp.classList.add('gone');
 };

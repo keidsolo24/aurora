@@ -71,6 +71,7 @@ function deskRender(scrollTop) {
   const m = el.querySelector('.dmain'); if (m && keep) m.scrollTop = keep;
   if (V.card) deskCardMount();
   if (V.tab === 'board' && !V.card) deskBoardMount();
+  if (V.tab === 'home' && !V.card) { const pn = el.querySelector('.phnow'); if (pn) { pn._arcs = homeModel().arcs; $('#s-home')._arcs = pn._arcs; h19Mount(pn, false); } }
   const wb = $('#wBody'); if (wb) { if (DESK.wscroll == null) { const c = wb.firstChild.offsetHeight; DESK.wscroll = Math.max(0, (clamp(nowMin(), 480, 1260) - 360 - 120) / 1080 * c); } wb.scrollTop = DESK.wscroll; wb.addEventListener('scroll', () => { DESK.wscroll = wb.scrollTop; }, { passive: true }); }
   syncBadge();
   if (!V.card) auraFromCards(null);
@@ -89,10 +90,7 @@ function deskHome() {
   // left: now
   const pill = nx ? '<button class="fp frost grow press" data-a="openItem" data-id="' + nx.id + '"><span class="ic"><span class="led" style="--c:' + cardColor(nx.card) + '"></span></span><span class="pt"><span>' + esc(nx.t) + '</span><small>' + esc([nx.time || t('anyTime'), nx.card && cardById(nx.card) ? cardById(nx.card).name : ''].filter(Boolean).join(' · ')) + '</small></span></button><button class="fp frost press" style="padding-right:18px" data-a="homeDone" data-id="' + nx.id + '"><span class="ic">' + ico('check', 18, 2.4) + '</span>' + esc(t('done')) + '</button>'
     : '<button class="fp frost grow press" data-a="add" data-ctx="today"><span class="ic">' + ico('plus', 18, 2.4) + '</span><span class="pt"><span>' + esc(t('addForToday')) + '</span><small>' + esc(dayShort(M.d)) + '</small></span></button>';
-  const left = '<section class="pn frost phnow" style="grid-column:1/5"><div class="ph2"><span class="cap">' + esc(cs ? 'Teď' : 'Now') + '</span><span class="muted">' + (M.list.length ? t('ofDone', M.doneN, M.list.length) : esc(t('nothingToday'))) + '</span></div>'
-    + '<div class="ddial" id="dialw">' + dialSVG(M.arcs, M.nm) + '<button class="orb press" data-a="orbTap"><span class="n">' + esc(n) + '</span><span class="s">' + esc(s) + '</span></button></div>'
-    + '<div class="prow">' + pill + '</div>'
-    + '<div class="pfoot"><span class="cap">' + esc(t('then')) + '</span>' + (rest.slice(0, 3).map(i => trow(i, i.date && i.date < M.d && !i.repeat ? i.date : M.d, null)).join('') || '<div class="muted dempty">' + esc(t('nothingElse')) + '</div>') + '</div></section>';
+  const left = '<section class="pn frost phnow h19" style="grid-column:1/5">' + h19Top(M) + h19StackHTML(M) + '</section>';
   // middle: the day
   const its = itemsOn(day); const od = day === T() ? overdueItems() : [];
   let rows = '', placed = day !== T();

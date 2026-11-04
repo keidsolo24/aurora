@@ -2,6 +2,7 @@
 /* ============ UI primitives ============ */
 const ACT = {}; // action registry: data-a="name"
 const IC = {
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"/>',
   pause: '<rect x="7" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" stroke="none"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   more: '<circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
@@ -222,7 +223,7 @@ document.addEventListener('focusin', e => {
 /* ---------- video manual ---------- */
 function playTutorial() {
   const L2 = $('#vlayer');
-  L2.innerHTML = '<button class="cb frost x press" data-a="closeVideo" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button><video src="tutorial.mp4?v=2" poster="tutorial-poster.jpg?v=2" controls playsinline autoplay preload="auto"></video>';
+  L2.innerHTML = '<button class="cb frost x press" data-a="closeVideo" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button><video src="tutorial.mp4?v=3" poster="tutorial-poster.jpg?v=3" controls playsinline autoplay preload="auto"></video>';
   L2.classList.add('on');
   const v = $('video', L2); v.play && v.play().catch(() => {});
   v.onended = () => setTimeout(() => ACT.closeVideo(), 600);
@@ -232,7 +233,7 @@ ACT.tutorial = () => playTutorial();
 function playIntro(onDone) {
   const L2 = $('#vlayer'); const cs = lang() === 'cs';
   L2.classList.add('on', 'intro'); L2.classList.remove('fade', 'playing');
-  L2.innerHTML = '<video src="tutorial.mp4?v=2" poster="tutorial-poster.jpg?v=2" muted playsinline preload="auto"></video>'
+  L2.innerHTML = '<video src="tutorial.mp4?v=3" poster="tutorial-poster.jpg?v=3" muted playsinline preload="auto"></video>'
     + '<button class="splash" data-a="introStart" aria-label="Start"><img src="logo.svg" alt="aurora"><span class="hint frost">' + esc(cs ? 'Klepni a začni' : 'Tap to begin') + '</span></button>'
     + '<button class="chip frost press skip" data-a="skipIntro">' + esc(cs ? 'Přeskočit' : 'Skip') + '</button>';
   const v = $('video', L2); let done = false;

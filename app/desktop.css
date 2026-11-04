@@ -357,3 +357,16 @@ body:not(.solidui).desk #s-settings>.hdr::before{background:none}
 /* v18: sheets opened from Settings on desktop must sit above the Settings panel */
 body.desk #scrim.on{z-index:44}
 body.desk #sheet{z-index:46}
+
+/* ===== v19 · desktop Home left panel ===== */
+body.desk .phnow.h19{gap:14px}
+body.desk .phnow.h19 .fh{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px}
+body.desk .phnow.h19 .fh .t{font:800 22px/1 'Bricolage Grotesque';letter-spacing:-.02em}
+body.desk .phnow.h19 .fh .s{font:400 13px/1 Inter;color:var(--ink2)}
+body.desk .phnow.h19 .harcw{margin:4px -6px 0}
+body.desk .phnow.h19 .ht{font-size:46px}
+body.desk .phnow.h19 .ht.long{font-size:34px}
+body.desk .phnow.h19 .hwk{margin:6px 0 0}
+body.desk .phnow.h19 .hstack{flex:1 1 auto;height:auto;min-height:200px}
+body.desk .phnow.h19 .hcard{background:rgba(243,234,216,.05);box-shadow:inset 0 0 0 1px rgba(243,234,216,.08);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.desk .phnow.h19 .hdots{right:-14px}

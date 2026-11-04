@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '18.1';
+const VERSION = '19';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -97,7 +97,7 @@ const L = {
   tooBig: ['Video is too big (max 500 MB)', 'Video je moc velké (max 500 MB)'], noSpace: ['Not enough space on this phone for this video', 'V telefonu není dost místa na tohle video'], saving: ['Saving…', 'Ukládám…'],
   wkSummary: ['{0} things done this week', 'Tento týden hotovo: {0}'], planNext: ['Plan next week', 'Naplánovat další týden'],
   perCard: ['By card', 'Podle karet'], noneYet: ['Nothing checked off yet. This page fills up as you go.', 'Zatím nic odškrtnuto. Stránka se plní postupně.'],
-  peekAt: ['{0} · {1}', '{0} · {1}'], ver: ['Aurora Glass {0} · test build', 'Aurora Glass {0} · testovací verze'],
+  peekAt: ['{0} · {1}', '{0} · {1}'], ver: ['Aurora {0} · beta', 'Aurora {0} · beta'],
   dragTo: ['Moved to {0}', 'Přesunuto na {0}'], pickCard: ['Move to card', 'Přesunout do karty'],
   photoAdded: ['Added to Board', 'Přidáno na Board'], noteAdded: ['Note added', 'Poznámka přidána'], planned: ['Planned · {0}', 'Naplánováno · {0}'],
   undated: ['Saved · no day yet', 'Uloženo · zatím bez dne'], cardCreated: ['Card created', 'Karta vytvořena'],
