@@ -206,6 +206,15 @@ footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:1
 @media (prefers-reduced-motion:reduce){.hero .float,.hero .scroll i::after{animation:none}.hero h1 .ln span{transition:none;transform:none}}
 #launch{position:fixed;inset:0;z-index:200;background:#86c9de center/cover no-repeat;transition:opacity .65s cubic-bezier(.2,.8,.2,1),filter .65s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);cursor:pointer}#launch video{width:100%;height:100%;object-fit:cover;display:block}#launch.out{opacity:0;filter:blur(14px);transform:scale(1.04);pointer-events:none}@media (prefers-reduced-motion:reduce){#launch{transition:opacity .25s}#launch.out{filter:none;transform:none}}#launch .tap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);display:flex;justify-content:center;pointer-events:none}#launch .tap span{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 22px;border-radius:999px;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;color:#fff;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 10px 30px rgba(0,40,70,.18);opacity:0;transform:translateY(10px) scale(.98);transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1)}#launch .tap i{width:8px;height:8px;border-radius:4px;background:#fff;box-shadow:0 0 12px #fff}#launch.wait .tap span{opacity:1;transform:none}#launch.wait .tap i{animation:lTap 2.2s ease-in-out infinite}@keyframes lTap{50%{opacity:.35;transform:scale(.7)}}#launch:focus{outline:none}#launch:focus-visible .tap span{box-shadow:inset 0 0 0 2px #fff}@media (prefers-reduced-motion:reduce){#launch.wait .tap i{animation:none}}
 footer .sig{width:26px;height:26px;opacity:.75}
+.vsec{padding-top:clamp(40px,8vh,90px)}
+.vsec .sec-head{text-align:center;display:flex;flex-direction:column;align-items:center}
+.vfr{position:relative;width:min(340px,78vw);aspect-ratio:1080/2338;margin:34px auto 0;border-radius:46px;overflow:hidden;background:#0b1426;box-shadow:0 50px 110px rgba(0,0,0,.5),inset 0 0 0 1px rgba(243,234,216,.12)}
+.vfr video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.vsnd{position:absolute;right:14px;bottom:14px;z-index:2;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:999px;font:600 13.5px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(10,18,32,.42);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);cursor:pointer}
+.vsnd svg{width:16px;height:16px}
+.vsnd .on{display:none}.vsnd.un .on{display:block}.vsnd.un .off{display:none}
+.hero .vfr.hv{display:none;margin:4px auto 6px;width:min(300px,74vw)}
+@media (max-width:899px){.hero .vfr.hv{display:block}.hero .stage{display:none}#video{display:none}}
 </style>
 </head>
 <body>
@@ -248,7 +257,7 @@ footer .sig{width:26px;height:26px;opacity:.75}
   <div class="bar">
     <a href="#main" aria-label="Aurora, nahoru"><img class="logo" src="app/logo.svg" alt="aurora" width="96" height="24"></a>
     <nav aria-label="Sekce">
-      <a href="#umi">Co umí</a><a href="#spolu">Spolu</a><a href="#iphone">Na iPhone</a><a href="#beta">Beta</a>
+      <a href="#video">Video</a><a href="#umi">Co umí</a><a href="#spolu">Spolu</a><a href="#iphone">Na iPhone</a><a href="#beta">Beta</a>
     </nav>
     <a class="btn cr" href="app/">Vyzkoušet</a>
   </div>
@@ -260,6 +269,7 @@ footer .sig{width:26px;height:26px;opacity:.75}
       <div class="copy">
         <p class="eyebrow rv" style="--d:.15s">Soukromá beta · pro pár lidí</p>
         <h1 class="d"><span class="ln"><span style="--d:.2s">Vize.</span></span><span class="ln"><span style="--d:.34s">Plán.</span></span><span class="ln"><span style="--d:.48s" class="accent">Krok.</span></span></h1>
+        <div class="vfr hv rv" style="--d:.6s"><video src="app/promo.mp4?v=1" poster="app/promo-poster.jpg?v=2" muted loop playsinline preload="metadata" aria-label="Aurora za 26 sekund"></video><button class="vsnd" type="button" aria-label="Zapnout zvuk"><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>Zvuk</span></button></div>
         <p class="tag rv" style="--d:.7s">Postav si svůj svět.<br>Den po dni.</p>
         <p class="lead rv" style="--d:.82s">Aurora spojí návyky, projekty a celý tvůj den na jedno místo. Bez účtu, bez reklam. Data máš u sebe.</p>
         <div class="ctas rv" style="--d:.94s">
@@ -276,6 +286,21 @@ footer .sig{width:26px;height:26px;opacity:.75}
     </div>
     <a class="scroll rv" style="--d:1s" href="#umi"><i></i>Co umí</a>
   </section>
+
+  <section class="sec vsec" id="video" aria-labelledby="vid-h">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow rv">Video · 26 s</p><h2 class="d rv" id="vid-h" style="--d:.08s">Celý den<br>v kostce.</h2></div>
+      <div class="vfr rv" style="--d:.16s">
+        <video src="app/promo.mp4?v=1" poster="app/promo-poster.jpg?v=2" muted loop playsinline preload="none" aria-label="Aurora za 26 sekund: nápady, plán, návyky a sdílení"></video>
+        <button class="vsnd" type="button" aria-label="Zapnout zvuk"><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>Zvuk</span></button>
+      </div>
+    </div>
+  </section>
+  <script>(function(){document.querySelectorAll('.vfr').forEach(function(f){var v=f.querySelector('video'),b=f.querySelector('.vsnd');if(!v)return;
+    b.addEventListener('click',function(){v.muted=!v.muted;b.classList.toggle('un',!v.muted);b.setAttribute('aria-label',v.muted?'Zapnout zvuk':'Vypnout zvuk');if(!v.muted){v.currentTime=0;v.play().catch(function(){});}});
+    if(!('IntersectionObserver' in window)){v.play().catch(function(){});return;}
+    new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&e.intersectionRatio>.3&&f.offsetParent){v.play().catch(function(){});}else{v.pause();}});},{threshold:[0,.3,.6]}).observe(v);});
+  })();</script>
 
   <section class="sec" id="umi" aria-labelledby="umi-h">
     <div class="wrap">

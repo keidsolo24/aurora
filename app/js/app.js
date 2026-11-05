@@ -84,9 +84,10 @@ function showWelcome() {
     const nm = 17 * 60 + 20;
     const arcs = [{ s: 14 * 60, e: 15 * 60, c: '#f0a44b', st: 'done' }, { s: 18 * 60, e: 18 * 60 + 45, c: '#3fbf7f', st: 'next' }, { s: 19 * 60, e: 20 * 60, c: '#6f8cff', st: 'later' }, { s: 20 * 60 + 30, e: 21 * 60, c: '#9fb3c4', st: 'later' }];
     const dial = arcSVG({ nm, arcs }).replace(/data-a="peek"/g, 'data-a="wPeek"');
-    w.innerHTML = '<div class="wtop"><img class="wmini" src="logo.svg" alt="aurora"><span style="flex:1"></span><button class="chip frost press" data-a="tutorial">' + ico('play', 14, 2) + 'Video 50 s' + '</button><button class="chip frost press" data-a="wLang" data-k="' + (cs ? 'en' : 'cs') + '">' + (cs ? 'EN' : 'CZ') + '</button></div>'
+    w.innerHTML = '<div class="wtop"><img class="wmini" src="logo.svg" alt="aurora"><span style="flex:1"></span><button class="chip frost press" data-a="wLang" data-k="' + (cs ? 'en' : 'cs') + '">' + (cs ? 'EN' : 'CZ') + '</button></div>'
       + '<div class="wsl" id="wsl">'
-      + '<section class="ws"><div class="harcw wdemo19">' + dial + '<span class="hctr" style="pointer-events:none"><span class="hk">' + esc(cs ? 'další' : 'next') + '</span><span class="ht" id="wOrbN">' + esc(cs ? 'Lekce 4' : 'Lesson 4') + '</span><span class="hs" id="wOrbS">' + esc(cs ? 'v 18:00 · Učit se' : 'at 6pm · Study') + '</span></span><span class="wtap chip frost" id="wTap">' + esc(cs ? 'Klepni na oblouk' : 'Tap an arc') + '</span></div><h1>' + (cs ? 'Tvůj den.<br>Jedním tahem.' : 'Your day.<br>In one stroke.') + '</h1><p>' + esc(cs ? 'Oblouk je tvůj den od rána do půlnoci. Barevné kousky jsou tvoje věci, svítí to, co je teď a co je další.' : 'The arc is your day from morning to midnight. The coloured bits are your things; now and next glow.') + '</p></section>'
+      + '<section class="ws"><div class="harcw wdemo19">' + dial + '<span class="hctr" style="pointer-events:none"><span class="hk">' + esc(cs ? 'další' : 'next') + '</span><span class="ht" id="wOrbN">' + esc(cs ? 'Lekce 4' : 'Lesson 4') + '</span><span class="hs" id="wOrbS">' + esc(cs ? 'v 18:00 · Učit se' : 'at 6pm · Study') + '</span></span><span class="wtap chip frost" id="wTap">' + esc(cs ? 'Klepni na oblouk' : 'Tap an arc') + '</span></div><h1>' + (cs ? 'Tvůj den.<br>Jedním tahem.' : 'Your day.<br>In one stroke.') + '</h1><p>' + esc(cs ? 'Oblouk je tvůj den od rána do půlnoci. Barevné kousky jsou tvoje věci, svítí to, co je teď a co je další.' : 'The arc is your day from morning to midnight. The coloured bits are your things; now and next glow.') + '</p>'
+      + '<button class="wvid frost press" data-a="promo"><span class="wvi">' + ico('play', 18, 2.2) + '</span><span class="wvt"><b>' + esc(cs ? 'Jak to funguje?' : 'How it works') + '</b><small>' + esc(cs ? 'Celý den v kostce · video 26 s' : 'Your whole day · 26 s video') + '</small></span><span class="wvp">' + esc(cs ? 'Pustit' : 'Play') + '</span></button></section>'
       + '<section class="ws"><h2 class="wbig">' + (cs ? 'Jak ti mám<br>říkat?' : 'What should<br>I call you?') + '</h2><div class="fld frost namef"><input id="wName" placeholder="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" aria-label="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" autocomplete="given-name" value="' + esc(S.name || '') + '" enterkeyhint="done"></div>'
       + '<p class="wsub">' + esc(cs ? 'Hned potom založíš první kartu: návyk nebo projekt. Zbytek přidáš přes +.' : 'Next you create your first card: a habit or a project. Add the rest with +.') + '</p>'
       + (old ? '<button class="chip frost press wold" data-a="wImport">' + ico('import', 15, 2) + esc(cs ? 'Načíst moje data ze staré Aurory' : 'Load my data from old Aurora') + '</button>' : '') + '<button class="chip frost press wold" data-a="wSync">' + ico('sync', 15, 2) + esc(cs ? 'Už mám Auroru jinde · propojit' : 'I use Aurora elsewhere · link') + '</button><button class="chip frost press wold" style="margin-top:8px" data-a="wInvite">' + ico('users', 15, 2) + esc(cs ? 'Mám pozvánku do karty' : 'I have a card invitation') + '</button></section>'
@@ -173,7 +174,14 @@ async function boot() {
   setTimeout(() => ensureVideoThumbs(), 800);
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').then(reg => {
-      reg.addEventListener('updatefound', () => { const nw = reg.installing; nw && nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) toast(esc(t('updateReady')), { label: t('reload'), fn: () => location.reload() }); }); });
+      reg.addEventListener('updatefound', () => { const nw = reg.installing; nw && nw.addEventListener('statechange', () => { if (nw.state !== 'installed' || !navigator.serviceWorker.controller) return;
+        /* v19.2: freshly opened or in the background → just load the new version; otherwise offer it */
+        if (performance.now() < 9000 && !SH.open) { setTimeout(() => location.reload(), 400); return; }
+        V.updWait = true; toast(esc(t('updateReady')), { label: t('reload'), fn: () => location.reload() }); }); });
+      let lastChk = Date.now();
+      document.addEventListener('visibilitychange', () => { if (document.hidden) { if (V.updWait) V.updReload = true; return; }
+        if (V.updReload) { location.reload(); return; }
+        if (Date.now() - lastChk > 30 * 60e3) { lastChk = Date.now(); reg.update().catch(() => {}); } });
     }).catch(() => {});
   }
   if (navigator.storage && navigator.storage.persist) { try { navigator.storage.persist(); } catch (e) {} }

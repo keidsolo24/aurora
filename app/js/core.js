@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '19';
+const VERSION = '19.2';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -187,14 +187,16 @@ function migrate(s) {
 /* ---------- media ---------- */
 const MEDIA_URL = new Map();
 async function putMedia(blob) { const k = 'm' + uid(); await DB.set('media', k, blob); MEDIA_URL.set(k, URL.createObjectURL(blob)); return k; }
+const urlKey = k => typeof k === 'string' && k.startsWith('url:'); /* built-in media shipped with the app, e.g. the tutorial on Board */
 async function mediaURL(k) {
   if (!k) return '';
+  if (urlKey(k)) return k.slice(4);
   if (MEDIA_URL.has(k)) return MEDIA_URL.get(k);
   try { const b = await DB.get('media', k); if (!b) return ''; const u = URL.createObjectURL(b); MEDIA_URL.set(k, u); return u; } catch (e) { return ''; }
 }
-const mediaNow = k => MEDIA_URL.get(k) || '';
+const mediaNow = k => urlKey(k) ? k.slice(4) : (MEDIA_URL.get(k) || '');
 async function warmMedia() { const ks = new Set(); S.moments.forEach(m => { m.img && ks.add(m.img); m.thumb && ks.add(m.thumb); }); if (S.wallKey) ks.add(S.wallKey); await Promise.all([...ks].map(mediaURL)); }
-async function delMedia(k) { if (!k) return; try { await DB.del('media', k); } catch (e) {} const u = MEDIA_URL.get(k); if (u) URL.revokeObjectURL(u); MEDIA_URL.delete(k); }
+async function delMedia(k) { if (!k || urlKey(k)) return; try { await DB.del('media', k); } catch (e) {} const u = MEDIA_URL.get(k); if (u) URL.revokeObjectURL(u); MEDIA_URL.delete(k); }
 async function compressImage(file, max = 1800) {
   if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
   try {
@@ -411,10 +413,10 @@ const ART = {
 };
 async function sampleState(base) {
   const s = Object.assign(blankState(), base || {});
-  const d = T();
+  const d = T(); const N = (cs, en) => s.lang === 'cs' ? cs : en;
   const c = (id, name, type, color, extra = {}) => Object.assign({ id, name, type, color, note: '', created: addD(d, -40) }, extra);
   s.cards = [
-    c('ucit', 'UČIT SE', 'habit', '#3fbf7f', { note: s.lang === 'cs' ? 'Hodina denně, kapitola po kapitole.' : 'An hour a day, chapter by chapter.' }),
+    c('ucit', N('UČIT SE', 'LEARN'), 'habit', '#3fbf7f', { note: s.lang === 'cs' ? 'Hodina denně, kapitola po kapitole.' : 'An hour a day, chapter by chapter.' }),
     c('lumen', 'Lumen', 'project', '#f0a44b', { deadline: addD(d, 7), note: s.lang === 'cs' ? 'Vizuál pro kavárnu, logo a menu.' : 'Visual identity for a café: logo and menu.' }),
     c('health', 'Health', 'habit', '#6f8cff', { note: s.lang === 'cs' ? 'Pohyb každý den, aspoň 30 minut.' : 'Move every day, at least 30 minutes.' }),
     c('night', 'Night drive', 'project', '#ff5c9a', { note: s.lang === 'cs' ? 'Krátký film o nočním městě.' : 'A short film about the city at night.' }),
@@ -427,21 +429,21 @@ async function sampleState(base) {
   const q = m => Math.ceil(m / 5) * 5;
   const slot = (off) => mtime(clamp(late ? (off < 0 ? h - 120 : q(h + avail * ({40: .12, 100: .45, 190: .78}[off] || .5))) : Math.ceil((h + off) / 15) * 15, 6 * 60, 23 * 60 + 50));
   s.items = [
-    it('Moodboard pro Lumen', 'lumen', { date: d, time: slot(-180), done: true, doneOn: d, dur: 60 }),
-    it('Lekce 4 — grafy', 'ucit', { date: d, time: slot(40), dur: late ? Math.min(45, Math.round(avail * .25)) : 45 }),
-    it('Trénink', 'health', { repeat: 'daily', time: slot(100), dur: late ? Math.min(60, Math.round(avail * .25)) : 60, doneDates: hist(3, .62), date: addD(d, -60) }),
-    it('Nákup na víkend', null, { date: d, time: slot(190), dur: late ? Math.min(30, Math.round(avail * .15)) : 30 }),
-    it('Zálohovat fotky', null, { date: d }),
-    it('Číst 20 stran', 'ucit', { repeat: 'daily', doneDates: hist(11, .7), date: addD(d, -60) }),
-    it('Poslat první skicu', 'lumen', { date: d }),
-    it('Vybrat paletu', 'lumen', { date: addD(d, 1) }),
-    it('Typografie titulku', 'lumen', {}),
-    it('Menu — sazba', 'lumen', { date: addD(d, 5) }),
+    it(N('Moodboard pro Lumen', 'Moodboard for Lumen'), 'lumen', { date: d, time: slot(-180), done: true, doneOn: d, dur: 60 }),
+    it(N('Lekce 4 — grafy', 'Lesson 4 — charts'), 'ucit', { date: d, time: slot(40), dur: late ? Math.min(45, Math.round(avail * .25)) : 45 }),
+    it(N('Trénink', 'Workout'), 'health', { repeat: 'daily', time: slot(100), dur: late ? Math.min(60, Math.round(avail * .25)) : 60, doneDates: hist(3, .62), date: addD(d, -60) }),
+    it(N('Nákup na víkend', 'Weekend groceries'), null, { date: d, time: slot(190), dur: late ? Math.min(30, Math.round(avail * .15)) : 30 }),
+    it(N('Zálohovat fotky', 'Back up photos'), null, { date: d }),
+    it(N('Číst 20 stran', 'Read 20 pages'), 'ucit', { repeat: 'daily', doneDates: hist(11, .7), date: addD(d, -60) }),
+    it(N('Poslat první skicu', 'Send first sketch'), 'lumen', { date: d }),
+    it(N('Vybrat paletu', 'Pick a palette'), 'lumen', { date: addD(d, 1) }),
+    it(N('Typografie titulku', 'Title typography'), 'lumen', {}),
+    it(N('Menu — sazba', 'Menu — layout'), 'lumen', { date: addD(d, 5) }),
     it('Kickoff call', 'lumen', { date: addD(d, -3), done: true, doneOn: addD(d, -3) }),
-    it('Test z kap. 3', 'ucit', {}),
-    it('Scénář — 1. verze', 'night', { date: addD(d, 2), time: '10:00', dur: 90 }),
-    it('Lokace: most a pumpa', 'night', {}),
-    it('Natočit test světel', 'night', { date: addD(d, -1) }),
+    it(N('Test z kap. 3', 'Chapter 3 quiz'), 'ucit', {}),
+    it(N('Scénář — 1. verze', 'Script — first draft'), 'night', { date: addD(d, 2), time: '10:00', dur: 90 }),
+    it(N('Lokace: most a pumpa', 'Locations: bridge, gas station'), 'night', {}),
+    it(N('Natočit test světel', 'Shoot a lighting test'), 'night', { date: addD(d, -1) }),
   ];
   const art = async (k, r) => { const b = new Blob([ART[k]], { type: 'image/svg+xml' }); const key = await putMedia(b); return { img: key, r }; };
   const now = Date.now();

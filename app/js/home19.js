@@ -120,7 +120,7 @@ function stackCards(M) {
   const h = new Date().getHours(); const N = spoluNews(); const tp = tipToday(); const bm = boardPick();
   const c = { pak: cardPak(M), week: cardWeek(M) };
   if (N) c.spolu = cardSpolu(N); if (tp) c.tip = cardTip(tp); if (bm) c.board = cardBoard(bm); if (h >= 18) c.eve = cardEvening(M);
-  let order = h >= 18 ? ['eve', 'pak', 'week', 'spolu', 'tip', 'board'] : N && !N.seen ? ['spolu', 'pak', 'week', 'tip', 'board'] : ['pak', 'week', 'tip', 'spolu', 'board'];
+  let order = h >= 18 ? (N && !N.seen ? ['spolu', 'eve', 'pak', 'week', 'tip', 'board'] : ['eve', 'pak', 'week', 'spolu', 'tip', 'board']) : N && !N.seen ? ['spolu', 'pak', 'week', 'tip', 'board'] : ['pak', 'week', 'tip', 'spolu', 'board'];
   order = order.filter(k => c[k]);
   return { order, html: order.map(k => c[k]), news: N };
 }

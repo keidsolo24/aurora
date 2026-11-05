@@ -44,14 +44,14 @@ function showTip(o) {
   const w = Math.min(innerWidth - 32, 380), left = Math.max(16, Math.min(innerWidth - w - 16, r.left + r.width / 2 - w / 2));
   el.style.width = w + 'px'; el.style.left = left + 'px';
   const h = el.offsetHeight, above = r.top - h - 14 > 20;
-  el.style.top = (above ? r.top - h - 14 : r.bottom + 14) + 'px';
-  el.classList.toggle('below', !above);
+  if (o.place === 'over') { el.style.top = (r.top + Math.max(8, (r.height - h) / 2)) + 'px'; el.classList.add('over'); el.querySelector('.tarr').style.display = 'none'; }
+  else { el.style.top = (above ? r.top - h - 14 : r.bottom + 14) + 'px'; el.classList.toggle('below', !above); }
   el.querySelector('.tarr').style.left = clamp(r.left + 34 - left, 22, w - 40) + 'px';
   const ring = document.createElement('div'); ring.id = 'tipring'; ring.style.cssText = 'left:' + (r.left - 3) + 'px;top:' + (r.top - 3) + 'px;width:' + (r.width + 6) + 'px;height:' + (r.height + 6) + 'px;border-radius:' + getComputedStyle(o.anchor).borderRadius;
   document.body.appendChild(ring);
   el.addEventListener('click', e => { const b = e.target.closest('[data-x]'); if (!b) return; closeTip(); if (b.dataset.x === 'ok' && o.okFn) o.okFn(); });
   requestAnimationFrame(() => { el.classList.add('on'); ring.classList.add('on'); });
-  setTimeout(() => document.addEventListener('pointerdown', tipOutside, true), 50);
+  setTimeout(() => document.addEventListener('pointerdown', tipOutside, true), 600);
   const sb = $('#sheet .sb'); sb && sb.addEventListener('scroll', closeTip, { once: true, passive: true });
   return true;
 }
