@@ -35,12 +35,13 @@ function coach(k, delay = 700, tries = 3) {
 }
 /* v19.1: the step-by-step tutorial lives on Board as a pinned video, once; people delete it when they are done */
 function seedTutorial() {
+  if (S && Array.isArray(S.moments)) S.moments.forEach(m => { if (m.sys === 'tutorial' && m.dur !== TUT_DUR) { m.dur = TUT_DUR; m.img = 'url:' + TUT_SRC; } });
   if (!S || !S.onboarded || (S.tips && S.tips.tutBoard) || !Array.isArray(S.moments)) return false;
   S.tips = S.tips || {}; S.tips.tutBoard = Date.now();
-  if (!S.moments.some(m => m.sys === 'tutorial')) S.moments.unshift({ id: uid(), sys: 'tutorial', kind: 'video', card: null, pin: true, note: lang() === 'cs' ? 'Jak Aurora funguje · video' : 'How Aurora works · video', d: T(), ts: Date.now(), img: 'url:tutorial.mp4?v=4', thumb: 'url:tutorial-thumb.jpg?v=4', r: 1.3, dur: TUT_DUR });
+  if (!S.moments.some(m => m.sys === 'tutorial')) S.moments.unshift({ id: uid(), sys: 'tutorial', kind: 'video', card: null, pin: true, note: lang() === 'cs' ? 'Jak Aurora funguje · video' : 'How Aurora works · video', d: T(), ts: Date.now(), img: 'url:' + TUT_SRC, thumb: 'url:tutorial-thumb.jpg?v=4', r: 1.3, dur: TUT_DUR });
   save(); return true;
 }
-const TUT_DUR = 72;
+const TUT_DUR = 59;
 {
   const drop = () => { if ($('#tip') && typeof closeTip === 'function') closeTip(); };
   const _go = go; go = function (tab) { if (tab !== V.tab) drop(); if (tab === 'board') seedTutorial(); const r = _go.apply(this, arguments); if (COACH[tab]) coach(tab); return r; };

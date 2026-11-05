@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '19.2';
+const VERSION = '19.3';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -187,14 +187,17 @@ function migrate(s) {
 /* ---------- media ---------- */
 const MEDIA_URL = new Map();
 async function putMedia(blob) { const k = 'm' + uid(); await DB.set('media', k, blob); MEDIA_URL.set(k, URL.createObjectURL(blob)); return k; }
-const urlKey = k => typeof k === 'string' && k.startsWith('url:'); /* built-in media shipped with the app, e.g. the tutorial on Board */
+const safeHref = u => /^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '#'; /* v19.3: no javascript: or data: links from shared cards */
+const TUT_SRC = 'tutorial.mp4?v=5';
+const urlKey = k => typeof k === 'string' && k.startsWith('url:');
+const urlOf = k => { const u = k.slice(4); return /^tutorial\.mp4\?v=\d+$/.test(u) ? TUT_SRC : u; }; /* built-in media shipped with the app, e.g. the tutorial on Board */
 async function mediaURL(k) {
   if (!k) return '';
-  if (urlKey(k)) return k.slice(4);
+  if (urlKey(k)) return urlOf(k);
   if (MEDIA_URL.has(k)) return MEDIA_URL.get(k);
   try { const b = await DB.get('media', k); if (!b) return ''; const u = URL.createObjectURL(b); MEDIA_URL.set(k, u); return u; } catch (e) { return ''; }
 }
-const mediaNow = k => urlKey(k) ? k.slice(4) : (MEDIA_URL.get(k) || '');
+const mediaNow = k => urlKey(k) ? urlOf(k) : (MEDIA_URL.get(k) || '');
 async function warmMedia() { const ks = new Set(); S.moments.forEach(m => { m.img && ks.add(m.img); m.thumb && ks.add(m.thumb); }); if (S.wallKey) ks.add(S.wallKey); await Promise.all([...ks].map(mediaURL)); }
 async function delMedia(k) { if (!k || urlKey(k)) return; try { await DB.del('media', k); } catch (e) {} const u = MEDIA_URL.get(k); if (u) URL.revokeObjectURL(u); MEDIA_URL.delete(k); }
 async function compressImage(file, max = 1800) {
