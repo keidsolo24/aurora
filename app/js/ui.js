@@ -211,14 +211,66 @@ function autoFocus(el, ms = 360) { if (!el || IOS) return; setTimeout(() => { tr
   document.addEventListener('focusout', () => { setTimeout(() => { if (!isField(document.activeElement)) { apply(0); window.scrollTo(0, 0); follow(600); } }, 60); });
   if (v) { v.addEventListener('resize', () => follow(300)); v.addEventListener('scroll', () => follow(300)); }
   window.addEventListener('orientationchange', () => follow(800));
+  /* v19.4 · iOS 27 home-screen apps: the body is 100lvh tall, but iOS 27 can report a large viewport taller than
+     what it really shows, so the bottom nav ended under the screen edge (feedback 6. 11., iOS 27.0.1, 393×793).
+     In a home-screen app the body follows the real fixed viewport, measured with a probe. Where the two agree
+     (every other phone, Safari tabs, desktop) nothing changes. */
+  const STANDALONE = navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  const probe = document.createElement('div'); probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none;z-index:-1';
+  document.documentElement.appendChild(probe);
+  const html = document.documentElement; let vfixState = 0;
+  const vfix = () => {
+    if (!STANDALONE || KB.open || isField(document.activeElement)) return;
+    const ph = Math.round(probe.getBoundingClientRect().height); if (ph < 300) return;
+    html.classList.remove('vfix');                      // measure the natural body first
+    const bh = Math.round(document.body.getBoundingClientRect().height);
+    const was = vfixState;
+    if (Math.abs(ph - bh) > 2) { root.setProperty('--apph', ph + 'px'); html.classList.add('vfix'); vfixState = ph; }
+    else { root.removeProperty('--apph'); vfixState = 0; }
+    if (was !== vfixState && typeof render === 'function' && typeof S !== 'undefined' && S) requestAnimationFrame(() => render()); // Home re-fits its stack
+  };
+  window.AUR_VFIX = vfix;
+  let vt = 0; const vlater = ms => { clearTimeout(vt); vt = setTimeout(vfix, ms); };
+  window.addEventListener('resize', () => vlater(120));
+  window.addEventListener('orientationchange', () => vlater(500));
+  window.addEventListener('pageshow', () => vlater(60));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) vlater(120); });
+  document.addEventListener('focusout', () => vlater(700));
+  vfix(); vlater(400);
   measure();
 })();
-/* keep a focused field inside a scrolling screen visible above the keyboard */
-document.addEventListener('focusin', e => {
-  const el = e.target; if (!el || el.closest('#sheet') || !el.matches('input,textarea')) return;
-  const scr = el.closest('.scr'); if (!scr) return;
-  setTimeout(() => { const r = el.getBoundingClientRect(); const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight); const room = vh - 24; if (r.bottom > room || r.top < 90) scr.scrollBy({ top: r.bottom - room + 40, behavior: RM ? 'auto' : 'smooth' }); }, 380);
-});
+/* v19.4: what you type always stays above the keyboard, in sheets and in screens.
+   For a textarea it follows the caret line (a long pasted plan), not just the field. Only the inner list
+   scrolls, the sheet and the page never jump. */
+function caretBox(el) {
+  const r = el.getBoundingClientRect();
+  if (el.tagName !== 'TEXTAREA' || el.selectionEnd == null) return [r.top, r.bottom];
+  const cs = getComputedStyle(el); const d = document.createElement('div');
+  ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'paddingTop', 'paddingLeft', 'paddingRight', 'borderTopWidth', 'borderLeftWidth', 'borderRightWidth', 'boxSizing', 'wordBreak', 'overflowWrap', 'tabSize'].forEach(k => { d.style[k] = cs[k]; });
+  Object.assign(d.style, { position: 'fixed', left: '-9999px', top: '0', visibility: 'hidden', whiteSpace: 'pre-wrap', width: r.width + 'px', height: 'auto' });
+  d.textContent = el.value.slice(0, el.selectionEnd); const sp = document.createElement('span'); sp.textContent = '​'; d.appendChild(sp);
+  document.body.appendChild(d); const y = sp.offsetTop - el.scrollTop; const lh = parseFloat(cs.lineHeight) || 26; d.remove();
+  return [r.top + Math.max(0, y), Math.min(r.bottom, r.top + y + lh) + 8];
+}
+function keepVisible(el, smooth) {
+  if (!el || !document.contains(el) || document.activeElement !== el) return;
+  const box = el.closest('#sheet .sb') || el.closest('.scr'); if (!box) return;
+  const vv = window.visualViewport; const visB = vv ? vv.offsetTop + vv.height : innerHeight;
+  const b = box.getBoundingClientRect(); const bottom = Math.min(b.bottom, visB) - 14; const top = b.top + (box.classList.contains('sb') ? 6 : 96);
+  const [ct, cb] = caretBox(el);
+  let dy = 0; if (cb > bottom) dy = cb - bottom; else if (ct < top) dy = Math.max(ct - top, -box.scrollTop);
+  if (Math.abs(dy) < 2) return;
+  box.scrollBy({ top: dy, behavior: smooth && !RM ? 'smooth' : 'auto' });
+}
+(function () {
+  const F = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=time]):not([type=date]),textarea');
+  let tm = 0;
+  document.addEventListener('focusin', e => { const el = e.target; if (!F(el)) return; setTimeout(() => keepVisible(el, true), 80); setTimeout(() => keepVisible(el, true), 420); });
+  document.addEventListener('input', e => { const el = e.target; if (F(el)) requestAnimationFrame(() => keepVisible(el, false)); });
+  const settle = () => { clearTimeout(tm); tm = setTimeout(() => { const a = document.activeElement; if (F(a)) keepVisible(a, true); }, 140); };
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', settle);
+})();
 
 /* ---------- video manual ---------- */
 function playTutorial(kind) {

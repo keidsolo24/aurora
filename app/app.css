@@ -863,3 +863,11 @@ body:not(.solidui) .mt.link{background:rgba(16,26,40,.5);-webkit-backdrop-filter
 #welcome .wvt b{font-size:15px;font-weight:600}
 #welcome .wvt small{font-size:12.5px;opacity:.72}
 #welcome .wvp{font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;background:#fff;color:#0b1320;flex:none}
+
+/* v19.4 keyboard: no safe-area padding above the keyboard, content stays where the caret is */
+body.kbopen #sheet .sb{padding-bottom:18px}
+#sheet .sb{transition:padding-bottom .26s var(--out)}
+#sheet.drag .sb{transition:none}
+@media (prefers-reduced-motion:reduce){#sheet .sb{transition:none}}
+/* v19.4 · iOS 27: body follows the real viewport in home-screen apps (see vfix in ui.js) */
+html.vfix body{height:var(--apph)}

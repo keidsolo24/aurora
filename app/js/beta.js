@@ -119,7 +119,7 @@ async function fbSend() {
   const cs = lang() === 'cs'; const sv = $('#sheetSave'); const url = fbServer();
   if (!url) { toast(esc(cs ? 'Chybí adresa serveru' : 'Server address missing')); return; }
   if (sv) { sv.disabled = true; sv.textContent = cs ? 'Odesílám…' : 'Sending…'; }
-  const body = { kind: FB.kind, text: FB.text.trim().slice(0, 4000), img: FB.img, name: (S.name || '').trim().slice(0, 60), ver: VERSION, lang: S.lang,
+  const body = { kind: FB.kind, text: FB.text.trim().slice(0, 4000), img: FB.img, name: (S.name || '').trim().slice(0, 60), ver: VERSION + (window.AUR_NS ? '-test' : ''), lang: S.lang,
     meta: { ua: navigator.userAgent.slice(0, 300), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, standalone: isStandalone(), layout: document.body.classList.contains('desk') ? 'desk' : 'mobile', cards: S.cards.length, items: S.items.length, shared: (S.shared || []).length, push: !!(S.push && S.push.on) } };
   try {
     const r = await fetch(url + '/fb', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
