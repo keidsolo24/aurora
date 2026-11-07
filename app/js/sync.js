@@ -13,6 +13,7 @@ function syncEnts() {
   for (const x of S.moments) if (!sh || !spaceOfMoment(x)) m.set('m:' + x.id, x);
   for (const ch of S.shared || []) m.set('k:' + ch.sp, { sp: ch.sp, secret: ch.secret, kind: ch.kind, ref: ch.ref });
   m.set('p:prefs', { name: S.name || '', lang: S.lang, nudges: S.nudges, weekly: S.weekly, order: S.cards.map(c => c.id), me: S.me && S.me.id || null });
+  if (S.acc && S.acc.login) m.set('p:acc', { login: S.acc.login, id: S.acc.id }); // v19.5: who this account is
   return m;
 }
 async function snapLoad() { if (SY.snap) return SY.snap; try { SY.snap = (await DB.get('kv', 'syncsnap')) || {}; } catch (e) { SY.snap = {}; } return SY.snap; }
@@ -40,6 +41,7 @@ async function syncPush() {
   const snap = await snapLoad(); const now = Date.now(); const cur = syncEnts();
   const out = [];
   for (const [k, v] of cur) { const s = JSON.stringify(v); if (snap[k] !== s) out.push({ k, v: s, u: now }); }
+  if (S.acc && S.acc.login && out.some(e => e.k === 'p:prefs')) syncApi('/a/name', { login: S.acc.login, sp: S.sync.sp, secret: S.sync.secret, name: (S.name || '').trim() }).catch(() => {});
   for (const k of Object.keys(snap)) { if ((k[0] === 'c' || k[0] === 'i' || k[0] === 'm' || k[0] === 'k') && k[1] === ':' && !cur.has(k)) out.push({ k, v: null, u: now }); }
   for (let i = 0; i < out.length; i += 200) {
     const part = out.slice(i, i + 200);
@@ -87,7 +89,8 @@ async function syncPull() {
 }
 function applyEnt(k, v) {
   const t = k[0], id = k.slice(2);
-  if (k === 'p:prefs') { if (v) { const p = JSON.parse(v); S.name = p.name || S.name; if (p.lang) S.lang = p.lang; S.nudges = p.nudges !== false; S.weekly = p.weekly !== false; if (Array.isArray(p.order)) SY.order = p.order; if (p.me && (!S.me || !S.me.id || !(S.shared || []).length)) S.me = { id: p.me }; } return; }
+  if (k === 'p:prefs') { if (v) { const p = JSON.parse(v); S.name = p.name || S.name; if (p.lang) S.lang = p.lang; S.nudges = p.nudges !== false; S.weekly = p.weekly !== false; if (Array.isArray(p.order)) SY.order = p.order; if (p.me && !(S.acc && S.acc.id) && (!S.me || !S.me.id || !(S.shared || []).length)) S.me = { id: p.me }; } return; }
+  if (k === 'p:acc') { if (v) { let o = null; try { o = JSON.parse(v); } catch (e) {} if (o && o.id && o.login && (!S.acc || S.acc.id !== o.id || S.acc.login !== o.login)) { S.acc = { login: o.login, id: o.id }; if (typeof adoptId === 'function') adoptId(o.id); } } return; }
   if (t === 'k') {
     // a shared card / plan I am in (joined on my other device)
     S.shared = S.shared || [];
@@ -138,13 +141,22 @@ async function syncCreate() {
 async function syncCode() { const j = await syncApi('/s/code', { sp: S.sync.sp, secret: S.sync.secret }); S.sync.code = j.code; S.sync.codeExp = j.exp; return j; }
 async function syncJoin(code, mode) {
   const j = await syncApi('/s/join', { code });
-  if (mode === 'replace') { S.cards = []; S.items = []; S.moments = []; }
-  S.sync = { sp: j.sp, secret: j.secret, dev: (S.sync && S.sync.dev) || uid(), cur: { r: 0, k: '' }, state: 'ok' };
+  await syncAttach(j.sp, j.secret, mode);
+  if (typeof hideWelcome === 'function') hideWelcome(); render();
+}
+/* this device takes the data of a sync space (an account). 'replace' drops only this device's own things:
+   shared cards stay, otherwise their missing records would be deleted for everyone in them */
+async function syncAttach(sp, secret, mode) {
+  if (mode === 'replace') {
+    const sh = typeof spaceOfItem === 'function';
+    S.cards = S.cards.filter(c => c.sh); S.items = S.items.filter(i => sh && spaceOfItem(i)); S.moments = S.moments.filter(m => sh && spaceOfMoment(m));
+  }
+  S.sync = { sp, secret, dev: (S.sync && S.sync.dev) || uid(), cur: { r: 0, k: '' }, state: 'ok' };
   S.onboarded = true;
   SY.snap = {}; await snapSave();
   await syncPull();   // theirs first (incl. name & language), then ours go up
   await syncNow();
-  save(); applyLook(); buildNav(); if (typeof hideWelcome === 'function') hideWelcome(); render();
+  save(); applyLook(); buildNav(); render();
 }
 function syncLeave() { S.sync = { dev: S.sync && S.sync.dev }; SY.snap = {}; snapSave(); save(); syncBadge(); }
 
@@ -162,8 +174,13 @@ function syncPage() {
   let h = '<div class="hdr"><button class="cb frost press" data-a="settingsBack" aria-label="Back">' + ico('back', 20, 2.2) + '</button><span></span></div><h1 class="t1" style="margin-bottom:18px">' + esc(cs ? 'Synchronizace' : 'Sync') + '</h1>';
   const st = !on ? 'off' : S.sync.state === 'err' ? 'err' : 'ok';
   h += '<section class="nstat frost' + (st === 'ok' ? ' on' : '') + '"><span class="ni">' + ico('sync', 22, 1.9) + '</span><span class="tx"><b>' + esc(!on ? (cs ? 'Jen v tomto zařízení' : 'Only on this device') : st === 'err' ? (cs ? 'Problém' : 'Problem') : (cs ? 'Propojeno' : 'Linked')) + '</b><small>'
-    + esc(!on ? (cs ? 'Propoj telefon a počítač, ať mají stejné plány, karty a nápady.' : 'Link your phone and computer so they share plans, cards and ideas.') : st === 'err' ? S.sync.err : (cs ? 'Poslední synchronizace ' : 'Last sync ') + syncAgo() + ' · ' + (S.items.length + S.cards.length + S.moments.length) + (cs ? ' záznamů' : ' records')) + '</small></span></section>';
-  if (!on) {
+    + esc(!on ? (cs ? 'Přihlas se ke svému účtu na telefonu i počítači a budou mít stejné plány, karty a nápady.' : 'Link your phone and computer so they share plans, cards and ideas.') : st === 'err' ? S.sync.err : (cs ? 'Poslední synchronizace ' : 'Last sync ') + syncAgo() + ' · ' + (S.items.length + S.cards.length + S.moments.length) + (cs ? ' záznamů' : ' records')) + '</small></span></section>';
+  if (typeof accOn === 'function' && accOn()) {
+    h += '<div class="sec"><span class="cap">' + esc(cs ? 'Další zařízení' : 'Another device') + '</span><section class="frost solid" style="border-radius:24px;padding:16px 18px;font:400 14.5px/1.5 Inter">' + esc(cs ? 'Otevři Auroru na druhém zařízení a přihlas se jako ' : 'Open Aurora on the other device and log in as ') + '<b>@' + esc(S.acc.login) + '</b>' + esc(cs ? '. Data se spojí samy.' : '. The data joins by itself.') + '</section></div>'
+      + (on ? '<div class="sec"><section class="grp frost solid"><button class="srow" data-a="syncNowBtn">' + esc(cs ? 'Synchronizovat teď' : 'Sync now') + '<span class="r">' + ico('sync', 15, 2) + '</span></button><button class="srow" data-a="accPage">' + esc(cs ? 'Účet' : 'Account') + '<span class="r">@' + esc(S.acc.login) + ico('chev', 15, 2.2) + '</span></button></section></div>' : '');
+  } else if (typeof accOn === 'function') {
+    h += '<button class="pbtn cr press" style="width:100%;margin-top:16px" data-a="acOpen">' + esc(cs ? 'Vytvořit účet nebo se přihlásit' : 'Create an account or log in') + '</button>';
+  } else if (!on) {
     h += '<div class="sec"><span class="cap">' + esc(cs ? 'První zařízení' : 'First device') + '</span><section class="grp frost solid"><button class="srow" data-a="syncCreate"><span class="tx">' + esc(cs ? 'Vytvořit propojení' : 'Create a link') + '<small>' + esc(cs ? 'Dostaneš kód pro druhé zařízení' : 'You get a code for the other device') + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button></section></div>'
       + '<div class="sec"><span class="cap">' + esc(cs ? 'Druhé zařízení' : 'Second device') + '</span><section class="frost solid" style="border-radius:24px;padding:14px 16px"><div class="fld in" style="padding:12px 14px"><input id="syncCodeIn" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="' + esc(cs ? 'Kód, např. RKSA-D5FY' : 'Code, e.g. RKSA-D5FY') + '" aria-label="Code" style="font:700 20px/1.2 \'Bricolage Grotesque\';letter-spacing:.06em;text-transform:uppercase"></div>'
       + ((S.cards.length + S.items.length + S.moments.length) ? '<div class="muted" style="font:400 12.5px/1.45 Inter;margin:10px 2px 0">' + esc(cs ? 'V tomto zařízení už nějaká data jsou. Vyber, co s nimi:' : 'This device already has data. Choose:') + '</div><div class="btnrow" style="margin-top:10px"><button class="pbtn ghost press" data-a="syncJoin" data-k="replace">' + esc(cs ? 'Nahradit' : 'Replace') + '</button><button class="pbtn cr press" data-a="syncJoin" data-k="merge">' + esc(cs ? 'Sloučit' : 'Merge') + '</button></div>'

@@ -88,12 +88,11 @@ function showWelcome() {
       + '<div class="wsl" id="wsl">'
       + '<section class="ws"><div class="harcw wdemo19">' + dial + '<span class="hctr" style="pointer-events:none"><span class="hk">' + esc(cs ? 'další' : 'next') + '</span><span class="ht" id="wOrbN">' + esc(cs ? 'Lekce 4' : 'Lesson 4') + '</span><span class="hs" id="wOrbS">' + esc(cs ? 'v 18:00 · Učit se' : 'at 6pm · Study') + '</span></span><span class="wtap chip frost" id="wTap">' + esc(cs ? 'Klepni na oblouk' : 'Tap an arc') + '</span></div><h1>' + (cs ? 'Tvůj den.<br>Jedním tahem.' : 'Your day.<br>In one stroke.') + '</h1><p>' + esc(cs ? 'Oblouk je tvůj den od rána do půlnoci. Barevné kousky jsou tvoje věci, svítí to, co je teď a co je další.' : 'The arc is your day from morning to midnight. The coloured bits are your things; now and next glow.') + '</p>'
       + '<button class="wvid frost press" data-a="promo"><span class="wvi">' + ico('play', 18, 2.2) + '</span><span class="wvt"><b>' + esc(cs ? 'Jak to funguje?' : 'How it works') + '</b><small>' + esc(cs ? 'Celý den v kostce · video 26 s' : 'Your whole day · 26 s video') + '</small></span><span class="wvp">' + esc(cs ? 'Pustit' : 'Play') + '</span></button></section>'
-      + '<section class="ws"><h2 class="wbig">' + (cs ? 'Jak ti mám<br>říkat?' : 'What should<br>I call you?') + '</h2><div class="fld frost namef"><input id="wName" placeholder="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" aria-label="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" autocomplete="given-name" value="' + esc(S.name || '') + '" enterkeyhint="done"></div>'
-      + '<p class="wsub">' + esc(cs ? 'Hned potom založíš první kartu: návyk nebo projekt. Zbytek přidáš přes +.' : 'Next you create your first card: a habit or a project. Add the rest with +.') + '</p>'
-      + (old ? '<button class="chip frost press wold" data-a="wImport">' + ico('import', 15, 2) + esc(cs ? 'Načíst moje data ze staré Aurory' : 'Load my data from old Aurora') + '</button>' : '') + '<button class="chip frost press wold" data-a="wSync">' + ico('sync', 15, 2) + esc(cs ? 'Už mám Auroru jinde · propojit' : 'I use Aurora elsewhere · link') + '</button><button class="chip frost press wold" style="margin-top:8px" data-a="wInvite">' + ico('users', 15, 2) + esc(cs ? 'Mám pozvánku do karty' : 'I have a card invitation') + '</button></section>'
+      + '<section class="ws acws"><div id="acBox"></div>'
+      + '<div class="wchips">' + (old ? '<button class="chip frost press wold" data-a="wImport">' + ico('import', 15, 2) + esc(cs ? 'Načíst data ze staré Aurory' : 'Load data from old Aurora') + '</button>' : '') + '<button class="chip frost press wold" data-a="wInvite">' + ico('users', 15, 2) + esc(cs ? 'Mám pozvánku do karty' : 'I have a card invitation') + '</button></div></section>'
       + '</div><div class="wfoot"><div class="wdots" id="wdots"><i class="on"></i><i></i></div><button class="lnk wskip" id="wSkip" data-a="wSkip">' + esc(cs ? 'Přeskočit' : 'Skip') + '</button><button class="pbtn cr press" id="wNext" data-a="wNext">' + esc(cs ? 'Dál' : 'Next') + '</button></div>';
-    const n = $('#wName'); n.addEventListener('input', () => { S.name = n.value; }); n.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); n.blur(); } });
-    const sl = $('#wsl'); sl.addEventListener('scroll', () => { const k = Math.round(sl.scrollLeft / sl.clientWidth); if (k === w._k) return; w._k = k; $$('#wdots i').forEach((d, j) => d.classList.toggle('on', j === k)); $('#wNext').textContent = k === 1 ? (lang() === 'cs' ? 'Začít' : 'Start') : (lang() === 'cs' ? 'Dál' : 'Next'); $('#wSkip').style.visibility = k === 1 ? 'hidden' : ''; }, { passive: true });
+    ACC.ctx = 'welcome'; if (!ACC.rc && !ACC.pending) ACC.mode = ACC.mode || 'new'; w.classList.remove('acc'); accPaint();
+    const sl = $('#wsl'); sl.addEventListener('scroll', () => { const k = Math.round(sl.scrollLeft / sl.clientWidth); if (k === w._k) return; w._k = k; $$('#wdots i').forEach((d, j) => d.classList.toggle('on', j === k)); $('#wNext').textContent = k === 1 ? accBtnLabel() : (lang() === 'cs' ? 'Dál' : 'Next'); $('#wSkip').style.visibility = k === 1 ? 'hidden' : ''; }, { passive: true });
     w._k = 0; w._mode = 'empty';
   };
   draw(); w.classList.add('on'); $('#nav').classList.add('away'); document.body.classList.add('navless');
@@ -109,12 +108,11 @@ ACT.wPeek = el => {
 ACT.wSkip = () => { const sl = $('#wsl'); sl && sl.scrollTo({ left: sl.clientWidth, behavior: RM ? 'auto' : 'smooth' }); };
 ACT.wNext = () => { const sl = $('#wsl'); const k = Math.round(sl.scrollLeft / sl.clientWidth);
   if (k < 1) { sl.scrollTo({ left: (k + 1) * sl.clientWidth, behavior: RM ? 'auto' : 'smooth' }); return; }
-  ACT.wEmpty(); };
-function hideWelcome() { const w = $('#welcome'); if (!w.classList.contains('on')) return; w.classList.remove('on'); w.innerHTML = ''; if (!V.card && !V.settingsOpen) { $('#nav').classList.remove('away'); document.body.classList.remove('navless'); } }
-ACT.wSync = () => { hideWelcome(); openSettings(); ACT.syncPage(); };
+  ACT.acGo(); };
+function hideWelcome() { const w = $('#welcome'); if (!w.classList.contains('on')) return; w.classList.remove('on', 'acc'); w.innerHTML = ''; if (!V.card && !V.settingsOpen) { $('#nav').classList.remove('away'); document.body.classList.remove('navless'); } }
 ACT.wLang = el => { S.lang = el.dataset.k; applyLook(); buildNav(); $('#welcome')._draw(); };
 ACT.wSample = async () => { const keep = { name: (S.name || '').trim(), lang: S.lang }; S = await sampleState(keep); save(); hideWelcome(); go('home'); };
-ACT.wEmpty = () => { S.name = (S.name || '').trim(); S.onboarded = true; save(); hideWelcome(); go('home'); setTimeout(() => openCardSheet(null), 350); };
+ACT.wEmpty = () => { S.name = (S.name || '').trim(); S.onboarded = true; ACC.rc = ''; save(); hideWelcome(); go('home'); setTimeout(() => openCardSheet(null), 350); };
 ACT.wImport = async () => {
   try { const r = await importOld(); if (!r || !(r.cards.length + r.items.length)) { toast(esc(t('nothingImport'))); return; }
     S.cards = r.cards; S.items = r.items; S.moments = r.moments; if (!S.name && r.name) S.name = r.name; S.onboarded = true; save(); hideWelcome(); go('home'); toast(esc(t('imported', r.cards.length, r.items.length, r.moments.length)));
@@ -169,7 +167,7 @@ async function boot() {
   if (q.has('item') || q.has('d') || q.has('card')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   if (typeof spoluBoot === 'function') spoluBoot();
   setTimeout(() => pushBoot(), 1200);
-  setTimeout(() => { syncBadge(); if (syncOn()) syncNow(); }, 900);
+  setTimeout(() => { syncBadge(); if (S.onboarded && !accOn()) accBoot(); else if (syncOn()) syncNow(); }, 900);
   refreshOldFlag();
   setTimeout(() => ensureVideoThumbs(), 800);
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

@@ -255,9 +255,9 @@ function caretBox(el) {
 }
 function keepVisible(el, smooth) {
   if (!el || !document.contains(el) || document.activeElement !== el) return;
-  const box = el.closest('#sheet .sb') || el.closest('.scr'); if (!box) return;
+  const box = el.closest('#sheet .sb') || el.closest('.scr') || el.closest('#welcome .acws'); if (!box) return;
   const vv = window.visualViewport; const visB = vv ? vv.offsetTop + vv.height : innerHeight;
-  const b = box.getBoundingClientRect(); const bottom = Math.min(b.bottom, visB) - 14; const top = b.top + (box.classList.contains('sb') ? 6 : 96);
+  const b = box.getBoundingClientRect(); const bottom = Math.min(b.bottom, visB) - 14; const top = b.top + (box.classList.contains('sb') || box.classList.contains('acws') ? 6 : 96);
   const [ct, cb] = caretBox(el);
   let dy = 0; if (cb > bottom) dy = cb - bottom; else if (ct < top) dy = Math.max(ct - top, -box.scrollTop);
   if (Math.abs(dy) < 2) return;

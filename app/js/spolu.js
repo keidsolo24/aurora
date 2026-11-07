@@ -6,7 +6,8 @@
      c:<id> card · i:<id> item · m:<id> moment · b:<media> photo preview
      x:<item>.<person> what that person has done (habits and plans: everyone ticks for themselves)
      u:<person> who is in · r:<person> removed by the owner · o:owner · a:<person>.<id> news
-     k:<space> key to a shared plan item, handed to the people it is meant for */
+     k:<space> key to a shared plan item, handed to the people it is meant for
+     y:<old person> → { id } the same person under their account id (v19.5: one person, one id) */
 Object.assign(IC, {
   users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c2.6-.2 5 1.6 5 4.8"/>',
   copy: '<rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/>',
@@ -29,8 +30,9 @@ function isTeam(i) { const c = i.card ? cardById(i.card) : null; return !!(c && 
 function members(ch) {
   if (!ch) return [];
   const me = meId();
-  const list = Object.entries(ch.mem || {}).filter(([, m]) => m && !m.removed).map(([id, m]) => ({ id, name: m.name || '?', joined: m.joined || 0 }));
-  if (!list.some(m => m.id === me)) list.push({ id: me, name: S.name || '?', joined: ch.joined || 0 });
+  const al = ch.alias || {};
+  const list = Object.entries(ch.mem || {}).filter(([id, m]) => m && !m.removed && !al[id]).map(([id, m]) => ({ id, name: m.name || '?', joined: m.joined || 0, login: m.login || '' }));
+  if (!list.some(m => m.id === me)) list.push({ id: me, name: S.name || '?', joined: ch.joined || 0, login: S.acc ? S.acc.login : '' });
   list.sort((a, b) => a.joined - b.joined || a.id.localeCompare(b.id));
   return list.map((m, k) => ({ ...m, name: m.id === me ? (S.name || m.name) : m.name, color: PCOL[k % PCOL.length], me: m.id === me, owner: m.id === ch.owner, ini: ((m.id === me ? S.name : m.name) || '?').trim().charAt(0).toUpperCase() || '?' }));
 }
@@ -117,19 +119,20 @@ function chEnts(ch) {
     if (!isTeam(i)) { const x = myX(i); if (hasX(x)) m.set('x:' + i.id + '.' + me, x); }
   }
   const mine = (ch.mem || {})[me] || {};
-  m.set('u:' + me, { name: (S.name || '').trim() || '?', joined: mine.joined || ch.joined || Date.now() });
+  m.set('u:' + me, Object.assign({ name: (S.name || '').trim() || '?', joined: mine.joined || ch.joined || Date.now() }, S.acc && S.acc.login ? { login: S.acc.login } : {}));
+  for (const o of ch.olds || []) m.set('y:' + o, { id: me });
   if (ch.owner === me) m.set('o:owner', { id: me });
   for (const r of ch.rm || []) m.set('r:' + r, { by: me });
   for (const a of (ch.act || []).filter(a => a.who === me).slice(-15)) m.set('a:' + me + '.' + a.id, a.iid ? { id: a.id, who: me, k: a.k, t: a.t, ts: a.ts, iid: a.iid } : { id: a.id, who: me, k: a.k, t: a.t, ts: a.ts });
   for (const k of ch.keys || []) m.set('k:' + k.sp, k);
   return m;
 }
-function mayDelete(k, snapV, me) {
-  const t = k[0];
+function mayDelete(k, snapV, me, ch) {
+  const t = k[0]; const olds = (ch && ch.olds) || [];
   if (t === 'c' || t === 'i' || t === 'm') return true;
-  if (t === 'x') return k.endsWith('.' + me);
+  if (t === 'x') return k.endsWith('.' + me) || olds.some(o => k.endsWith('.' + o)); // my old id's ticks: now under my account id
   if (t === 'a') return k.startsWith('a:' + me + '.');
-  if (t === 'u') return k === 'u:' + me;
+  if (t === 'u') return k === 'u:' + me || olds.includes(k.slice(2));
   return false; // keys (k) and removals (r) are never taken back automatically: my other devices don't hold them
 }
 async function chSnap(ch) { if (SP.snaps[ch.sp]) return SP.snaps[ch.sp]; let s = null; try { s = await DB.get('kv', 'snap:' + ch.sp); } catch (e) {} SP.snaps[ch.sp] = s || {}; return SP.snaps[ch.sp]; }
@@ -179,9 +182,10 @@ function chApply(ch, k, v) {
   if (t === 'u') {
     ch.mem = ch.mem || {};
     if (v == null) { delete ch.mem[id]; return true; }
-    ch.mem[id] = Object.assign({}, ch.mem[id], { name: o.name, joined: o.joined });
+    ch.mem[id] = Object.assign({}, ch.mem[id], { name: o.name, joined: o.joined }, o.login ? { login: o.login } : {});
     return true;
   }
+  if (t === 'y') { ch.alias = ch.alias || {}; if (o && o.id && o.id !== id) { ch.alias[id] = o.id; if (ch.mem && ch.mem[id]) delete ch.mem[id]; if (ch.owner === id) ch.owner = o.id; } else delete ch.alias[id]; return true; }
   if (t === 'r') { ch.mem = ch.mem || {}; if (v != null) { ch.mem[id] = Object.assign({}, ch.mem[id], { removed: true }); if (id === me) ch.kicked = true; } else if (ch.mem[id]) delete ch.mem[id].removed; return true; }
   if (t === 'o') { if (o && o.id) ch.owner = o.id; return true; }
   if (t === 'a') {
@@ -279,7 +283,7 @@ async function chPush(ch) {
   }
   const out = [];
   for (const [k, v] of cur) { const s = JSON.stringify(v); if (snap[k] !== s) out.push({ k, v: s, u: now }); }
-  for (const k of Object.keys(snap)) { if (k[1] === ':' && !cur.has(k) && k[0] !== 'b' && mayDelete(k, snap[k], me)) out.push({ k, v: null, u: now }); }
+  for (const k of Object.keys(snap)) { if (k[1] === ':' && !cur.has(k) && k[0] !== 'b' && mayDelete(k, snap[k], me, ch)) out.push({ k, v: null, u: now }); }
   for (let i = 0; i < out.length; i += 200) {
     const part = out.slice(i, i + 200);
     await chApi(ch, '/s/push', { dev: (S.sync && S.sync.dev) || me, ents: part });
@@ -420,7 +424,8 @@ async function peekInvite(code) {
     else if (k.startsWith('r:')) removed.add(k.slice(2));
     else if (k === 'o:owner') owner = (P(k) || {}).id;
   }
-  const people = Object.entries(mem).filter(([id, v]) => v && !removed.has(id)).map(([id, v]) => ({ id, name: v.name, joined: v.joined || 0 })).sort((a, b) => a.joined - b.joined);
+  const alias = new Set([...map.keys()].filter(k => k.startsWith('y:')).map(k => k.slice(2)));
+  const people = Object.entries(mem).filter(([id, v]) => v && !removed.has(id) && !alias.has(id)).map(([id, v]) => ({ id, name: v.name, joined: v.joined || 0, login: v.login || '' })).sort((a, b) => a.joined - b.joined);
   return { sp: j.sp, secret: j.secret, kind: card ? 'card' : 'item', ref: card ? card.id : item ? item.id : null, card, item, owner, people, items };
 }
 async function acceptInvite(pv) {
@@ -449,6 +454,7 @@ function inviteURL(code) { const u = new URL(location.href); u.search = ''; u.ha
 
 /* ================= sheets ================= */
 function needName(then) {
+  if (typeof accOn === 'function' && !accOn()) { accSheet(then, lang() === 'cs' ? 'Ke sdílení potřebuješ účet. Ostatní tě tak uvidí vždycky jen jednou, ať jsi na telefonu, nebo na počítači.' : 'Sharing needs an account, so the others always see you once, on your phone or computer.'); return; }
   if ((S.name || '').trim()) { then(); return; }
   const cs = lang() === 'cs';
   openSheet({ title: cs ? 'Jak ti mají říkat?' : 'What should they call you?', right: cs ? 'Dál' : 'Next', body: '<div class="muted" style="font:400 14px/1.45 Inter;margin:0 2px 12px">' + esc(cs ? 'Tvoje jméno uvidí lidé ve sdílené kartě.' : 'People in the shared card will see your name.') + '</div><div class="fld in"><input id="nmIn" placeholder="' + esc(cs ? 'Tvoje jméno' : 'Your name') + '" autocomplete="given-name" enterkeyhint="done"></div>',
@@ -521,15 +527,17 @@ async function openJoin(code) {
     prev = '<span class="cap" style="color:var(--ink)">' + esc(cs ? 'Plán spolu' : 'Plan together') + '</span><div class="jnm">' + esc(it.t) + '</div><div class="muted" style="font:400 14px/1.4 Inter">' + esc([it.date ? dayShort(it.date) : '', it.time || ''].filter(Boolean).join(' · ')) + '</div>';
   } else prev = '<div class="jnm">?</div>';
   SP.join = pv;
-  openSheet({ title: '', leftLabel: cs ? 'Ne, díky' : 'No thanks', cls: 'joinsheet', onClose: () => { if (!S.onboarded) setTimeout(() => { if (!S.onboarded) showWelcome(); }, 350); }, body: '<div class="joinw">' + avHTML(ownerAv, 60) + '<div class="jt">' + esc(owner.name + (cs ? (c ? ' tě zve do karty' : ' tě zve') : (c ? ' invites you to a card' : ' invites you'))) + '</div></div>'
+  openSheet({ title: '', leftLabel: cs ? 'Ne, díky' : 'No thanks', cls: 'joinsheet', onClose: () => { if (!S.onboarded && !SP.toAcc) setTimeout(() => { if (!S.onboarded && !SH.open) showWelcome(); }, 350); SP.toAcc = false; }, body: '<div class="joinw">' + avHTML(ownerAv, 60) + '<div class="jt">' + esc(owner.name + (cs ? (c ? ' tě zve do karty' : ' tě zve') : (c ? ' invites you to a card' : ' invites you'))) + '</div></div>'
     + '<section class="frost jprev">' + prev + '<div class="jwhat">' + ico('users', 18, 2) + '<span>' + esc(cs ? 'Všichni uvidíte všechno v ' + (c ? 'této kartě' : 'tomhle plánu') + '. Nic jiného z vaší Aurory.' : 'Everyone sees everything in this ' + (c ? 'card' : 'plan') + '. Nothing else from your Aurora.') + '</span></div></section>'
     + (full ? '<div class="muted" style="text-align:center;margin:16px 0">' + esc(cs ? 'Karta je plná (' + MAXP + ' lidí).' : 'This card is full.') + '</div>'
-      : (!(S.name || '').trim() ? '<span class="cap lab">' + esc(cs ? 'Tvoje jméno' : 'Your name') + '</span><div class="fld in"><input id="jName" placeholder="' + esc(cs ? 'Jak ti mají říkat' : 'What they call you') + '" autocomplete="given-name"></div>' : '')
+      : (typeof accOn === 'function' && !accOn() ? '<div class="muted jacc">' + esc(cs ? 'Nejdřív si uděláš účet, zabere to pár vteřin. Máš-li ho, přihlásíš se.' : 'First you make an account, it takes seconds. If you have one, log in.') + '</div>' : !(S.name || '').trim() ? '<span class="cap lab">' + esc(cs ? 'Tvoje jméno' : 'Your name') + '</span><div class="fld in"><input id="jName" placeholder="' + esc(cs ? 'Jak ti mají říkat' : 'What they call you') + '" autocomplete="given-name"></div>' : '')
         + '<button class="pbtn cr press" style="width:100%;margin-top:16px" data-a="joinYes">' + esc(cs ? 'Přidat se' : 'Join') + '</button>')
     + '<button class="pbtn ghost press" style="width:100%;margin-top:8px" data-a="sheetCancel">' + esc(cs ? 'Ne, díky' : 'No thanks') + '</button>' });
 }
 ACT.joinYes = async () => {
   const cs = lang() === 'cs'; const pv = SP.join; if (!pv) return;
+  if (typeof accOn === 'function' && !accOn()) { SP.toAcc = true; closeSheet(true); setTimeout(() => accSheet(() => ACT.joinYes(), cs ? 'Aby tě v kartě všichni viděli vždycky jako jednoho člověka, přidáš se přes účet.' : 'So everyone in the card always sees you as one person, you join with an account.'), 330); return; }
+  if (SH.open && !$('[data-a="joinYes"]')) closeSheet(true);
   const n = $('#jName'); if (n) { const v = n.value.trim(); if (!v) { n.focus(); toast(esc(cs ? 'Napiš své jméno' : 'Type your name')); return; } S.name = v; }
   const b = $('[data-a="joinYes"]'); if (b) { b.disabled = true; b.textContent = cs ? 'Přidávám…' : 'Joining…'; }
   try {
@@ -559,7 +567,15 @@ ACT.spDeleteAll = el => {
 ACT.spRemove = el => {
   const cs = lang() === 'cs'; const c = cardById(V.card); const ch = c ? chOfCard(c) : null; if (!ch) return;
   const m = members(ch).find(x => x.id === el.dataset.k); if (!m) return;
-  confirmSheet(cs ? 'Odebrat ' + m.name + ' z karty?' : 'Remove ' + m.name + ' from the card?', cs ? 'Odebrat' : 'Remove', () => removeMember(ch, m.id));
+  confirmSheet(cs ? 'Odebrat ' + m.name + (m.login ? ' (@' + m.login + ')' : '') + ' z karty?' : 'Remove ' + m.name + ' from the card?', cs ? 'Odebrat' : 'Remove', () => removeMember(ch, m.id));
+};
+/* v19.5: the owner of a shared plan can remove people from it too (e.g. an old duplicate of someone) */
+ACT.spRemoveItem = el => {
+  const cs = lang() === 'cs'; const i = A && A.editId ? itemById(A.editId) : null; const ch = i ? chOfItem(i) : null; if (!ch || ch.owner !== meId()) return;
+  const m = members(ch).find(x => x.id === el.dataset.k); if (!m || m.me) return;
+  const back = A.editId;
+  closeSheet(true);
+  setTimeout(() => confirmSheet(cs ? 'Odebrat ' + m.name + (m.login ? ' (@' + m.login + ')' : '') + ' z „' + i.t + '“?' : 'Remove ' + m.name + ' from "' + i.t + '"?', cs ? 'Odebrat' : 'Remove', async () => { await removeMember(ch, m.id); toast(esc(cs ? m.name + ' odebrán/a' : m.name + ' removed')); }), 330);
 };
 ACT.spLeaveItem = () => {
   const cs = lang() === 'cs'; const i = A && A.editId ? itemById(A.editId) : null; const ch = i ? chOfItem(i) : null; if (!ch || ch.kind !== 'item') return;
@@ -608,13 +624,14 @@ function spoluNews(c) {
   const list = (ch.act || []).slice().sort((a, b) => b.ts - a.ts).slice(0, 4);
   if (!list.length) return '';
   return '<div class="sec"><span class="cap" style="display:flex;justify-content:space-between">' + esc(cs ? 'Novinky' : 'News') + '<span class="muted" style="letter-spacing:0;text-transform:none;font:500 12px/1 Inter">' + esc(cs ? 'jen v kartě' : 'this card only') + '</span></span><section class="frost solid" style="border-radius:24px;padding:2px 14px">'
-    + list.map(a => { const m = ms.find(x => x.id === a.who) || { name: '?', ini: '?', color: '#9fb3c4' }; return '<div class="pact">' + avHTML(m, 30) + '<span class="tx"><span>' + esc(evText(a, m.name, ch, false, m.me)) + '</span><small>' + esc(agoText(a.ts)) + '</small></span>' + (a.k === 'done' ? '<span style="color:var(--green)">' + ico('check', 16, 2.6) + '</span>' : '') + '</div>'; }).join('') + '</section></div>';
+    + list.map(a => { const w = (ch.alias || {})[a.who] || a.who; const m = ms.find(x => x.id === w) || { name: '?', ini: '?', color: '#9fb3c4' }; return '<div class="pact">' + avHTML(m, 30) + '<span class="tx"><span>' + esc(evText(a, m.name, ch, false, m.me)) + '</span><small>' + esc(agoText(a.ts)) + '</small></span>' + (a.k === 'done' ? '<span style="color:var(--green)">' + ico('check', 16, 2.6) + '</span>' : '') + '</div>'; }).join('') + '</section></div>';
 }
+function sinceText(ts) { if (!ts) return ''; const cs = lang() === 'cs'; const d = new Date(ts); return (cs ? 'od ' : 'since ') + d.getDate() + '. ' + (d.getMonth() + 1) + '.'; }
 function spoluPeople(c) {
   const cs = lang() === 'cs'; const ch = chOfCard(c); const ms = members(ch); const iOwn = ch.owner === meId();
   return '<div class="sec"><span class="cap">' + esc((cs ? 'Lidé · ' : 'People · ') + ms.length + ' / ' + MAXP) + '</span><section class="grp frost solid">'
     + ms.map(m => { const n = memberWeek(c.id, m.id).filter(Boolean).length;
-      return '<div class="srow pmem">' + avHTML(m, 34) + '<span class="tx">' + esc(m.me ? (cs ? 'Ty' : 'You') : m.name) + '<small>' + esc([m.owner ? (cs ? 'založil/a kartu' : 'created the card') : '', c.type === 'habit' ? n + '/' + goalOf(c) + (cs ? ' tento týden' : ' this week') : ''].filter(Boolean).join(' · ')) + '</small></span>' + (iOwn && !m.me ? '<button class="r muted" data-a="spRemove" data-k="' + m.id + '" style="font:400 13.5px/1 Inter">' + esc(cs ? 'Odebrat' : 'Remove') + '</button>' : '') + '</div>'; }).join('')
+      return '<div class="srow pmem">' + avHTML(m, 34) + '<span class="tx">' + esc(m.me ? (cs ? 'Ty' : 'You') : m.name) + '<small>' + esc([m.login ? '@' + m.login : '', m.owner ? (cs ? 'založil/a kartu' : 'created the card') : sinceText(m.joined), c.type === 'habit' ? n + '/' + goalOf(c) + (cs ? ' tento týden' : ' this week') : ''].filter(Boolean).join(' · ')) + '</small></span>' + (iOwn && !m.me ? '<button class="r muted" data-a="spRemove" data-k="' + m.id + '" style="font:400 13.5px/1 Inter">' + esc(cs ? 'Odebrat' : 'Remove') + '</button>' : '') + '</div>'; }).join('')
     + (ms.length < MAXP ? '<button class="srow" data-a="spInvite" data-id="' + c.id + '"><span class="ci" style="width:34px;height:34px;border-radius:17px;border:0;background:rgba(255,255,255,.08)">' + ico('plus', 16, 2.4) + '</span><span class="tx">' + esc(cs ? 'Pozvat další' : 'Invite more') + '</span><span class="r">' + ico('chev', 15, 2.2) + '</span></button>' : '')
     + '</section><section class="grp frost" style="margin-top:10px"><button class="srow red" data-a="spLeave" data-id="' + c.id + '">' + ico('leave', 16, 2) + esc(cs ? 'Opustit kartu' : 'Leave card') + '</button>' + (iOwn ? '<button class="srow red" data-a="spDeleteAll" data-id="' + c.id + '">' + ico('trash', 16, 2) + esc(cs ? 'Smazat kartu pro všechny' : 'Delete for everyone') + '</button>' : '') + '</section>'
     + '<div class="muted" style="font:400 12.5px/1.45 Inter;margin:10px 4px 0">' + esc(cs ? 'Všichni vidíte všechno v této kartě: úkoly, plán, poznámku, fotky a kdo co splnil. Nic jiného z vaší Aurory.' : 'Everyone sees everything in this card: tasks, plan, note, photos and who did what. Nothing else.') + '</div></div>';
@@ -649,4 +666,4 @@ ACT.eDelete = () => {
   _eDelete();
 };
 ACT.wInvite = () => { hideWelcome(); SP.fromWelcome = true; ACT.joinCodeSheet(); };
-function momentBadge(m) { const ch = chBySp(spaceOfMoment(m)); if (!ch) return ''; const p = members(ch).find(x => x.id === m.by); return p && members(ch).length > 1 ? avHTML(p, 18, ' thb') : ''; }
+function momentBadge(m) { const ch = chBySp(spaceOfMoment(m)); if (!ch) return ''; const by = (ch.alias || {})[m.by] || m.by; const p = members(ch).find(x => x.id === by); return p && members(ch).length > 1 ? avHTML(p, 18, ' thb') : ''; }
