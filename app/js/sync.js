@@ -13,6 +13,7 @@ function syncEnts() {
   for (const x of S.moments) if (!sh || !spaceOfMoment(x)) m.set('m:' + x.id, x);
   for (const ch of S.shared || []) m.set('k:' + ch.sp, { sp: ch.sp, secret: ch.secret, kind: ch.kind, ref: ch.ref });
   m.set('p:prefs', { name: S.name || '', lang: S.lang, nudges: S.nudges, weekly: S.weekly, order: S.cards.map(c => c.id), me: S.me && S.me.id || null });
+  for (const [sp, k] of Object.entries(S.kickedSp || {})) if (!m.has('k:' + sp)) m.set('k:' + sp, k); // v19.5.1: removed here ≠ removed on my other devices
   if (S.acc && S.acc.login) m.set('p:acc', { login: S.acc.login, id: S.acc.id }); // v19.5: who this account is
   return m;
 }
@@ -94,6 +95,7 @@ function applyEnt(k, v) {
   if (t === 'k') {
     // a shared card / plan I am in (joined on my other device)
     S.shared = S.shared || [];
+    if (S.kickedSp && S.kickedSp[id]) return;
     const ch = S.shared.find(x => x.sp === id);
     if (v == null) { if (ch && typeof chDropLocal === 'function') chDropLocal(ch); return; }
     if (!ch) { const o = JSON.parse(v); S.shared.push({ sp: o.sp, secret: o.secret, kind: o.kind, ref: o.ref, cur: { r: 0, k: '' }, mem: {}, act: [], xs: {}, keys: [], joined: Date.now() }); if (typeof spoluSchedule === 'function') spoluSchedule(300); }

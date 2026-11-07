@@ -919,3 +919,18 @@ body.kbopen #welcome .wchips,body.kbopen #welcome .acwhy{display:none}
 .acprof small{font:500 14px/1 Inter;color:var(--ink2)}
 .prm{flex:none;margin-left:10px;height:30px;padding:0 12px;border-radius:15px;background:rgba(255,255,255,.08);font:500 13px/30px Inter;color:var(--ink2)}
 .jacc{text-align:center;font:400 13.5px/1.45 Inter;margin:16px 6px 0}
+
+/* v19.5.1 návrh · install per browser */
+#install .ihint.up{position:absolute;top:calc(var(--st) + 6px);right:22px;flex-direction:row-reverse;align-items:flex-start;gap:8px;animation:iBobUp 1.8s var(--out) infinite}
+#install .ihint.up span{margin-top:22px}
+@keyframes iBobUp{0%,100%{transform:translate(0,0)}50%{transform:translate(4px,-5px)}}
+#install .iwide{width:100%;max-width:360px}
+#install .inote{font:400 13px/1.4 Inter;color:var(--ink3);margin-top:-6px}
+#install .itog{flex:none;width:40px;height:24px;border-radius:12px;background:var(--green);position:relative}
+#install .itog i{position:absolute;right:2px;top:2px;width:20px;height:20px;border-radius:10px;background:#fff}
+#install[data-ctx^=inapp]{padding-top:calc(var(--st) + 92px)}
+#install[data-ctx^=inapp] .ihint.up{top:calc(var(--st) + 50px);right:26px}
+#install[data-ctx=ios-other] .ihint.up{top:calc(var(--st) + 52px)}
+#install .ihint.up{gap:6px;color:var(--ink)}
+#install .ihint.up span{margin-top:26px;padding:9px 13px;border-radius:14px;background:rgba(243,234,216,.16);box-shadow:inset 0 0 0 1px rgba(243,234,216,.25);font:600 14px/1 Inter}
+#install .ihint.up svg{color:#9fd6e8}

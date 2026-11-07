@@ -1,30 +1,80 @@
 /* Aurora v18 — beta: install gate, tips in context, feedback */
 
-/* ---------- 1. iPhone in Safari: ask to add to Home Screen first ---------- */
+/* ---------- 1. install: the right steps for where the person is (v19.5.1) ----------
+   Instagram & co. on iPhone: their browser cannot add to the Home Screen and does not keep data,
+   so the screen only shows how to get to Safari (no "continue here"). Android: Chrome installs in one tap. */
+const UA = navigator.userAgent || '';
+function installCtx() {
+  const q = new URLSearchParams(location.search).get('ictx'); if (q) return q;
+  const inApp = /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview|Snapchat|LinkedInApp|Twitter/i.test(UA);
+  const android = /Android/i.test(UA);
+  if (inApp) return android ? 'inapp-android' : 'inapp-ios';
+  if (android) return 'android';
+  if (/CriOS|EdgiOS|FxiOS/.test(UA)) return 'ios-other';
+  return 'safari';
+}
 function needInstall() {
-  if (!isIOS() || isStandalone()) return false;
+  if (isStandalone()) return false;
+  const c = installCtx(); if (c.startsWith('inapp')) return true;   // inside Instagram nothing would be kept
+  if (c !== 'android' && !isIOS()) return false;
   try { if (localStorage.getItem('aurBrowser') === '1') return false; } catch (e) {}
   return true;
 }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.AUR_BIP = e; });
 function showInstall(done) {
-  const cs = lang() === 'cs';
-  const el = document.createElement('div'); el.id = 'install'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', cs ? 'Přidej Auroru na plochu' : 'Add Aurora to your Home Screen');
+  const cs = lang() === 'cs'; const c = installCtx();
+  const el = document.createElement('div'); el.id = 'install'; el.dataset.ctx = c; el.setAttribute('role', 'dialog');
   const step = (n, html, icon) => '<div class="istep frost"><span class="in">' + n + '</span><span class="it">' + html + '</span>' + icon + '</div>';
-  const shareI = '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"/></svg>';
-  const plusI = '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
-  el.innerHTML = '<div class="iin"><img class="iicon" src="icon-180.png" alt="">'
-    + '<h1>' + (cs ? 'Přidej Auroru<br>na plochu.' : 'Add Aurora to your<br>Home Screen.') + '</h1>'
-    + '<p>' + esc(cs ? 'V Safari je to jen web. Z plochy funguje jako appka: na celou obrazovku, offline a s upozorněními.' : 'In Safari it is just a website. From the Home Screen it works like an app: full screen, offline and with notifications.') + '</p>'
-    + '<div class="isteps">'
-    + step(1, cs ? 'Klepni na <b>Sdílet</b> <small>(nebo ⋯ → Sdílet)</small>' : 'Tap <b>Share</b> <small>(or ⋯ → Share)</small>', shareI)
-    + step(2, cs ? 'Vyber <b>Přidat na plochu</b>' : 'Choose <b>Add to Home Screen</b>', plusI)
-    + step(3, cs ? 'Spouštěj z <b>ikony</b>' : 'Open it from the <b>icon</b>', '<img src="icon-180.png" alt="" class="imini">')
-    + '</div></div>'
-    + '<div class="ifoot"><button class="lnk" data-a="installSkip">' + esc(cs ? 'Pokračovat v prohlížeči' : 'Continue in the browser') + '</button>'
-    + '<div class="ihint"><span>' + esc(cs ? 'Sdílet je dole v Safari' : 'Share is at the bottom of Safari') + '</span><svg aria-hidden="true" width="26" height="30" viewBox="0 0 26 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2v24"/><path d="M5 18l8 8 8-8"/></svg></div></div>';
+  const sv = d => '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  const shareI = sv('<path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"/>');
+  const plusI = sv('<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>');
+  const dotsI = sv('<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>');
+  const vdotsI = sv('<circle cx="12" cy="5.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="18.5" r="1.3" fill="currentColor"/>');
+  const extI = sv('<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>');
+  const togI = '<span class="itog" aria-hidden="true"><i></i></span>';
+  const app = '<img src="icon-180.png" alt="" class="imini">';
+  const upR = t => '<div class="ihint up"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24L24 6"/><path d="M11 6h13v13"/></svg><span>' + esc(t) + '</span></div>';
+  const down = t => '<div class="ihint"><span>' + esc(t) + '</span><svg aria-hidden="true" width="26" height="30" viewBox="0 0 26 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2v24"/><path d="M5 18l8 8 8-8"/></svg></div>';
+  let h1, p, steps, foot = '', top = '';
+  if (c === 'inapp-ios') {
+    h1 = cs ? 'Otevři Auroru<br>v Safari.' : 'Open Aurora<br>in Safari.';
+    p = cs ? 'Teď jsi v prohlížeči Instagramu. Na plochu se Aurora přidá jen ze Safari a jen tam ti zůstanou data.' : 'You are in Instagram’s browser. Aurora can only be added to your Home Screen from Safari, and only there your data stays.';
+    steps = step(1, cs ? 'Klepni na <b>⋯</b> vpravo nahoře' : 'Tap <b>⋯</b> at the top right', dotsI) + step(2, cs ? 'Vyber <b>Otevřít v externím prohlížeči</b>' : 'Choose <b>Open in external browser</b>', extI) + step(3, cs ? 'V Safari ji přidáš na plochu' : 'In Safari, add it to your Home Screen', app);
+    top = upR(cs ? 'tady ⋯' : 'here ⋯');
+    foot = '<button class="pbtn in press iwide" data-a="installCopy">' + esc(cs ? 'Zkopírovat odkaz' : 'Copy the link') + '</button><small class="inote">' + esc(cs ? 'Nebo odkaz vlož do Safari sám.' : 'Or paste the link into Safari yourself.') + '</small>';
+  } else if (c === 'inapp-android') {
+    h1 = cs ? 'Otevři Auroru<br>v Chrome.' : 'Open Aurora<br>in Chrome.';
+    p = cs ? 'Teď jsi v prohlížeči Instagramu. Nainstalovat Auroru jde v Chrome a jen tam ti zůstanou data.' : 'You are in Instagram’s browser. Aurora installs from Chrome, and only there your data stays.';
+    steps = step(1, cs ? 'Klepni na <b>Otevřít v Chrome</b>' : 'Tap <b>Open in Chrome</b>', extI) + step(2, cs ? 'Chrome nabídne <b>Nainstalovat</b>' : 'Chrome offers <b>Install</b>', plusI) + step(3, cs ? 'Spouštěj z <b>ikony</b>' : 'Open it from the <b>icon</b>', app);
+    foot = '<button class="pbtn cr press iwide" data-a="installChrome">' + esc(cs ? 'Otevřít v Chrome' : 'Open in Chrome') + '</button><button class="lnk" data-a="installCopy">' + esc(cs ? 'Zkopírovat odkaz' : 'Copy the link') + '</button>';
+  } else if (c === 'android') {
+    h1 = cs ? 'Nainstaluj<br>Auroru.' : 'Install<br>Aurora.';
+    p = cs ? 'Jedno klepnutí a máš ji na ploše jako appku: na celou obrazovku, offline a s upozorněními.' : 'One tap and it is on your Home Screen like an app: full screen, offline and with notifications.';
+    steps = step(1, cs ? 'Klepni na <b>Nainstalovat</b>' : 'Tap <b>Install</b>', plusI) + step(2, cs ? 'Spouštěj z <b>ikony</b>' : 'Open it from the <b>icon</b>', app);
+    foot = '<button class="pbtn cr press iwide" data-a="installBip">' + esc(cs ? 'Nainstalovat' : 'Install') + '</button><button class="lnk" data-a="installSkip">' + esc(cs ? 'Pokračovat v prohlížeči' : 'Continue in the browser') + '</button>';
+  } else if (c === 'ios-other') {
+    h1 = cs ? 'Přidej Auroru<br>na plochu.' : 'Add Aurora to your<br>Home Screen.';
+    p = cs ? 'V prohlížeči je to jen web. Z plochy funguje jako appka: na celou obrazovku, offline a s upozorněními.' : 'In the browser it is just a website. From the Home Screen it works like an app.';
+    steps = step(1, cs ? 'Klepni na <b>Sdílet</b> v adresním řádku' : 'Tap <b>Share</b> in the address bar', shareI) + step(2, cs ? 'Vyber <b>Přidat na plochu</b>' : 'Choose <b>Add to Home Screen</b>', plusI) + step(3, cs ? 'Spouštěj z <b>ikony</b>' : 'Open it from the <b>icon</b>', app);
+    top = upR(cs ? 'Sdílet je nahoře' : 'Share is at the top');
+    foot = '<button class="lnk" data-a="installSkip">' + esc(cs ? 'Pokračovat v prohlížeči' : 'Continue in the browser') + '</button>';
+  } else {
+    h1 = cs ? 'Přidej Auroru<br>na plochu.' : 'Add Aurora to your<br>Home Screen.';
+    p = cs ? 'V Safari je to jen web. Z plochy funguje jako appka: na celou obrazovku, offline a s upozorněními.' : 'In Safari it is just a website. From the Home Screen it works like an app: full screen, offline and with notifications.';
+    steps = step(1, cs ? 'Klepni na <b>Sdílet</b> <small>(nebo ⋯ → Sdílet)</small>' : 'Tap <b>Share</b> <small>(or ⋯ → Share)</small>', shareI)
+      + step(2, cs ? 'Sjeď dolů na <b>Přidat na plochu</b> <small>(skryté pod Zobrazit další)</small>' : 'Scroll to <b>Add to Home Screen</b> <small>(under Show more)</small>', plusI)
+      + step(3, cs ? 'Nech zapnuté <b>Otevřít jako webovou aplikaci</b> → Přidat' : 'Keep <b>Open as Web App</b> on → Add', togI);
+    foot = '<button class="lnk" data-a="installSkip">' + esc(cs ? 'Pokračovat v prohlížeči' : 'Continue in the browser') + '</button>' + down(cs ? 'Sdílet je dole v Safari' : 'Share is at the bottom of Safari');
+  }
+  el.innerHTML = top + '<div class="iin"><img class="iicon" src="icon-180.png" alt=""><h1>' + h1 + '</h1><p>' + esc(p) + '</p><div class="isteps">' + steps + '</div></div><div class="ifoot">' + foot + '</div>';
+  el.setAttribute('aria-label', h1.replace(/<br>/g, ' '));
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('on'));
+  const appURL = () => { const u = new URL(location.href); const j = u.searchParams.get('join'); u.search = ''; u.hash = ''; if (j) u.searchParams.set('join', j); return u.toString(); };
   ACT.installSkip = () => { try { localStorage.setItem('aurBrowser', '1'); } catch (e) {} el.classList.remove('on'); setTimeout(() => el.remove(), 400); done && done(); };
+  ACT.installCopy = async () => { try { await navigator.clipboard.writeText(appURL()); toast(esc(cs ? 'Odkaz zkopírovaný. Vlož ho do Safari.' : 'Link copied. Paste it into Safari.')); } catch (e) { toast(esc(appURL())); } };
+  ACT.installChrome = () => { const u = new URL(appURL()); location.href = 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(u.href) + ';end'; };
+  ACT.installBip = async () => { const e = window.AUR_BIP; if (!e) { toast(esc(cs ? 'Menu ⋮ → Přidat na plochu' : 'Menu ⋮ → Add to Home screen')); return; } e.prompt(); try { await e.userChoice; } catch (er) {} window.AUR_BIP = null; ACT.installSkip(); };
 }
 
 /* ---------- 2. tips in context (Apple: ask when it makes sense) ---------- */

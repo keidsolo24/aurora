@@ -341,6 +341,7 @@ async function chSync(ch) {
   try {
     const r = await chPull(ch); changed = r.changed || r.media;
     if (ch.kicked || ch.gone) {
+      if (ch.kicked && !ch.gone) (S.kickedSp = S.kickedSp || {})[ch.sp] = { sp: ch.sp, secret: ch.secret, kind: ch.kind, ref: ch.ref }; // keep its key in my sync, so a removed old id never takes the card from my other devices
       const card = ch.kind === 'card' ? cardById(ch.ref) : null; const nm = card ? card.name : '';
       chDropLocal(ch); await rawSave(); render();
       toast(esc(lang() === 'cs' ? (ch.gone ? 'Karta ' + nm + ' byla smazána' : 'Už nejsi v kartě ' + nm) : (ch.gone ? 'Card ' + nm + ' was deleted' : 'You are no longer in ' + nm)));
@@ -566,13 +567,13 @@ ACT.spDeleteAll = el => {
 };
 ACT.spRemove = el => {
   const cs = lang() === 'cs'; const c = cardById(V.card); const ch = c ? chOfCard(c) : null; if (!ch) return;
-  const m = members(ch).find(x => x.id === el.dataset.k); if (!m) return;
+  const m = members(ch).find(x => x.id === el.dataset.k); if (!canRemove(ch, m)) return;
   confirmSheet(cs ? 'Odebrat ' + m.name + (m.login ? ' (@' + m.login + ')' : '') + ' z karty?' : 'Remove ' + m.name + ' from the card?', cs ? 'Odebrat' : 'Remove', () => removeMember(ch, m.id));
 };
 /* v19.5: the owner of a shared plan can remove people from it too (e.g. an old duplicate of someone) */
 ACT.spRemoveItem = el => {
-  const cs = lang() === 'cs'; const i = A && A.editId ? itemById(A.editId) : null; const ch = i ? chOfItem(i) : null; if (!ch || ch.owner !== meId()) return;
-  const m = members(ch).find(x => x.id === el.dataset.k); if (!m || m.me) return;
+  const cs = lang() === 'cs'; const i = A && A.editId ? itemById(A.editId) : null; const ch = i ? chOfItem(i) : null; if (!ch) return;
+  const m = members(ch).find(x => x.id === el.dataset.k); if (!canRemove(ch, m)) return;
   const back = A.editId;
   closeSheet(true);
   setTimeout(() => confirmSheet(cs ? 'Odebrat ' + m.name + (m.login ? ' (@' + m.login + ')' : '') + ' z „' + i.t + '“?' : 'Remove ' + m.name + ' from "' + i.t + '"?', cs ? 'Odebrat' : 'Remove', async () => { await removeMember(ch, m.id); toast(esc(cs ? m.name + ' odebrán/a' : m.name + ' removed')); }), 330);
@@ -626,12 +627,21 @@ function spoluNews(c) {
   return '<div class="sec"><span class="cap" style="display:flex;justify-content:space-between">' + esc(cs ? 'Novinky' : 'News') + '<span class="muted" style="letter-spacing:0;text-transform:none;font:500 12px/1 Inter">' + esc(cs ? 'jen v kartě' : 'this card only') + '</span></span><section class="frost solid" style="border-radius:24px;padding:2px 14px">'
     + list.map(a => { const w = (ch.alias || {})[a.who] || a.who; const m = ms.find(x => x.id === w) || { name: '?', ini: '?', color: '#9fb3c4' }; return '<div class="pact">' + avHTML(m, 30) + '<span class="tx"><span>' + esc(evText(a, m.name, ch, false, m.me)) + '</span><small>' + esc(agoText(a.ts)) + '</small></span>' + (a.k === 'done' ? '<span style="color:var(--green)">' + ico('check', 16, 2.6) + '</span>' : '') + '</div>'; }).join('') + '</section></div>';
 }
+/* who may remove whom: the owner; and when the owner is an old id without an account (an install that is gone),
+   anyone with an account may remove people without one (old duplicates) */
+function canRemove(ch, m) {
+  if (!ch || !m || m.me) return false;
+  if (ch.owner === meId()) return true;
+  if (!(typeof accOn === 'function' && accOn())) return false;
+  const own = members(ch).find(x => x.owner);
+  return (!own || !own.login) && !m.login;
+}
 function sinceText(ts) { if (!ts) return ''; const cs = lang() === 'cs'; const d = new Date(ts); return (cs ? 'od ' : 'since ') + d.getDate() + '. ' + (d.getMonth() + 1) + '.'; }
 function spoluPeople(c) {
   const cs = lang() === 'cs'; const ch = chOfCard(c); const ms = members(ch); const iOwn = ch.owner === meId();
   return '<div class="sec"><span class="cap">' + esc((cs ? 'Lidé · ' : 'People · ') + ms.length + ' / ' + MAXP) + '</span><section class="grp frost solid">'
     + ms.map(m => { const n = memberWeek(c.id, m.id).filter(Boolean).length;
-      return '<div class="srow pmem">' + avHTML(m, 34) + '<span class="tx">' + esc(m.me ? (cs ? 'Ty' : 'You') : m.name) + '<small>' + esc([m.login ? '@' + m.login : '', m.owner ? (cs ? 'založil/a kartu' : 'created the card') : sinceText(m.joined), c.type === 'habit' ? n + '/' + goalOf(c) + (cs ? ' tento týden' : ' this week') : ''].filter(Boolean).join(' · ')) + '</small></span>' + (iOwn && !m.me ? '<button class="r muted" data-a="spRemove" data-k="' + m.id + '" style="font:400 13.5px/1 Inter">' + esc(cs ? 'Odebrat' : 'Remove') + '</button>' : '') + '</div>'; }).join('')
+      return '<div class="srow pmem">' + avHTML(m, 34) + '<span class="tx">' + esc(m.me ? (cs ? 'Ty' : 'You') : m.name) + '<small>' + esc([m.login ? '@' + m.login : '', m.owner ? (cs ? 'založil/a kartu' : 'created the card') : sinceText(m.joined), c.type === 'habit' ? n + '/' + goalOf(c) + (cs ? ' tento týden' : ' this week') : ''].filter(Boolean).join(' · ')) + '</small></span>' + (canRemove(ch, m) ? '<button class="r muted" data-a="spRemove" data-k="' + m.id + '" style="font:400 13.5px/1 Inter">' + esc(cs ? 'Odebrat' : 'Remove') + '</button>' : '') + '</div>'; }).join('')
     + (ms.length < MAXP ? '<button class="srow" data-a="spInvite" data-id="' + c.id + '"><span class="ci" style="width:34px;height:34px;border-radius:17px;border:0;background:rgba(255,255,255,.08)">' + ico('plus', 16, 2.4) + '</span><span class="tx">' + esc(cs ? 'Pozvat další' : 'Invite more') + '</span><span class="r">' + ico('chev', 15, 2.2) + '</span></button>' : '')
     + '</section><section class="grp frost" style="margin-top:10px"><button class="srow red" data-a="spLeave" data-id="' + c.id + '">' + ico('leave', 16, 2) + esc(cs ? 'Opustit kartu' : 'Leave card') + '</button>' + (iOwn ? '<button class="srow red" data-a="spDeleteAll" data-id="' + c.id + '">' + ico('trash', 16, 2) + esc(cs ? 'Smazat kartu pro všechny' : 'Delete for everyone') + '</button>' : '') + '</section>'
     + '<div class="muted" style="font:400 12.5px/1.45 Inter;margin:10px 4px 0">' + esc(cs ? 'Všichni vidíte všechno v této kartě: úkoly, plán, poznámku, fotky a kdo co splnil. Nic jiného z vaší Aurory.' : 'Everyone sees everything in this card: tasks, plan, note, photos and who did what. Nothing else.') + '</div></div>';

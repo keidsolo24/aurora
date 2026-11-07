@@ -31,8 +31,8 @@
 <link rel="icon" href="icon-192.png">
 <link rel="preload" href="fonts/inter-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app.css?v=195">
-<link rel="stylesheet" href="desktop.css?v=195">
+<link rel="stylesheet" href="app.css?v=1951">
+<link rel="stylesheet" href="desktop.css?v=1951">
 <style>#launch{position:fixed;inset:0;z-index:200;background:#86c9de center/cover no-repeat;transition:opacity .65s cubic-bezier(.2,.8,.2,1),filter .65s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);cursor:pointer}#launch video{width:100%;height:100%;object-fit:cover;display:block}#launch.out{opacity:0;filter:blur(14px);transform:scale(1.04);pointer-events:none}@media (prefers-reduced-motion:reduce){#launch{transition:opacity .25s}#launch.out{filter:none;transform:none}}#launch .tap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);display:flex;justify-content:center;pointer-events:none}#launch .tap span{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 22px;border-radius:999px;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;color:#fff;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 10px 30px rgba(0,40,70,.18);opacity:0;transform:translateY(10px) scale(.98);transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1)}#launch .tap i{width:8px;height:8px;border-radius:4px;background:#fff;box-shadow:0 0 12px #fff}#launch.wait .tap span{opacity:1;transform:none}#launch.wait .tap i{animation:lTap 2.2s ease-in-out infinite}@keyframes lTap{50%{opacity:.35;transform:scale(.7)}}#launch:focus{outline:none}#launch:focus-visible .tap span{box-shadow:inset 0 0 0 2px #fff}@media (prefers-reduced-motion:reduce){#launch.wait .tap i{animation:none}}#promo{position:fixed;inset:0;z-index:210;background:#060b1c;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s cubic-bezier(.2,.8,.2,1)}#promo.on{opacity:1}#promo.out{opacity:0;pointer-events:none}#promo video{width:100%;height:100%;object-fit:contain;display:block}#promo button{position:absolute;z-index:2;height:40px;padding:0 16px;border:0;border-radius:999px;font:600 14px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(10,18,32,.4);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);cursor:pointer}#promo .pskip{right:16px;top:calc(env(safe-area-inset-top,0px) + 12px)}#promo .psnd{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(-50%)}</style>
 </head>
 <body>
@@ -47,7 +47,7 @@
   try { last = +localStorage.getItem('aur' + 'Seen') || 0; ver = localStorage.getItem('aur' + 'V') || ''; } catch (e) {}
   var fresh = !last && !ver; /* nobody has opened Aurora in this browser before */
   var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var full = Date.now() - last > 36e5 || ver !== '19.5';
+  var full = Date.now() - last > 36e5 || ver !== '19.5.1';
   var ended = false, waiting = false;
   function done() { if (ended) return; ended = true; L.classList.add('out'); L.classList.remove('wait'); try { dispatchEvent(new Event('aurlaunch')); } catch (e) {} removeEventListener('keydown', key); setTimeout(function () { L.remove(); }, 700); }
   /* full intro: it stays on the logo until the person taps */
@@ -55,7 +55,7 @@
     L.classList.add('wait'); L.setAttribute('role', 'button'); L.setAttribute('aria-hidden', 'false'); L.setAttribute('aria-label', T ? T.textContent : 'Vstoupit'); L.tabIndex = 0; try { L.focus({ preventScroll: true }); } catch (e) {} }
   function quick() { if (V) V.remove(); L.style.backgroundImage = 'url(' + base + '-last.jpg)'; setTimeout(done, RM ? 120 : 380); }
   function key(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } else if (e.key === 'Escape') { e.preventDefault(); done(); } }
-  function mark() { try { localStorage.setItem('aur' + 'Seen', Date.now()); localStorage.setItem('aur' + 'V', '19.5'); } catch (e) {} }
+  function mark() { try { localStorage.setItem('aur' + 'Seen', Date.now()); localStorage.setItem('aur' + 'V', '19.5.1'); } catch (e) {} }
   /* v19.1: for new people the 26 s video plays once, right after the tap (the tap is what lets it play with sound) */
   function promo() {
     try { if (localStorage.getItem('aur' + 'Promo')) return; localStorage.setItem('aur' + 'Promo', '1'); } catch (e) { return; }
@@ -106,19 +106,19 @@
 <input type="file" id="fileIn" accept="image/*,video/*" hidden>
 <input type="file" id="wallIn" accept="image/*" hidden>
 <input type="file" id="restoreIn" accept="application/json,.json" hidden>
-<script src="js/core.js?v=195"></script>
-<script src="js/ui.js?v=195"></script>
-<script src="js/screens.js?v=195"></script>
-<script src="js/sheets.js?v=195"></script>
-<script src="js/push.js?v=195"></script>
-<script src="js/sync.js?v=195"></script>
-<script src="js/spolu.js?v=195"></script>
-<script src="js/account.js?v=195"></script>
-<script src="js/tips.js?v=195"></script>
-<script src="js/home19.js?v=195"></script>
-<script src="js/beta.js?v=195"></script>
-<script src="js/app.js?v=195"></script>
-<script src="js/coach.js?v=195"></script>
-<script src="js/desktop.js?v=195"></script>
+<script src="js/core.js?v=1951"></script>
+<script src="js/ui.js?v=1951"></script>
+<script src="js/screens.js?v=1951"></script>
+<script src="js/sheets.js?v=1951"></script>
+<script src="js/push.js?v=1951"></script>
+<script src="js/sync.js?v=1951"></script>
+<script src="js/spolu.js?v=1951"></script>
+<script src="js/account.js?v=1951"></script>
+<script src="js/tips.js?v=1951"></script>
+<script src="js/home19.js?v=1951"></script>
+<script src="js/beta.js?v=1951"></script>
+<script src="js/app.js?v=1951"></script>
+<script src="js/coach.js?v=1951"></script>
+<script src="js/desktop.js?v=1951"></script>
 </body>
 </html>

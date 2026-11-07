@@ -161,11 +161,12 @@ async function boot() {
   if (typeof deskCheck === 'function') deskCheck();
   if (S.wall === 'ember' || S.wall === 'night') { S.wall = 'aurora'; save(); applyLook(); }
   const startOnb = () => { if (!S.onboarded && !q.get('join')) { showWelcome(); const rv = () => { const w = $('#welcome'); if (w) { w.classList.remove('reveal'); void w.offsetWidth; w.classList.add('reveal'); } }; if (document.getElementById('launch')) addEventListener('aurlaunch', rv, { once: true }); else rv(); } };
-  if (!q.get('join') && typeof needInstall === 'function' && needInstall()) showInstall(startOnb); else startOnb();
+  const inApp = typeof installCtx === 'function' && installCtx().startsWith('inapp'); // v19.5.1: inside Instagram even an invite waits for Safari / Chrome
+  if ((!q.get('join') || inApp) && typeof needInstall === 'function' && needInstall()) showInstall(startOnb); else startOnb();
   if (q.get('tab') && RENDER[q.get('tab')]) go(q.get('tab'));
   if ((q.get('item') || q.get('card')) && S.onboarded) { const href = location.href; setTimeout(() => openDeepLink(href), 300); }
   if (q.has('item') || q.has('d') || q.has('card')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
-  if (typeof spoluBoot === 'function') spoluBoot();
+  if (typeof spoluBoot === 'function' && !(inApp && !isStandalone())) spoluBoot();
   setTimeout(() => pushBoot(), 1200);
   setTimeout(() => { syncBadge(); if (S.onboarded && !accOn()) accBoot(); else if (syncOn()) syncNow(); }, 900);
   refreshOldFlag();
