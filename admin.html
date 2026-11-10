@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Aurora · feedback</title>
+<title>Aurora · admin</title>
 <link rel="icon" href="app/icon-192.png">
 <style>
 @font-face{font-family:'Bricolage Grotesque';font-weight:800;font-display:swap;src:url(app/fonts/bricolage-grotesque-latin-800-normal.woff2) format('woff2')}
@@ -40,6 +40,29 @@ button,input{font:inherit;color:inherit}
 .act{display:flex;gap:8px}
 .act button{height:36px;padding:0 14px;border-radius:999px;border:0;background:rgba(243,234,216,.1);cursor:pointer;font-size:13px;font-weight:600}
 .empty{color:var(--ink2);padding:40px 0;text-align:center}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;margin:6px 0 18px}
+.tabs button{height:40px;padding:0 18px;border-radius:999px;border:0;background:none;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink2)}
+.tabs button.on{background:var(--ink);color:#0e1a2b}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.st{border-radius:22px;padding:16px 18px}
+.st b{display:block;font:800 36px/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.03em}
+.st span{display:block;margin-top:8px;color:var(--ink3);font-size:12.5px}
+.ub{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.ub .q{flex:1;min-width:180px;height:40px;border-radius:999px;border:0;padding:0 16px;background:rgba(243,234,216,.08);outline:0}
+.ub .cp{height:40px;padding:0 16px;border-radius:999px;border:0;background:var(--ink);color:#0e1a2b;font-weight:600;font-size:14px;cursor:pointer}
+.ut{border-radius:24px;overflow:hidden}
+.ur .ls{display:none}
+.empty{padding:28px 16px;color:var(--ink3);text-align:center}
+.ur{display:grid;grid-template-columns:40px minmax(0,1.6fr) .9fr 1fr .9fr .6fr .5fr;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid rgba(243,234,216,.08);font-size:14px}
+.ur:first-child{border-top:0}
+.ur.h{color:var(--ink3);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.av{width:34px;height:34px;border-radius:17px;display:grid;place-items:center;font:800 15px/1 'Bricolage Grotesque',sans-serif;color:#0e1a2b}
+.nm b{display:block;font-weight:600}.nm small{color:var(--ink3);font-size:12.5px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.dv{color:var(--ink2)}
+.ok{color:#8be0b0;font-weight:600}
+@media (max-width:900px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ur{grid-template-columns:36px minmax(0,1fr) auto}.ur>:nth-child(n+4){display:none}.ur .ls{display:block}}
 #big{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
 #big img{max-width:100%;max-height:100%;border-radius:12px}
 </style>
@@ -47,7 +70,8 @@ button,input{font:inherit;color:inherit}
 <body>
 <div class="wrap">
   <img src="app/logo.svg" alt="aurora" style="height:26px">
-  <h1>Feedback z bety</h1>
+  <h1 id="h1">Admin</h1>
+  <div class="tabs g" id="tabs" hidden><button data-t="fb" class="on">Feedback</button><button data-t="us">Uživatelé</button></div>
   <p class="sub" id="sub">Zprávy od testerů, nejnovější nahoře.</p>
   <div id="login" class="login g" hidden>
     <label for="key">Admin klíč <span style="color:var(--ink3)">(proměnná ADMIN_KEY ve Workeru)</span></label>
@@ -59,13 +83,18 @@ button,input{font:inherit;color:inherit}
     <div class="bar" id="bar"></div>
     <div class="list" id="list"></div>
   </div>
+  <div id="users" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="ub"><input class="q" id="uq" placeholder="Hledat jméno nebo @login"><button class="cp" id="ucopy">Kopírovat pro Notion</button><button class="cp g" id="ureload" style="background:rgba(243,234,216,.1);color:var(--ink)">Obnovit</button></div>
+    <div class="ut g" id="ut"></div>
+  </div>
 </div>
 <div id="big"><img alt=""></div>
 <script>
 const SERVER = 'https://calm-brook-f448.keidaurora.workers.dev';
 const KINDS = { all: 'Vše', open: 'Nevyřešené', bug: 'Chyby', idea: 'Nápady', love: 'Pochvaly' };
 const LBL = { bug: 'Chyba', idea: 'Nápad', love: 'Pochvala' };
-let items = [], filter = 'open', key = '';
+let items = [], filter = 'open', key = '', tab = 'fb', users = null, uq = '', unow = Date.now();
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 try { key = localStorage.getItem('aurAdminKey') || ''; } catch (e) {}
@@ -73,8 +102,8 @@ async function api(path, body) { const r = await fetch(SERVER + path, { method: 
 async function load() {
   if (!key) { $('#login').hidden = false; $('#main').hidden = true; return; }
   $('#err').textContent = '';
-  try { const j = await api('/fb/list'); items = j.items || []; try { localStorage.setItem('aurAdminKey', key); } catch (e) {} $('#login').hidden = true; $('#main').hidden = false; draw(); }
-  catch (e) { $('#login').hidden = false; $('#main').hidden = true; $('#err').textContent = e.message === 'forbidden' ? 'Špatný klíč.' : (key ? 'Server neodpovídá: ' + e.message : ''); }
+  try { const j = await api('/fb/list'); items = j.items || []; try { localStorage.setItem('aurAdminKey', key); } catch (e) {} $('#login').hidden = true; $('#tabs').hidden = false; show(); }
+  catch (e) { $('#login').hidden = false; $('#main').hidden = true; $('#users').hidden = true; $('#tabs').hidden = true; $('#err').textContent = e.message === 'forbidden' ? 'Špatný klíč.' : (key ? 'Server neodpovídá: ' + e.message : ''); }
 }
 function ago(at) { const d = new Date(at); return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) + ' ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); }
 function device(m) { const ua = m.ua || ''; const os = /iPhone/.test(ua) ? 'iPhone' : /iPad|Macintosh.*Mobile/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'zařízení'; return os + ' · ' + (m.w || '?') + '×' + (m.h || '?') + (m.standalone ? ' · z plochy' : ' · v prohlížeči') + (m.push ? ' · notifikace zap.' : ''); }
@@ -89,9 +118,55 @@ function draw() {
       + '<div class="act"><button data-done="' + i.id + '" data-v="' + (i.done ? 0 : 1) + '">' + (i.done ? 'Vrátit mezi nevyřešené' : 'Hotovo, vyřešeno') + '</button></div></article>'; }).join('') : '<div class="empty">Nic tu není.</div>';
   $('#sub').textContent = items.length + ' zpráv celkem · ' + items.filter(i => !i.done).length + ' nevyřešených';
 }
+/* ---------- v19.5.2 · Users tab ---------- */
+function show() {
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  $('#main').hidden = tab !== 'fb'; $('#users').hidden = tab !== 'us';
+  if (tab === 'fb') { $('#h1').textContent = 'Feedback'; draw(); } else { $('#h1').textContent = 'Uživatelé'; loadUsers(); }
+}
+const $$ = s => [...document.querySelectorAll(s)];
+async function loadUsers(force) {
+  if (users && !force) return drawUsers();
+  $('#sub').textContent = 'Načítám…';
+  try { const j = await api('/a/list'); users = j.users || []; unow = j.now || Date.now(); drawUsers(); }
+  catch (e) { $('#sub').textContent = e.message === 'not found' ? 'Server ještě nemá /a/list: nasaď nový Worker (v19.5.2).' : 'Nepovedlo se načíst: ' + e.message; }
+}
+const DAY = 864e5;
+const PLAT = { iphone: 'iPhone', ipad: 'iPad', android: 'Android', windows: 'PC', mac: 'Mac', other: 'jiné' };
+const COL = ['#8be0b0', '#ff8fb8', '#7fb3ff', '#f0a44b', '#f3ead8', '#b08cff', '#4cc9d9'];
+function dd(at) { if (!at) return '—'; const d = new Date(at); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; }
+function rel(at) {
+  if (!at) return 'zatím ne'; const m = Math.round((unow - at) / 6e4);
+  if (m < 5) return 'teď'; if (m < 60) return 'před ' + m + ' min'; const h = Math.round(m / 60); if (h < 24) return 'před ' + h + ' h';
+  const d = Math.round(h / 24); return d === 1 ? 'včera' : 'před ' + d + ' dny';
+}
+function devs(u) { const seen = new Set(); return u.devs.map(d => (PLAT[d.plat] || d.plat || '?') + (d.mode === 'app' && /iphone|ipad|android/.test(d.plat) ? '' : d.mode === 'web' && /iphone|ipad|android/.test(d.plat) ? ' (web)' : '')).filter(x => !seen.has(x) && seen.add(x)).join(' · ') || '—'; }
+const verOf = u => (u.devs.slice().sort((a, b) => (b.last || 0) - (a.last || 0))[0] || {}).ver || '—';
+function drawUsers() {
+  const all = users || []; const act = n => all.filter(u => u.last && unow - u.last < n * DAY).length;
+  const nd = all.reduce((s, u) => s + u.devs.length, 0);
+  const st = [[all.length, 'účtů celkem'], [act(1), 'aktivní dnes'], [act(7), 'aktivní za 7 dní'], [all.filter(u => unow - (u.created || 0) < 7 * DAY).length, 'nových za 7 dní'], [nd, 'zařízení · ' + all.reduce((s, u) => s + u.devs.filter(d => /iphone|android/.test(d.plat)).length, 0) + ' telefon'], [all.filter(u => u.spolu).length, 've Spolu']];
+  $('#stats').innerHTML = st.map(([b, t]) => '<div class="st g"><b>' + b + '</b><span>' + esc(t) + '</span></div>').join('');
+  const q = uq.trim().toLowerCase().replace(/^@/, '');
+  const rows = all.filter(u => !q || u.login.includes(q) || (u.name || '').toLowerCase().includes(q));
+  $('#ut').innerHTML = '<div class="ur h"><span></span><span>Jméno · login</span><span>Od</span><span>Naposledy</span><span>Zařízení</span><span>Spolu</span><span>Verze</span></div>'
+    + (rows.length ? rows.map((u, k) => { const fresh = u.last && unow - u.last < DAY;
+      return '<div class="ur"><span class="av" style="background:' + COL[(all.indexOf(u)) % COL.length] + '">' + esc((u.name || u.login)[0].toUpperCase()) + '</span><span class="nm"><b>' + esc(u.name || '—') + '</b><small>@' + esc(u.login) + '<span class="ls"> · ' + esc(rel(u.last)) + '</span></small></span><span>' + dd(u.created) + '</span><span><span class="dot" style="background:' + (fresh ? '#8be0b0' : 'rgba(243,234,216,.3)') + '"></span>' + esc(rel(u.last)) + '</span><span class="dv">' + esc(devs(u)) + '</span><span class="ok">' + (u.spolu ? '✓ ' + u.spolu : '') + '</span><span class="dv">' + esc(verOf(u)) + '</span></div>'; }).join('')
+      : '<div class="empty">' + (all.length ? 'Nikdo neodpovídá hledání.' : 'Zatím žádné účty.') + '</div>');
+  $('#sub').textContent = 'Účty v Auroře. Server vidí jen login, jméno, zařízení a kdy byl kdo naposledy aktivní, nikdy obsah. Aktivita se počítá od verze 19.5.2.';
+}
+function tsv() {
+  const head = ['Jméno', 'Login', 'Účet od', 'Naposledy', 'Zařízení', 'Spolu', 'Verze'];
+  const iso = at => at ? new Date(at).toISOString().slice(0, 10) : '';
+  return [head].concat((users || []).map(u => [u.name || '', '@' + u.login, iso(u.created), iso(u.last), devs(u), u.spolu ? 'ano' : 'ne', verOf(u)])).map(r => r.map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+}
+$('#uq').addEventListener('input', e => { uq = e.target.value; drawUsers(); });
+$('#ucopy').onclick = async () => { const b = $('#ucopy'); try { await navigator.clipboard.writeText(tsv()); b.textContent = 'Zkopírováno ✓'; } catch (e) { b.textContent = 'Nejde kopírovat'; } setTimeout(() => { b.textContent = 'Kopírovat pro Notion'; }, 2200); };
 document.addEventListener('click', async e => {
+  const tb = e.target.closest('#tabs [data-t]'); if (tb) { tab = tb.dataset.t; show(); return; }
   const f = e.target.closest('[data-f]'); if (f) { filter = f.dataset.f; draw(); return; }
   if (e.target.id === 'reload') { load(); return; }
+  if (e.target.id === 'ureload') { loadUsers(true); return; }
   const d = e.target.closest('[data-done]'); if (d) { const id = +d.dataset.done, v = +d.dataset.v; await api('/fb/done', { id, done: v }); const it = items.find(x => x.id === id); if (it) it.done = v; draw(); return; }
   if (e.target.classList.contains('img')) { $('#big img').src = e.target.src; $('#big').style.display = 'flex'; return; }
   if (e.target.closest('#big')) $('#big').style.display = 'none';

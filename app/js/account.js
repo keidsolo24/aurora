@@ -286,3 +286,16 @@ ACT.acLogout = () => {
     closeSettings(true); applyLook(); buildNav(); go('home'); render(); showWelcome();
   });
 };
+
+/* v19.5.2 · admin Users tab: once a day each logged-in device says "I was here" (version, platform). No content. */
+function accSeen() {
+  if (typeof accOn !== 'function' || !accOn() || !syncOn() || !S.sync.dev) return;
+  const k = S.acc.login + '|' + T() + '|' + VERSION; let last = '';
+  try { last = localStorage.getItem('aurSeenA') || ''; } catch (e) {}
+  if (last === k) return;
+  const ua = navigator.userAgent || '';
+  const plat = /iPhone|iPod/.test(ua) ? 'iphone' : (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'ipad' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : 'other';
+  const mode = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches) ? 'app' : 'web';
+  syncApi('/a/seen', { login: S.acc.login, sp: S.sync.sp, secret: S.sync.secret, dev: S.sync.dev, ver: VERSION, plat, mode })
+    .then(() => { try { localStorage.setItem('aurSeenA', k); } catch (e) {} }).catch(() => {});
+}

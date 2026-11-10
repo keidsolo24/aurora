@@ -162,7 +162,7 @@ ACT.fbKind = el => { FB.kind = el.dataset.k; $$('#sheet .fbk .chip').forEach(b =
 ACT.fbImgX = () => { FB.img = null; fbRefresh(); };
 ACT.feedback = () => {
   const cs = lang() === 'cs';
-  openSheet({ title: 'Feedback', leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: cs ? 'Odeslat' : 'Send', rightDisabled: FB.text.trim().length < 3, body: fbBody(), mount: fbMount, cls: 'addsheet fbsheet', dirty: () => FB.text.trim().length > 2, onSave: fbSend });
+  openSheet({ title: 'Feedback', leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: cs ? 'Odeslat' : 'Send', rightDisabled: FB.text.trim().length < 3, body: fbBody(), mount: fbMount, cls: 'addsheet fbsheet', dirty: () => FB.text.trim().length > 2, restore: () => ACT.feedback(), onSave: fbSend });
   setTimeout(() => { const ta = $('#fbText'); ta && ta.focus(); }, 380);
 };
 async function fbSend() {

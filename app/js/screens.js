@@ -5,14 +5,15 @@ const fmtDur = m => m >= 600 ? Math.round(m / 60) + 'h' : Math.floor(m / 60) + '
 function deadlineText(dl) { const n = daysBetween(T(), dl); if (n === 0) return t('dueToday'); if (n === 1) return t('tomorrow').toLowerCase(); if (n < 0) return t('overdueBy', -n); return t('daysLeft', n); }
 function ruleOf(card) { if (card.type === 'habit') return goalText(goalOf(card)); const r = cardItems(card.id).find(i => i.repeat); return r ? repText(r) : ''; }
 function kickOf(card) { return '<span class="kick cap" style="color:var(--ink)"><span class="led" style="--c:' + card.color + '"></span>' + esc(card.type === 'habit' ? t('habit') : t('project')) + (card.type === 'habit' && ruleOf(card) ? ' · ' + esc(ruleOf(card)) : '') + '</span>'; }
-function checkBtn(i, d, color) { const on = isDone(i, d); return '<button class="c0' + (on ? ' on' : '') + '" style="--c:' + (color || cardColor(i.card)) + '" data-a="toggle" data-id="' + i.id + '" data-d="' + d + '" aria-label="' + esc(t('done')) + '" aria-pressed="' + on + '">' + ico('check', 14, 3) + '</button>'; }
+function checkBtn(i, d, color) { const on = isDone(i, d); return '<button class="c0' + (on ? ' on' : '') + '" style="--c:' + (color || itemColor(i)) + '" data-a="toggle" data-id="' + i.id + '" data-d="' + d + '" aria-label="' + esc(t('done')) + '" aria-pressed="' + on + '">' + ico('check', 14, 3) + '</button>'; }
 function itemRow(i, d, opts = {}) {
   const on = isDone(i, d); let right = '';
   if (opts.right !== undefined) right = opts.right;
   else if (!i.repeat && !i.date && !on) right = '<button class="r warn" data-a="when" data-id="' + i.id + '">' + esc(t('whenAdd')) + '</button>';
   else { const late = !i.repeat && i.date && i.date < T() && !on; right = '<span class="r' + (late ? ' late' : '') + '">' + esc(whenLabel(i)) + '</span>'; }
   const sub = opts.sub !== undefined ? opts.sub : itemSub(i, opts.withCard !== false);
-  return '<div class="irow' + (on ? ' done' : '') + '" role="button" tabindex="0" data-a="openItem" data-id="' + i.id + '">' + checkBtn(i, d) + '<span class="tx"><span>' + esc(i.t) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + right + '</div>';
+  const mu = i.mom && typeof momThumb === 'function' ? momThumb(S.moments.find(x => x.id === i.mom)) : '';
+  return '<div class="irow' + (on ? ' done' : '') + '" role="button" tabindex="0" data-a="openItem" data-id="' + i.id + '">' + checkBtn(i, d) + (mu ? '<img class="imth" src="' + mu + '" alt="">' : '') + '<span class="tx"><span>' + esc(i.t) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + right + '</div>';
 }
 function thumbHTML(m) {
   const c = cardColor(m.card);
@@ -30,7 +31,7 @@ function homeModel() {
   const timed = itemsOn(d).filter(i => i.time);
   const nextT = timed.find(i => !isDone(i, d) && tmin(i.time) + (i.dur || 45) > nm) || null;
   const nextAny = nextT || list.find(i => !isDone(i, d) && !i.time) || list.find(i => !isDone(i, d)) || null;
-  const arcs = timed.map(i => { const s = tmin(i.time), e = s + (i.dur || 45); const st = isDone(i, d) ? 'done' : i === nextT ? 'next' : e < nm ? 'past' : 'later'; return { id: i.id, s, e, c: cardColor(i.card), st, t: i.t, time: i.time }; });
+  const arcs = timed.map(i => { const s = tmin(i.time), e = s + (i.dur || 45); const st = isDone(i, d) ? 'done' : i === nextT ? 'next' : e < nm ? 'past' : 'later'; return { id: i.id, s, e, c: itemColor(i), st, t: i.t, time: i.time }; });
   return { d, nm, list, timed, nextT, nextAny, arcs, doneN: list.filter(i => isDone(i, d)).length };
 }
 function orbText(M) {
@@ -94,11 +95,11 @@ function renderHome() {
   const dots = M.list.slice(0, 12).map(i => '<i class="' + (isDone(i, M.d) ? 'on' : '') + '"></i>').join('');
   const nx = M.nextAny;
   const pill = nx
-    ? '<button class="fp frost grow press" data-a="openItem" data-id="' + nx.id + '"><span class="ic"><span class="led" style="--c:' + cardColor(nx.card) + '"></span></span><span class="pt"><span>' + esc(nx.t) + '</span><small>' + esc([nx.time || (nx.date && nx.date < M.d ? dayName(nx.date) : t('anyTime')), nx.card && cardById(nx.card) ? cardById(nx.card).name : ''].filter(Boolean).join(' · ')) + '</small></span></button><button class="fp frost press" style="padding-right:20px" data-a="homeDone" data-id="' + nx.id + '"><span class="ic">' + ico('check', 18, 2.4) + '</span>' + esc(t('done')) + '</button>'
+    ? '<button class="fp frost grow press" data-a="openItem" data-id="' + nx.id + '"><span class="ic"><span class="led" style="--c:' + itemColor(nx) + '"></span></span><span class="pt"><span>' + esc(nx.t) + '</span><small>' + esc([nx.time || (nx.date && nx.date < M.d ? dayName(nx.date) : t('anyTime')), nx.card && cardById(nx.card) ? cardById(nx.card).name : ''].filter(Boolean).join(' · ')) + '</small></span></button><button class="fp frost press" style="padding-right:20px" data-a="homeDone" data-id="' + nx.id + '"><span class="ic">' + ico('check', 18, 2.4) + '</span>' + esc(t('done')) + '</button>'
     : '<button class="fp frost grow press" data-a="add" data-ctx="today"><span class="ic">' + ico('plus', 18, 2.4) + '</span><span class="pt"><span>' + esc(t('addForToday')) + '</span><small>' + esc(dayShort(M.d)) + '</small></span></button>';
   const rest = M.list.filter(i => !isDone(i, M.d) && i !== nx);
   const then = rest.length
-    ? '<section class="then frost"><span class="cap" style="flex:none">' + esc(t('then')) + '</span><div class="row">' + rest.map(i => '<button class="chip in press" data-a="openItem" data-id="' + i.id + '"><span class="dot" style="--c:' + cardColor(i.card) + '"></span>' + esc(i.t) + (i.time ? '<small>' + i.time + '</small>' : '') + '</button>').join('') + '</div></section>'
+    ? '<section class="then frost"><span class="cap" style="flex:none">' + esc(t('then')) + '</span><div class="row">' + rest.map(i => '<button class="chip in press" data-a="openItem" data-id="' + i.id + '"><span class="dot" style="--c:' + itemColor(i) + '"></span>' + esc(i.t) + (i.time ? '<small>' + i.time + '</small>' : '') + '</button>').join('') + '</div></section>'
     : (M.list.length ? '<section class="then frost"><span class="cap" style="flex:none">' + esc(t('then')) + '</span><span class="muted" style="font:400 13.5px/1 Inter">' + esc(t('nothingElse')) + '</span></section>' : '');
   const tiles = chooseTiles();
   let tl = tiles.map(tileHTML).join('');
@@ -112,7 +113,7 @@ function renderHome() {
     + '<div class="prow">' + pill + '</div></section>'
     + laterHTML(M, nx) + '</div>';
   el._arcs = M.arcs;
-  auraFromCards(nx && nx.card ? cardColor(nx.card) : null);
+  auraFromCards(nx && nx.card ? itemColor(nx) : null);
 }
 let peekT = null;
 ACT.peek = el => {
@@ -130,7 +131,7 @@ ACT.homeDone = el => {
   if (k >= 0 && !RM) { const p = $$('#dialw .arcI')[k]; if (p) p.animate([{ strokeWidth: 6 }, { strokeWidth: 13 }, { strokeWidth: 6 }], { duration: 600, easing: 'cubic-bezier(.3,1.4,.5,1)' }); }
   const ck = el.querySelector('svg path'); if (ck && !RM) ck.animate([{ strokeDasharray: '24', strokeDashoffset: 24 }, { strokeDasharray: '24', strokeDashoffset: 0 }], { duration: 360 });
   toast(esc(t('completed', i.t)), { label: t('undo'), fn: () => { setDone(i, d, false); render(); } });
-  setTimeout(() => { render(); const tl = i.card && $('#s-home .tile[data-id="' + i.card + '"]'); if (tl) pulse(tl, cardColor(i.card)); }, 380);
+  setTimeout(() => { render(); const tl = i.card && $('#s-home .tile[data-id="' + i.card + '"]'); if (tl) pulse(tl, itemColor(i)); }, 380);
 };
 ACT.nudgeAdd = el => { const c = cardById(el.dataset.id); if (!c) return; S.items.push({ id: uid(), t: '10 min · ' + c.name, card: c.id, date: T(), created: T() }); save(); render(); toast(esc(t('planned', t('today')))); };
 
@@ -266,7 +267,7 @@ function renderCard() {
     else if (p.date) ch.push(ico('cal', 13, 2.2) + esc(dayShort(p.date)));
     if (p.time) ch.push(ico('clock', 13, 2.2) + p.time);
     hint.innerHTML = ch.length ? ch.map(x => '<span class="chip in">' + x + '</span>').join('') : '<span class="muted">' + esc(lang() === 'cs' ? 'Bez dne · den přidáš i později' : 'No day · add one later') + '</span>'; hint.hidden = false; };
-  const addIt = () => { const v = inp.value.trim(); if (!v) return; const p = NL(v); const it = { id: uid(), t: stripSpans(v, p.spans) || v, card: c.id, created: T() }; if (p.date) it.date = p.date; if (p.time) { it.time = p.time; it.dur = 45; it.remind = S.push.def != null ? S.push.def : 10; } if (p.repeat) { it.repeat = p.repeat; if (p.repeat === 'days') it.days = p.days; it.doneDates = []; if (!it.date) it.date = T(); } S.items.push(it); save(); const y = el.scrollTop; renderCard(); el.scrollTop = y; const ni = $('#addTaskIn'); ni && ni.focus({ preventScroll: true }); haptic(); toast(esc(it.date || it.repeat ? t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : '')) : t('undated'))); };
+  const addIt = () => { const v = inp.value.trim(); if (!v) return; const p = NL(v); const it = { id: uid(), t: stripSpans(v, p.spans) || v, card: c.id, created: T() }; if (p.date) it.date = p.date; if (p.time) { it.time = p.time; it.dur = p.dur || 45; it.remind = S.push.def != null ? S.push.def : 10; } if (p.repeat) { it.repeat = p.repeat; if (p.repeat === 'days') it.days = p.days; it.doneDates = []; if (!it.date) it.date = T(); } S.items.push(it); save(); const y = el.scrollTop; renderCard(); el.scrollTop = y; const ni = $('#addTaskIn'); ni && ni.focus({ preventScroll: true }); haptic(); toast(esc(it.date || it.repeat ? t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : '')) : t('undated'))); };
   inp.addEventListener('input', paintHint);
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addIt(); } });
   go2.addEventListener('click', e => { e.preventDefault(); addIt(); });
@@ -325,7 +326,7 @@ ACT.boardFilter = el => { V.boardFilter = el.dataset.k; renderBoard(); };
 ACT.boardSearch = () => { V.boardSearch = !V.boardSearch; if (!V.boardSearch) V.boardQ = ''; renderBoard(); if (V.boardSearch) { const q = $('#boardQ'); q && q.focus(); } };
 
 /* ---------------- PLAN ---------------- */
-function dayDots(d) { const cs = [...new Set(itemsOn(d).map(i => cardColor(i.card)))].slice(0, 3); return cs.map(c => '<i style="--c:' + c + '"></i>').join(''); }
+function dayDots(d) { const cs = [...new Set(itemsOn(d).map(i => itemColor(i)))].slice(0, 3); return cs.map(c => '<i style="--c:' + c + '"></i>').join(''); }
 function weekStrip() {
   const ws = V.planWeek; let h = '';
   for (let k = 0; k < 7; k++) { const d = addD(ws, k); h += '<button class="wd' + (d === V.planDay ? ' on' : '') + (d === T() ? ' tdy' : '') + '" data-a="planDay" data-d="' + d + '"><span class="l">' + WD[lang()][k] + '</span><span class="n">' + dOf(d).getDate() + '</span><span class="ds">' + dayDots(d) + '</span></button>'; }
@@ -338,7 +339,7 @@ function weekNav() {
 }
 function trow(i, d, nextId) {
   const on = isDone(i, d); const late = !i.repeat && i.date < T() && !on;
-  return '<div class="trow' + (on ? ' done' : '') + (i.id === nextId ? ' next' : '') + (late ? ' late' : '') + '" role="button" data-a="openItem" data-id="' + i.id + '" style="--c:' + cardColor(i.card) + '"><span class="tm">' + (late ? esc(dayShort(i.date)) : i.time || esc(t('any'))) + '</span><span class="bar"></span><span class="tx"><span>' + esc(i.t) + '</span><small>' + esc([itemSub(i), i.dur && i.time ? i.dur + ' min' : ''].filter(Boolean).join(' · ') || (i.time ? '' : t('anyTime'))) + '</small></span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + checkBtn(i, d) + '</div>';
+  return '<div class="trow' + (on ? ' done' : '') + (i.id === nextId ? ' next' : '') + (late ? ' late' : '') + '" role="button" data-a="openItem" data-id="' + i.id + '" style="--c:' + itemColor(i) + '"><span class="tm">' + (late ? esc(dayShort(i.date)) : i.time || esc(t('any'))) + '</span><span class="bar"></span>' + (i.mom && typeof momThumb === 'function' && momThumb(S.moments.find(x => x.id === i.mom)) ? '<img class="imth" src="' + momThumb(S.moments.find(x => x.id === i.mom)) + '" alt="">' : '') + '<span class="tx"><span>' + esc(i.t) + '</span><small>' + esc([itemSub(i), i.time ? i.time + '–' + endOf(i.time, i.dur) + (i.dur >= 120 ? ' · ' + durLabel(i.dur) : '') : ''].filter(Boolean).join(' · ') || (i.time ? '' : t('anyTime'))) + '</small></span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + checkBtn(i, d) + '</div>';
 }
 function renderPlan() {
   const el = $('#s-plan'); if (!V.planDay) V.planDay = T(); if (!V.planWeek) V.planWeek = weekStart(V.planDay); if (!V.monCursor) V.monCursor = T().slice(0, 7);
@@ -359,20 +360,20 @@ function renderPlan() {
       + '<button class="addday in press" data-a="add" data-date="' + d + '">' + ico('plus', 16, 2.2) + esc(t('addTo', lang() === 'cs' && Math.abs(daysBetween(T(), d)) <= 1 ? dayName(d).toLowerCase() : dayName(d))) + '</button></section>';
     const nd = undatedItems();
     body += '<section class="frost solid nodue" style="border-radius:30px;padding:16px 18px;margin-top:10px"><div style="display:flex;justify-content:space-between"><span class="cap">' + esc(t('noDayYet')) + ' · ' + nd.length + '</span><span class="muted" style="font:400 12px/1 Inter">' + esc(t('fromCards')) + '</span></div>'
-      + (nd.length ? '<div class="chips wrap" style="margin-top:14px">' + nd.map(i => '<button class="chip in" data-a="when" data-drag="' + i.id + '" data-id="' + i.id + '"><span class="dot" style="--c:' + cardColor(i.card) + '"></span>' + esc(i.t) + '</button>').join('') + '</div><div class="muted" style="margin-top:14px;font:400 12.5px/1.35 Inter">' + esc(t('dragHint')) + '</div>' : '<div class="muted" style="margin-top:12px;font:400 13px/1.4 Inter">' + (lang() === 'cs' ? 'Všechno má svůj den.' : 'Everything has a day.') + '</div>') + '</section>';
+      + (nd.length ? '<div class="chips wrap" style="margin-top:14px">' + nd.map(i => '<button class="chip in" data-a="when" data-drag="' + i.id + '" data-id="' + i.id + '"><span class="dot" style="--c:' + itemColor(i) + '"></span>' + esc(i.t) + '</button>').join('') + '</div><div class="muted" style="margin-top:14px;font:400 12.5px/1.35 Inter">' + esc(t('dragHint')) + '</div>' : '<div class="muted" style="margin-top:12px;font:400 13px/1.4 Inter">' + (lang() === 'cs' ? 'Všechno má svůj den.' : 'Everything has a day.') + '</div>') + '</section>';
   } else if (V.planMode === 'week') {
     const H = 432, S0 = 360, SPAN = 1080; const cs = lang() === 'cs';
     let head = '<span></span>', cols = '', tot = 0, dn = 0, best = [-1, 0];
     for (let k = 0; k < 7; k++) {
       const d = addD(V.planWeek, k); const its = itemsOn(d); const isT = d === T();
       const doneN = its.filter(i => isDone(i, d)).length; tot += its.length; dn += doneN; if (doneN > best[1]) best = [k, doneN];
-      const un = its.filter(i => !i.time).slice(0, 3).map(i => '<i style="--c:' + cardColor(i.card) + ';' + (isDone(i, d) ? '' : 'opacity:.45') + '"></i>').join('');
+      const un = its.filter(i => !i.time).slice(0, 3).map(i => '<i style="--c:' + itemColor(i) + ';' + (isDone(i, d) ? '' : 'opacity:.45') + '"></i>').join('');
       head += '<button class="' + (isT ? 'tdy' : '') + '" data-a="openDay" data-d="' + d + '">' + esc(WD[lang()][k].slice(0, 2)) + '<b>' + dOf(d).getDate() + '</b><span class="dd">' + un + '</span></button>';
       const nm = nowMin(); const nextT = isT ? its.find(i => i.time && !isDone(i, d) && tmin(i.time) + (i.dur || 45) > nm) : null;
       let bl = '';
-      its.filter(i => i.time).forEach(i => {
-        const st = Math.max(0, tmin(i.time) - S0), du = i.dur || 45; const top = st / SPAN * H; const h = Math.max(18, du / SPAN * H);
-        bl += '<button class="wg-b' + (isDone(i, d) ? ' done' : '') + (nextT && nextT.id === i.id ? ' next' : '') + '" style="--c:' + cardColor(i.card) + ';top:' + top.toFixed(1) + 'px;height:' + h.toFixed(1) + 'px" data-a="openItem" data-id="' + i.id + '" aria-label="' + esc(i.time + ' ' + i.t) + '"></button>';
+      lanes(its.filter(i => i.time).map(i => ({ i, s: tmin(i.time), e: tmin(i.time) + (i.dur || 45) }))).forEach(b => {
+        const i = b.i; const st = Math.min(SPAN - 18 / H * SPAN, Math.max(0, b.s - S0)); const top = st / SPAN * H; const h = Math.max(18, (Math.min(S0 + SPAN, b.e) - S0 - st) / SPAN * H); const w = 100 / b.n;
+        bl += '<button class="wg-b' + (isDone(i, d) ? ' done' : '') + (nextT && nextT.id === i.id ? ' next' : '') + '" style="--c:' + itemColor(i) + ';top:' + top.toFixed(1) + 'px;height:' + h.toFixed(1) + 'px' + (b.n > 1 ? ';left:calc(' + (b.lane * w) + '% + 2px);right:auto;width:calc(' + w + '% - 3px)' : '') + '" data-a="openItem" data-id="' + i.id + '" aria-label="' + esc(i.time + ' ' + i.t) + '"></button>';
       });
       if (isT) { const y = Math.min(H, Math.max(0, (nm - S0) / SPAN * H)); bl += '<span class="wg-now" style="top:' + y.toFixed(1) + 'px"></span>'; }
       cols += '<div class="wg-col' + (isT ? ' tdy' : '') + '" style="grid-column:' + (k + 2) + '" data-a="openDay" data-d="' + d + '">' + bl + '</div>';

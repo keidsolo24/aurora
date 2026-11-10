@@ -121,6 +121,7 @@ async function syncNow(opts = {}) {
     else if (r.media) render();
     S.sync.state = 'ok'; S.sync.last = Date.now(); S.sync.err = '';
     await rawSave();
+    if (typeof accSeen === 'function') accSeen();
   } catch (e) {
     S.sync.state = 'err'; S.sync.err = e.code === 'nodb' ? (lang() === 'cs' ? 'Na serveru chybí databáze D1' : 'Server has no D1 database') : e.status === 403 ? (lang() === 'cs' ? 'Propojení už neplatí' : 'Link is no longer valid') : (lang() === 'cs' ? 'Bez spojení, zkusím znovu' : 'Offline, will retry');
   } finally {

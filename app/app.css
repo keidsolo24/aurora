@@ -934,3 +934,29 @@ body.kbopen #welcome .wchips,body.kbopen #welcome .acwhy{display:none}
 #install .ihint.up{gap:6px;color:var(--ink)}
 #install .ihint.up span{margin-top:26px;padding:9px 13px;border-radius:14px;background:rgba(243,234,216,.16);box-shadow:inset 0 0 0 1px rgba(243,234,216,.25);font:600 14px/1 Inter}
 #install .ihint.up svg{color:#9fd6e8}
+
+/* v19.5.2 · Board → Plán */
+.amth{flex:none;width:34px;height:34px;border-radius:10px;object-fit:cover;margin:-4px 0}
+.imth{flex:none;width:36px;height:36px;border-radius:10px;object-fit:cover}
+.dsth{flex:none;width:30px;height:30px;border-radius:8px;object-fit:cover}
+
+/* v19.5.2 · viewer bottom like the update video */
+#viewer .vfoot{position:absolute;left:0;right:0;bottom:0;padding:110px 16px calc(var(--sb) + 18px);display:flex;flex-direction:column;align-items:flex-start;gap:12px;background:linear-gradient(to top,rgba(8,14,24,.9) 0%,rgba(8,14,24,.66) 48%,transparent);pointer-events:none;transition:opacity .25s}
+#viewer .vfoot>*{pointer-events:auto}
+#viewer .vchip{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 13px;border-radius:16px;background:rgba(10,18,28,.55);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(243,234,216,.1);font:500 13px/1 Inter;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#viewer .vttl{margin:0;font:800 40px/1.02 'Bricolage Grotesque';letter-spacing:-.035em;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+#viewer .vsub{margin:-4px 0 0;font:400 14.5px/1.4 Inter;color:var(--ink2);max-height:4.2em;overflow:auto;white-space:pre-wrap}
+#viewer .vbtns{display:grid;grid-template-columns:1fr 1.15fr 1fr 1.7fr;gap:8px;width:100%;margin-top:4px}
+#viewer .vbtns button{height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 14px/1 Inter;white-space:nowrap;min-width:0;overflow:hidden;padding:0 6px}
+#viewer .vbtns .vplan{color:var(--navy)}
+#viewer.bare .vfoot{opacity:0;pointer-events:none}
+#viewer.bare .vfoot>*{pointer-events:none}
+/* v19.5.2 · own colour on a plan item without a card (in the Card tray) */
+.acol{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.acol .cap{flex:none}
+.acol .sws{flex:1;display:flex;justify-content:flex-end;gap:6px;min-width:0}
+.acol .sw{width:25px;height:25px;flex:none;border-radius:13px;background:var(--c);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22);padding:0;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s}
+.acol .sw.on{box-shadow:0 0 0 2px rgba(19,35,58,.9),0 0 0 4px var(--c),0 0 12px var(--c);transform:scale(1.04)}
+@media (max-width:360px){.acol .sw{width:22px;height:22px}.acol .sws{gap:5px}}
+/* v19.5.2 · time tile shows the range */
+.atile .v .tend{font-style:normal;font-size:.7em;letter-spacing:0;opacity:.62;margin-left:1px}

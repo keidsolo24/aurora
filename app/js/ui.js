@@ -121,7 +121,7 @@ function openSheet(o) {
   const el = $('#sheet');
   el.className = 'frost' + (o.cls ? ' ' + o.cls : '');
   el.innerHTML = '<div class="grab"><i></i></div><div class="sh"><div class="l">' + (o.leftHTML || (o.left !== false ? '<button class="lnk" data-a="sheetCancel">' + esc(o.leftLabel || t('cancel')) + '</button>' : '')) + '</div><div class="tl">' + (o.titleHTML || esc(o.title || '')) + '</div><div class="rt">' + (o.right ? '<button class="save cr press" id="sheetSave"' + (o.rightDisabled ? ' disabled' : '') + '>' + esc(o.right) + '</button>' : '') + '</div></div><div class="sb">' + o.body + '</div>';
-  SH.onClose = o.onClose || null; SH.onSave = o.onSave || null; SH.dirty = o.dirty || null; SH.open = true;
+  SH.onClose = o.onClose || null; SH.onSave = o.onSave || null; SH.dirty = o.dirty || null; SH.restore = o.restore || null; SH.open = true;
   if (o.right) $('#sheetSave').onclick = () => { if (SH.onSave) SH.onSave(); };
   $('#scrim').classList.add('on'); el.classList.remove('drag');
   el.style.transform = '';
@@ -131,12 +131,16 @@ function openSheet(o) {
 }
 function closeSheet(force) {
   if (!SH.open) return;
-  if (!force && SH.dirty && SH.dirty()) { confirmInline(); return; }
+  const lost = !force && SH.dirty && SH.dirty();
+  if (lost && !SH.restore) { confirmInline(); return; }
+  const back = lost ? SH.restore : null; SH.restore = null;
   const el = $('#sheet'); el.classList.remove('on'); el.style.transform = ''; $('#scrim').classList.remove('on'); SH.open = false;
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
   const cb = SH.onClose; SH.onClose = null; cb && cb();
   document.body.classList.remove('sheeting');
   setTimeout(() => { if (!SH.open) el.innerHTML = ''; }, 450);
+  /* no 'Cancel / Discard' question: it just closes, and the draft can come back */
+  if (back) setTimeout(() => toast(esc(lang() === 'cs' ? 'Zahozeno' : 'Discarded'), { label: lang() === 'cs' ? 'Vrátit' : 'Undo', fn: back }), 160);
 }
 function confirmInline() {
   const sb = $('#sheet .sb'); if (!sb || $('#discardBar')) return;
@@ -237,7 +241,14 @@ function autoFocus(el, ms = 360) { if (!el || IOS) return; setTimeout(() => { tr
   window.addEventListener('pageshow', () => vlater(60));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) vlater(120); });
   document.addEventListener('focusout', () => vlater(700));
-  vfix(); vlater(400);
+  /* v19.5.2 · at launch iOS 27 sometimes settles the real height late and fires no resize, so the nav sat wrong until
+     the app was reopened: keep watching the probe itself, and re-check a few times while the app wakes up */
+  if (window.ResizeObserver) try { new ResizeObserver(() => vlater(40)).observe(probe); } catch (e) {}
+  if (v) v.addEventListener('resize', () => vlater(160));
+  const settle = () => [150, 400, 900, 1600, 3000].forEach(ms => setTimeout(vfix, ms));
+  window.addEventListener('pageshow', settle);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
+  vfix(); settle();
   measure();
 })();
 /* v19.4: what you type always stays above the keyboard, in sheets and in screens.

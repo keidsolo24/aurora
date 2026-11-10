@@ -9,7 +9,9 @@ function cardChips(sel, suggested, act = 'pickCard') {
 let A = null;
 const REM_OPTS = [['off', 'rOff'], [0, 'rAt'], [10, 'r10'], [30, 'r30'], [60, 'r60'], ['eve', 'rEve']];
 const QUICK_TIMES = ['08:00', '10:00', '12:00', '14:00', '18:00', '20:00'];
-function durLabel(m) { return m < 60 ? m + ' min' : (m % 60 ? (m / 60).toString().replace('.', lang() === 'cs' ? ',' : '.') : m / 60) + ' h'; }
+function durLabel(m) { if (m < 60) return m + ' min'; if (!(m % 60)) return m / 60 + ' h'; if (!(m % 30)) return (m / 60).toString().replace('.', lang() === 'cs' ? ',' : '.') + ' h'; return Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
+const DUR_OPTS = [15, 30, 45, 60, 90, 120, 180, 240, 360, 480];
+const endOf = (time, dur) => mtime((tmin(time) + (dur || 45)) % 1440);
 function remLabel(r) { const o = REM_OPTS.find(x => x[0] === r); return o ? t(o[1]) : t('r10'); }
 function suggestCard(txt) {
   if (A.cardTouched) return A.card;
@@ -22,7 +24,7 @@ function openAdd(o = {}) {
   const mode = o.mode === 'photo' || o.mode === 'note' ? 'note' : 'plan';
   A = { mode, editId: null, text: o.text || '', card: o.card || null, baseCard: o.card || (S.lastCard && cardById(S.lastCard) ? S.lastCard : null), cardTouched: !!o.card,
     date: base, baseDate: base, time: null, repeat: null, days: [], dur: 45, remind: S.push && S.push.def != null ? S.push.def : 10,
-    dT: false, tT: false, rT: false, tile: null, row: null, mon: null, file: null, url: null, kind: null, fromMoment: o.fromMoment || null, spans: [] };
+    dT: false, tT: false, rT: false, tile: null, row: null, mon: null, file: null, url: null, kind: null, fromMoment: o.fromMoment || null, color: o.color || null, spans: [] };
   if (mode === 'note') { A.baseCard = o.card || null; A.card = o.card || null; }
   else if (!o.card) A.card = A.baseCard;
   if (A.text) applyParse();
@@ -33,18 +35,21 @@ function openItem(id) {
   const rep = i.repeat === 'weekly' ? 'days' : (i.repeat || null);
   A = { mode: 'plan', editId: id, text: i.t, card: i.card || null, baseCard: i.card || null, cardTouched: true, date: i.date || null, baseDate: i.date || null, time: i.time || null,
     repeat: rep, days: i.repeat === 'weekly' ? [dow(i.date || T())] : (i.days || []).slice(), dur: i.dur || 45, remind: i.remind === undefined ? (S.push.def != null ? S.push.def : 10) : (i.remind === null ? 'off' : i.remind),
-    dT: true, tT: true, rT: true, tile: null, row: null, mon: null, spans: [] };
+    dT: true, tT: true, rT: true, tile: null, row: null, mon: null, color: i.color || null, spans: [] };
   A.orig = JSON.stringify(planFields());
   openAddSheet(false);
 }
 function openAddSheet(pickPhoto) {
   const head = A.editId ? '<span class="tl">' + esc(t('editT')) + '</span>'
     : '<div class="seg in mseg"><button class="' + (A.mode === 'plan' ? 'on' : '') + '" data-a="aMode" data-k="plan">' + esc(t('planT')) + '</button><button class="' + (A.mode === 'note' ? 'on' : '') + '" data-a="aMode" data-k="note">' + esc(t('idea')) + '</button></div>';
-  openSheet({ titleHTML: head, leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: saveLabel(), rightDisabled: !canSave(), body: addBody(), mount: () => mountAdd(pickPhoto), onSave: () => saveAdd(), dirty: addDirty, cls: 'addsheet' });
+  openSheet({ titleHTML: head, leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: saveLabel(), rightDisabled: !canSave(), body: addBody(), mount: () => mountAdd(pickPhoto), onSave: () => saveAdd(), dirty: addDirty, restore: (a => () => { A = a; A.tile = null; A.row = null; A.mon = null; openAddSheet(false); })(A), cls: 'addsheet' });
+  if (!A.editId && A.init == null) A.init = addSnap();
 }
 function saveLabel() { return A.editId ? t('save') : A.mode === 'note' ? t('throwIt') : t('addBtn'); }
-function addDirty() { if (!A) return false; if (A.editId) return JSON.stringify(planFields()) !== A.orig; return !!((A.text || '').trim() || A.file); }
-function planFields() { return [A.text.trim(), A.card, A.date, A.time, A.repeat, (A.days || []).join(), A.dur, A.remind]; }
+/* only what the person changed counts: text prefilled from Board / a link is not a draft */
+function addSnap() { return JSON.stringify([A.mode, A.text.trim(), A.mode === 'plan' ? planFields() : A.card]); }
+function addDirty() { if (!A) return false; if (A.editId) return JSON.stringify(planFields()) !== A.orig; if (A.file) return true; return !!(A.text || '').trim() && addSnap() !== A.init; }
+function planFields() { return [A.text.trim(), A.card, A.date, A.time, A.repeat, (A.days || []).join(), A.dur, A.remind, A.color]; }
 function canSave() { return A.mode === 'note' ? !!(A.text.trim() || A.file) : !!A.text.trim(); }
 
 /* ----- parse typed sentence into fields (fields the user tapped stay as tapped) ----- */
@@ -53,6 +58,7 @@ function applyParse() {
   const p = NL(A.text); A.spans = p.spans;
   if (!A.dT) A.date = p.date || (p.repeat ? T() : A.baseDate);
   if (!A.tT) A.time = p.time;
+  if (!A.durT) { if (p.dur) { A.dur = p.dur; A._pdur = true; } else if (A._pdur) { A.dur = 45; A._pdur = false; } }
   if (!A.rT) { A.repeat = p.repeat; A.days = p.days || []; }
   if (p.card && !A.cardTouched) { A.card = p.card; A._tagCard = true; }
   else if (!A.cardTouched) { const sc = suggestCard(A.text); A.card = A._tagCard && !p.card ? sc : (p.card || sc); A._tagCard = !!p.card; }
@@ -92,18 +98,20 @@ function planDyn() {
   const [wv, ws] = whenVal(); const [rv, rs] = repVal(); const c = cardById(A.card);
   let h = '<div class="atiles">'
     + tileB('when', t('when'), wv, ws)
-    + tileB('time', t('time'), A.time ? esc(A.time) : '—', A.time ? t('forDur', durLabel(A.dur || 45)) : t('noTimeS'))
-    + tileB('card', t('cardCap'), c ? esc(c.name) : esc(t('noCard')), c ? (c.type === 'habit' ? t('countsStreak') : t('projectT')) : t('optional'), c ? c.color : null)
+    + tileB('time', t('time'), A.time ? esc(A.time) + '<i class="tend">–' + endOf(A.time, A.dur) + '</i>' : '—', A.time ? t('forDur', durLabel(A.dur || 45)) : t('noTimeS'))
+    + tileB('card', t('cardCap'), c ? esc(c.name) : esc(t('noCard')), c ? (c.type === 'habit' ? t('countsStreak') : t('projectT')) : A.color ? (lang() === 'cs' ? 'vlastní barva' : 'own colour') : t('optional'), c ? c.color : A.color)
     + tileB('rep', t('repeat'), rv, rs) + '</div>';
   if (A.tile) h += '<div class="atray in">' + trayHTML() + '</div>';
   const pr = partnerRow();
-  if (A.time || pr) {
-    h += '<div class="alist in">' + (A.time ? ''
-      + listRow('dur', 'dur', t('length'), durLabel(A.dur || 45), () => '<div class="chips wrap">' + [15, 30, 45, 60, 90, 120].map(m => '<button class="chip ' + ((A.dur || 45) === m ? 'cr' : 'in') + ' press" data-a="aDur" data-k="' + m + '">' + durLabel(m) + '</button>').join('') + '</div>')
+  const mr = momRow(A.fromMoment || (A.editId && (itemById(A.editId) || {}).mom));
+  if (A.time || pr || mr) {
+    h += '<div class="alist in">' + mr + (A.time ? ''
+      + listRow('dur', 'dur', t('length'), durLabel(A.dur || 45) + ' · ' + A.time + '–' + endOf(A.time, A.dur), () => { const other = !DUR_OPTS.includes(A.dur || 45); return '<div class="chips wrap">' + DUR_OPTS.map(m => '<button class="chip ' + ((A.dur || 45) === m ? 'cr' : 'in') + ' press" data-a="aDur" data-k="' + m + '">' + durLabel(m) + '</button>').join('')
+        + '<label class="chip pick ' + (other ? 'cr' : 'in') + '">' + ico('clock', 15, 2) + esc(other ? (lang() === 'cs' ? 'do ' : 'until ') + endOf(A.time, A.dur) : (lang() === 'cs' ? 'Do…' : 'Until…')) + '<input type="time" id="aEndIn" value="' + endOf(A.time, A.dur) + '" aria-label="' + esc(lang() === 'cs' ? 'Konec' : 'End') + '"></label></div>'; })
       + listRow('rem', 'bell', t('remind'), remLabel(A.remind), () => '<div class="chips wrap">' + REM_OPTS.map(([k, l]) => '<button class="chip ' + (A.remind === k ? 'cr' : 'in') + ' press" data-a="aRem" data-k="' + k + '">' + esc(t(l)) + '</button>').join('') + '</div>' + (!S.push.on ? '<div class="muted asub">' + esc(lang() === 'cs' ? 'Notifikace zapneš v Nastavení → Notifikace.' : 'Turn on notifications in Settings → Notifications.') + '</div>' : '')) : '')
       + pr + '</div>';
   }
-  h += '<div class="hint"><span class="led" style="--c:' + cardColor(A.card) + '"></span><span id="aHint">' + landsText() + shareHint() + '</span></div>';
+  h += '<div class="hint"><span class="led" style="--c:' + itemColor({ card: A.card, color: A.color }) + '"></span><span id="aHint">' + landsText() + shareHint() + '</span></div>';
   if (A.editId) {
     const i = itemById(A.editId); const d = i.repeat ? T() : (i.date || T()); const on = isDone(i, d);
     const ch = typeof chOfItem === 'function' ? chOfItem(i) : null;
@@ -139,7 +147,23 @@ function shareHint() {
   if (A.partner === 'invite') return ' ' + esc(cs ? 'Po uložení dostaneš odkaz pro parťáka.' : 'You get a link after saving.');
   return o.length ? ' ' + esc(cs ? 'Uvidí to i ' + namesOf(o) + '.' : namesOf(o) + ' will see it too.') : '';
 }
+/* plan item without a card can carry its own colour (with a card, the card's colour wins) */
+function colorRow() {
+  if (A.mode !== 'plan' || cardById(A.card)) return '';
+  const cur = A.color || '#9fb3c4';
+  return '<div class="acol"><span class="cap">' + esc(lang() === 'cs' ? 'Barva' : 'Colour') + '</span><span class="sws">' + COLORS.map(c => '<button class="sw press' + (cur === c ? ' on' : '') + '" style="--c:' + c + '" data-a="aColor" data-k="' + c + '" aria-label="' + c + '" aria-pressed="' + (cur === c) + '"></button>').join('') + '</span></div>';
+}
+ACT.aColor = el => { A.color = el.dataset.k === '#9fb3c4' ? null : el.dataset.k; A.tile = null; haptic(); updAdd(); };
 ACT.aPartner = el => { A.partner = el.dataset.k || null; A.row = null; updAdd(); };
+function momName(m) { const cs = lang() === 'cs'; return m.kind === 'video' ? (cs ? 'Video z Boardu' : 'Video from Board') : m.kind === 'photo' ? (cs ? 'Fotka z Boardu' : 'Photo from Board') : m.kind === 'link' ? (m.site || (cs ? 'Odkaz z Boardu' : 'Link from Board')) : (cs ? 'Nápad z Boardu' : 'Idea from Board'); }
+const momThumb = m => m && (m.kind === 'photo' || m.kind === 'video') ? mediaNow(m.thumb || m.img) : '';
+/* the Board thing a plan item came from: thumbnail + what it is; tap opens it */
+function momRow(id) {
+  const m = id && S.moments.find(x => x.id === id); if (!m) return '';
+  const cs = lang() === 'cs'; const u = momThumb(m);
+  const what = m.kind === 'video' ? (cs ? 'video' : 'video') : m.kind === 'photo' ? (cs ? 'fotka' : 'photo') : m.kind === 'link' ? (cs ? 'odkaz' : 'link') : (cs ? 'nápad' : 'idea');
+  return '<button class="lrw press amom" data-a="viewMoment" data-id="' + m.id + '">' + (u ? '<img class="amth" src="' + u + '" alt="">' : '<span class="li">' + ico(m.kind === 'link' ? 'link' : 'note', 15, 2) + '</span>') + '<span class="ll">' + esc(cs ? 'Z Boardu' : 'From Board') + '</span><span class="lv"><b>' + esc(what) + '</b>' + ico('chev', 13, 2.4) + '</span></button>';
+}
 function listRow(k, icn, label, val, body) {
   const on = A.row === k;
   return '<button class="lrw press" data-a="aRow" data-k="' + k + '" aria-expanded="' + on + '"><span class="li">' + ico(icn, 15, 2) + '</span><span class="ll">' + esc(label) + '</span><span class="lv"><b>' + esc(val) + '</b>' + ico(on ? 'chevD' : 'chev', 13, 2.4) + '</span></button>' + (on ? '<div class="lexp">' + body() + '</div>' : '');
@@ -161,7 +185,7 @@ function trayHTML() {
   }
   if (A.tile === 'card') {
     const sug = suggestCard(A.text);
-    return '<div class="chips wrap" id="aCards">' + cardChips(A.card, sug) + '</div>';
+    return '<div class="chips wrap" id="aCards">' + cardChips(A.card, sug) + '</div>' + colorRow();
   }
   if (A.tile === 'rep') {
     const segs = [['', t('off')], ['daily', t('dailyS')], ['weekdays', t('wkdaysS')], ['days', t('selDays')]];
@@ -247,6 +271,7 @@ function mountAdd(pickPhoto) {
   if (pickPhoto) { const f = $('#aFile'); if (f) try { f.click(); } catch (e) {} }
 }
 function bindAddDyn() {
+  const ei = $('#aEndIn'); if (ei) ei.addEventListener('change', () => { if (!ei.value || !A.time) return; let d = tmin(ei.value) - tmin(A.time); if (d <= 0) d += 1440; if (d > 16 * 60) { toast(esc(lang() === 'cs' ? 'Nejvýš 16 hodin' : '16 hours at most')); return; } A.dur = d; A.durT = true; A.row = null; updAdd(); });
   const ti = $('#aTimeIn'); if (ti) ti.addEventListener('change', () => { if (ti.value) { A.time = ti.value; A.tT = true; if (!A.date && !A.repeat) { A.date = T(); A.dT = true; } updAdd(); } });
   const f = $('#aFile'); if (f) f.addEventListener('change', async () => {
     const file = f.files && f.files[0]; if (!file) return;
@@ -266,7 +291,7 @@ ACT.aMonShift = el => { const [y, m] = A.mon.split('-').map(Number); const d = n
 ACT.aTime = el => { A.time = el.dataset.k || null; A.tT = true; if (A.time && !A.date && !A.repeat) { A.date = T(); A.dT = true; } A.tile = null; updAdd(); };
 ACT.aRepeat = el => { const k = el.dataset.k || null; A.repeat = k; A.rT = true; if (k === 'days' && !(A.days || []).length) A.days = [dow(A.date || T())]; if (k && !A.date) { A.date = T(); } updAdd(); };
 ACT.aWd = el => { const k = +el.dataset.k; const s2 = new Set(A.days || []); s2.has(k) ? s2.delete(k) : s2.add(k); A.days = [...s2].sort((a, b) => a - b); A.rT = true; haptic(); updAdd(); };
-ACT.aDur = el => { A.dur = +el.dataset.k; A.row = null; updAdd(); };
+ACT.aDur = el => { A.dur = +el.dataset.k; A.durT = true; A.row = null; updAdd(); };
 ACT.aRem = el => { const k = el.dataset.k; A.remind = k === 'off' || k === 'eve' ? k : +k; A.row = null; updAdd(); };
 ACT.aNoFile = () => { if (A.url) URL.revokeObjectURL(A.url); A.file = null; A.url = null; A.kind = null; updAdd(); };
 ACT.pickCard = el => { A.card = el.dataset.k || null; A.cardTouched = true; A.tile = null; A.row = null; updAdd(); };
@@ -280,6 +305,7 @@ async function saveAdd(o = {}) {
     let it, isNew = false;
     if (A.editId) { it = itemById(A.editId); if (!it) return; } else { it = { id: uid(), created: T() }; isNew = true; }
     it.t = title; it.card = card;
+    if (!card && A.color) it.color = A.color; else delete it.color;
     if (A.date) it.date = A.date; else delete it.date;
     if (A.time) { it.time = A.time; it.dur = A.dur || 45; it.remind = A.remind === 'off' ? null : A.remind; } else { delete it.time; delete it.dur; delete it.remind; }
     if (rep) {
@@ -288,7 +314,7 @@ async function saveAdd(o = {}) {
       if (!it.date) it.date = T();
     } else if (it.repeat) { delete it.repeat; delete it.days; delete it.doneDates; it.done = false; }
     if (isNew) S.items.push(it);
-    if (A.fromMoment) { const m = S.moments.find(x => x.id === A.fromMoment); if (m) m.planned = it.id; }
+    if (A.fromMoment) { const m = S.moments.find(x => x.id === A.fromMoment); if (m) { m.planned = it.id; it.mom = m.id; } }
     const pid = A.partner; const cardSh = card && cardById(card) && cardById(card).sh;
     save(); closeSheet(true); render();
     if (pid && !cardSh && !it.ish && typeof shareItem === 'function') setTimeout(() => needName(async () => {
@@ -366,11 +392,12 @@ ACT.wClearTime = () => { W.time = null; W.rer(); };
 /* ---------------- CARD create / edit ---------------- */
 let K = null;
 /* card: name + 4 tiles (what it is · how often / deadline · step · with whom), same pattern as "+" */
-function openCardSheet(id) {
+function openCardSheet(id, preset) {
   const c = id ? cardById(id) : null; const ch = c && typeof chOfCard === 'function' ? chOfCard(c) : null;
   K = c ? { id: c.id, name: c.name, type: c.type, color: c.color, deadline: c.deadline || null, goal: c.type === 'habit' ? goalOf(c) : 7, step: '', who: ch ? 'spolu' : 'me', with: [], tile: null }
     : { id: null, name: '', type: 'habit', color: COLORS[S.cards.length % COLORS.length], deadline: null, goal: 7, step: '', who: 'me', with: [], tile: null };
-  openSheet({ title: c ? t('editCard') : t('newCard'), leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: t('save'), rightDisabled: !K.name, body: cardBody(), mount: mountCardSheet, onSave: saveCardSheet, dirty: () => !c && K.name.trim(), cls: 'addsheet cardsheet' });
+  if (preset) { K = preset; K.tile = null; }
+  openSheet({ title: c ? t('editCard') : t('newCard'), leftHTML: '<button class="xbtn in press" data-a="sheetCancel" aria-label="' + esc(t('cancel')) + '">' + ico('x', 16, 2.4) + '</button>', right: t('save'), rightDisabled: !K.name, body: cardBody(), mount: mountCardSheet, onSave: saveCardSheet, dirty: () => !c && K.name.trim(), restore: (k => () => openCardSheet(k.id, k))(K), cls: 'addsheet cardsheet' });
 }
 function kTile(k, cap, val, sub, pre) {
   const on = K.tile === k;
@@ -534,12 +561,21 @@ function paintViewer(dir) {
     : m.kind === 'note' ? '<div class="vnote frost" style="--c:' + cardColor(m.card) + '">' + esc(m.note) + '</div>' : (m.kind === 'video' && !mediaNow(m.img) && m.thumb) ? '<img src="' + mediaNow(m.thumb) + '" alt="">' : m.kind === 'video' ? '<video src="' + u + '"' + (m.thumb ? ' poster="' + mediaNow(m.thumb) + '"' : '') + ' playsinline autoplay loop preload="auto"></video>' : '<img src="' + u + '" alt="' + esc(m.note || '') + '">';
  v.innerHTML = (m.kind !== 'note' && m.kind !== 'video' && m.kind !== 'link' && !miss ? '<div class="vbg" style="background-image:url(' + u + ')"></div>' : m.kind === 'note' ? '<div class="vbg" style="background:' + cardColor(m.card) + ';opacity:.5"></div>' : '')
     + '<div class="vmed" id="vmed">' + med + '</div>'
-    + '<div class="vtop"><span class="who frost">' + (c ? '<span class="led" style="--c:' + c.color + '"></span>' + esc(c.name) + ' · ' : '') + esc(dayName(m.d)) + '</span><span style="flex:1"></span>' + (m.kind === 'video' ? '<button class="cb frost press" id="vPlayBtn" data-a="vPlay" aria-label="Play">' + ico('pause', 20, 2) + '</button>' : '') + '<button class="cb frost press" data-a="closeViewer" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button></div>'
+    + '<div class="vtop"><span style="flex:1"></span>' + (m.kind === 'video' ? '<button class="cb frost press" id="vPlayBtn" data-a="vPlay" aria-label="Play">' + ico('pause', 20, 2) + '</button>' : '') + '<button class="cb frost press" data-a="closeViewer" aria-label="' + esc(t('close')) + '">' + ico('x', 20, 2.2) + '</button></div>'
     + (VW.list.length > 1 ? '<div class="vcount">' + (VW.idx + 1) + ' / ' + VW.list.length + '</div>' : '')
-    + (m.note && m.kind !== 'note' && m.kind !== 'link' ? '<div class="vcap">' + esc(m.note) + '</div>' : '')
-    + '<div class="vact"><button class="cr press vplan" data-a="vPlan">' + ico(m.planned && itemById(m.planned) ? 'check' : 'cal', 20, 2) + esc(m.planned && itemById(m.planned) ? t('inPlan') : t('plan2')) + '</button><button class="frost press" data-a="vCard">' + ico('card', 20, 1.9) + esc(c ? c.name : t('toCard')) + '</button><button class="frost press" data-a="vPin">' + ico('pin', 20, 1.9) + esc(m.pin ? t('unpin') : t('pin')) + '</button><button class="frost press" data-a="vEdit">' + ico('edit', 20, 1.9) + esc(t('edit')) + '</button><button class="frost press red" data-a="vDelete" aria-label="' + esc(t('del')) + '">' + ico('trash', 20, 1.9) + esc(t('del')) + '</button></div>';
+    + vFoot(m, c);
   const vv = $('#vmed video'); if (vv) { const pp = vv.play(); if (pp && pp.catch) pp.catch(() => { vv.muted = true; vv.play().catch(() => {}); const b = $('#vPlayBtn'); if (b) b.innerHTML = ico('play', 20, 2); }); }
   if (dir && !RM) $('#vmed').animate([{ transform: 'translateX(' + (dir * 60) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+}
+/* v19.5.2: bottom of the viewer like the update video: where it belongs, a big name, Pin · To card · Edit · Plan it */
+function vFoot(m, c) {
+  const cs = lang() === 'cs'; const media = m.kind === 'photo' || m.kind === 'video';
+  const lines = (m.note || '').split('\n'); const title = media ? (lines[0] || momName(m)) : ''; const more = media ? lines.slice(1).join('\n').trim() : '';
+  const planned = m.planned && itemById(m.planned);
+  return '<div class="vfoot"><span class="vchip">' + (c ? '<span class="led" style="--c:' + c.color + '"></span>' + esc(c.name) + ' · ' : '') + esc(dayName(m.d)) + '</span>'
+    + (title ? '<h2 class="vttl">' + esc(title) + '</h2>' : '') + (more ? '<p class="vsub">' + esc(more) + '</p>' : '')
+    + '<div class="vbtns"><button class="frost press" data-a="vPin">' + esc(m.pin ? t('unpin') : t('pin')) + '</button><button class="frost press" data-a="vCard">' + esc(t('toCard')) + '</button><button class="frost press" data-a="vEdit">' + esc(t('edit')) + '</button>'
+    + '<button class="cr press vplan" data-a="vPlan">' + ico(planned ? 'check' : 'cal', 18, 2) + esc(planned ? t('inPlan') : t('plan2')) + '</button></div></div>';
 }
 function closeViewer() { const v = $('#viewer'); const vid = $('video', v); if (vid) vid.pause(); v.classList.remove('on'); v.innerHTML = ''; document.body.classList.remove('viewing'); render(); }
 ACT.closeViewer = closeViewer;
@@ -554,8 +590,9 @@ ACT.vCard = () => {
 ACT.vSetCard = el => { const m = curM(); m.card = el.dataset.k || null; save(); closeSheet(true); paintViewer(); toast(esc(m.card ? cardById(m.card).name : t('noCard'))); };
 ACT.vEdit = () => {
   const m = curM(); let v = m.note || '';
-  openSheet({ title: m.kind === 'note' ? t('note') : t('captionPh'), right: t('save'), body: '<div class="fld in big"><textarea id="vNoteIn" rows="3" style="min-height:90px">' + esc(v) + '</textarea></div>', mount: () => { const i = $('#vNoteIn'); i.addEventListener('input', () => { v = i.value; $('#sheetSave').disabled = m.kind === 'note' && !v.trim(); }); autoFocus(i, 380); }, onSave: () => { m.note = v.trim(); save(); closeSheet(true); paintViewer(); } });
+  openSheet({ title: m.kind === 'note' ? t('note') : t('captionPh'), right: t('save'), body: '<div class="fld in big"><textarea id="vNoteIn" rows="3" style="min-height:90px">' + esc(v) + '</textarea></div><section class="grp frost solid" style="margin-top:14px"><button class="srow red" data-a="vDelFromEdit">' + ico('trash', 16, 2) + esc(lang() === 'cs' ? 'Smazat z Boardu' : 'Delete from Board') + '</button></section>', mount: () => { const i = $('#vNoteIn'); i.addEventListener('input', () => { v = i.value; $('#sheetSave').disabled = m.kind === 'note' && !v.trim(); }); autoFocus(i, 380); }, onSave: () => { m.note = v.trim(); save(); closeSheet(true); paintViewer(); } });
 };
+ACT.vDelFromEdit = () => { closeSheet(true); setTimeout(() => ACT.vDelete(), 300); };
 /* delete with undo instead of a confirm dialog (media is removed only once the undo window has passed) */
 ACT.vDelete = () => {
   const m = curM(); if (!m) return; const idx = S.moments.indexOf(m); const at = VW.idx;
@@ -569,14 +606,16 @@ ACT.vDelete = () => {
 ACT.vPlan = () => {
   const m = curM(); if (!m) return;
   if (m.planned && itemById(m.planned)) { const id = m.planned; closeViewer(); openItem(id); return; }
-  const text = (m.note || '').split('\n')[0].slice(0, 120);
+  // v19.5.2: a photo / video / link without a caption still goes straight to the plan (it gets a name and stays attached)
+  const own = (m.note || '').split('\n')[0].slice(0, 120) || (m.title || '').slice(0, 120);
+  const text = own || momName(m);
   closeViewer();
-  openAdd({ mode: 'plan', text, card: m.card || null, fromMoment: m.id });
-  if (!text) autoFocus($('#aText'), 380);
+  openAdd({ mode: 'plan', text, card: m.card || null, fromMoment: m.id, color: m.card ? null : COLORS[S.items.filter(i => !i.card).length % 7] });
+  if (!own) setTimeout(() => { const a = $('#aText'); if (a) try { a.select(); } catch (e) {} }, 420);
 };
 (function viewerGestures() {
   const v = $('#viewer'); let s = null, lastTap = 0;
-  v.addEventListener('pointerdown', e => { if (e.target.closest('button,.vcap,.vnote')) return; s = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+  v.addEventListener('pointerdown', e => { if (e.target.closest('button,.vfoot,.vnote')) return; s = { x: e.clientX, y: e.clientY, t: Date.now() }; });
   v.addEventListener('pointermove', e => { if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y; const m = $('#vmed'); if (m) m.style.transform = Math.abs(dy) > Math.abs(dx) ? 'translateY(' + Math.max(0, dy) + 'px) scale(' + (1 - Math.max(0, dy) / 1600) + ')' : 'translateX(' + dx + 'px)'; });
   const end = e => {
     if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y, dt = Date.now() - s.t; s = null; const m = $('#vmed'); if (m) m.style.transform = '';

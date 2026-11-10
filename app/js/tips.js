@@ -3,6 +3,9 @@
    Situational ones (a broken streak) jump the queue. Off in Settings → Tipy na Domově. */
 
 const TIPS = [
+  { id: 'rozsah', cs: ['Od kdy do kdy.', 'Napiš „práce po út pá 14-20“. Čas i délka 6 h se doplní samy.'], en: ['From when to when.', 'Type “work mon tue fri 14-20”. Time and a 6 h length fill in by themselves.'], act: 'add', used: () => S.items.some(i => (i.dur || 0) > 120) },
+  { id: 'boardplan', cs: ['Fotku rovnou do Plánu.', 'Otevři fotku na Boardu a dej Naplánovat. Nic nemusíš psát.'], en: ['A photo straight into Plan.', 'Open a photo on Board and tap Plan it. No typing needed.'], act: 'board', used: () => S.items.some(i => i.mom) },
+  { id: 'barva', cs: ['Barva i bez karty.', 'Věc bez karty nemusí být šedá. V přidání klepni na Karta a vyber barvu.'], en: ['Colour without a card.', 'An item without a card does not have to be grey. Tap Card when adding and pick a colour.'], act: 'add', used: () => S.items.some(i => i.color) },
   { id: 'veta', cs: ['Piš větou.', 'Napiš „každé út a čt v 18“ a Aurora to rozplánuje sama.'], en: ['Just type it.', 'Write “every tue and thu at 6pm” and Aurora plans it for you.'], act: 'add', used: () => S.items.some(i => i.repeat === 'days' || i.repeat === 'weekdays') },
   { id: 'malykrok', cs: ['Začni směšně malým krokem.', 'Dvě kliky místo dvaceti. Hlavně ať se to stane každý den.'], en: ['Start ridiculously small.', 'Two push-ups instead of twenty. What matters is that it happens.'] },
   { id: 'oblouk', cs: ['Klepni na oblouk.', 'Barevné kousky oblouku jsou tvoje plány. Klepnutím uvidíš, co který je.'], en: ['Tap the arc.', 'The coloured bits of the arc are your plans. Tap one to see what it is.'] },
@@ -68,6 +71,7 @@ ACT.tipAct = el => {
   if (k === 'note') return openAdd({ mode: 'note' });
   if (k === 'photo') return openAdd({ mode: 'photo', pickPhoto: true });
   if (k === 'spaces') return go('spaces');
+  if (k === 'board') return go('board');
   if (k === 'plan') { V.planMode = 'week'; V.planWeek = weekStart(T()); V.planDay = T(); return go('plan'); }
   if (k === 'newCard') return ACT.newCard && ACT.newCard();
   if (k === 'tutorial') return ACT.tutorial && ACT.tutorial();

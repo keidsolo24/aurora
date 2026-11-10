@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '19.5.1';
+const VERSION = '19.5.2';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -239,6 +239,7 @@ async function ensureVideoThumbs() {
 const COLORS = ['#3fbf7f', '#f0a44b', '#6f8cff', '#ff5c9a', '#b08cff', '#4cc9d9', '#e8c547', '#9fb3c4'];
 const cardById = id => S.cards.find(c => c.id === id);
 const cardColor = id => (cardById(id) || {}).color || '#9fb3c4';
+const itemColor = i => (i && i.card && cardById(i.card) ? cardById(i.card).color : i && i.color) || '#9fb3c4';
 const itemById = id => S.items.find(i => i.id === id);
 function occurs(i, d) {
   if (!i.repeat) return i.date === d;
@@ -361,9 +362,10 @@ const NL = (() => {
     ['pondělí|pondeli|monday', 0], ['úterý|utery|tuesday', 1], ['středa|středu|streda|stredu|wednesday', 2], ['čtvrtek|ctvrtek|thursday', 3],
     ['pátek|patek|friday', 4], ['sobota|sobotu|saturday', 5], ['neděle|neděli|nedele|nedeli|sunday', 6]];
   return function parse(text) {
-    const out = { date: null, time: null, repeat: null, days: null, card: null, spans: [] };
+    const out = { date: null, time: null, dur: null, repeat: null, days: null, card: null, spans: [] };
     if (!text) return out;
-    const take = (re, fn) => { const m = new RegExp(B + '(?:' + re + ')' + E, 'iu').exec(text); if (m) { const r = fn(m); if (r !== false) out.spans.push([m.index, m.index + m[0].length]); } return m; };
+    const free = m => !out.spans.some(([a, b]) => m.index < b && m.index + m[0].length > a);
+    const take = (re, fn) => { const m = new RegExp(B + '(?:' + re + ')' + E, 'iu').exec(text); if (m) { const r = free(m) ? fn(m) : false; if (r !== false) out.spans.push([m.index, m.index + m[0].length]); else return null; } return m; };
     take('každý den|kazdy den|denně|denne|every day|daily', () => { out.repeat = 'daily'; });
     if (!out.repeat) take('všední dny|vsedni dny|ve všední dny|weekdays|every weekday', () => { out.repeat = 'weekdays'; });
     if (!out.repeat) take('každý týden|kazdy tyden|every week|weekly', () => { out.repeat = 'weekly'; });
@@ -391,7 +393,25 @@ const NL = (() => {
         });
       }
     }
-    take('(?:v|ve|at|o|@)\\s*(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm|h|hod)?', m => {
+    /* a time range: "14:00-20:00", "14-20", "od 14 do 20", "from 2 to 8pm" → start + length */
+    take('(?:(od|from|v|ve|at|o|@)\\s*)?(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm)?\\s*(?:-|–|—|do|to|until|till|až do|az do)\\s*(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm|h|hod|hodin)?', m => {
+      let h1 = +m[2], m1 = +(m[3] || 0), h2 = +m[5], m2 = +(m[6] || 0); const a1 = (m[4] || '').toLowerCase(), a2 = (m[7] || '').toLowerCase();
+      const word = /do|to|until|till/i.test(m[0].replace(/^\D*\d+([:.]\d+)?/, ''));
+      if (!m[1] && !m[3] && !m[6] && !word && !a2) { if (h2 <= h1 || h1 < 5 || h2 - h1 > 12) return false; } // bare "14-20": plausible hours that go forward
+      if (a2 === 'pm' && h2 < 12) h2 += 12; if (a1 === 'pm' && h1 < 12) h1 += 12; if (a1 === 'am' && h1 === 12) h1 = 0;
+      if (a2 === 'pm' && !a1 && h1 < 12 && h1 + 12 <= h2) h1 += 12;
+      if (h1 > 23 || m1 > 59 || h2 > 24 || m2 > 59) return false;
+      let d = h2 * 60 + m2 - (h1 * 60 + m1); if (d <= 0) d += 1440;
+      if (d < 5 || d > 16 * 60) return false;
+      out.time = pad(h1) + ':' + pad(m1); out.dur = d;
+    });
+    /* a length: "na 8 h", "8 hodin", "for 2 hours", "na 90 min" */
+    take('(?:(?:na|for)\\s+)?(\\d{1,2}(?:[.,]5)?)\\s*(h|hod|hodiny|hodin|hodinu|hours?|hrs?)|(?:na|for)\\s+(\\d{1,3})\\s*(min|minut|minuty|mins?|minutes)', m => {
+      if (m[1] && !/^(na|for)\s/i.test(m[0]) && /^(h|hod)$/i.test(m[2]) && /(?:\bv|\bve|\bat|\bo|@)\s*$/i.test(text.slice(0, m.index))) return false; // "v 8h" is a time
+      const d = m[1] ? Math.round(parseFloat(m[1].replace(',', '.')) * 60) : +m[3];
+      if (!d || d < 5 || d > 16 * 60) return false; out.dur = d;
+    });
+    take('(?:od|from|v|ve|at|o|@)\\s*(\\d{1,2})(?:[:.](\\d{2}))?\\s*(am|pm|h|hod)?', m => {
       let h = +m[1], mi = +(m[2] || 0); const ap = (m[3] || '').toLowerCase();
       if (ap === 'pm' && h < 12) h += 12; if (ap === 'am' && h === 12) h = 0;
       if (h > 23 || mi > 59) return false;
