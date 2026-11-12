@@ -287,15 +287,56 @@ ACT.acLogout = () => {
   });
 };
 
-/* v19.5.2 · admin Users tab: once a day each logged-in device says "I was here" (version, platform). No content. */
-function accSeen() {
-  if (typeof accOn !== 'function' || !accOn() || !syncOn() || !S.sync.dev) return;
-  const k = S.acc.login + '|' + T() + '|' + VERSION; let last = '';
-  try { last = localStorage.getItem('aurSeenA') || ''; } catch (e) {}
-  if (last === k) return;
+/* v19.5.3 · usage for the admin: only numbers (when, where, how many), never content.
+   Kept per day on the device, sent on open / return at most every 15 min. */
+const USE = { k: null, at: 0, last: 0, sentAt: 0, busy: false };
+function useLoad() { try { return JSON.parse(localStorage.getItem('aurUse') || '{}') || {}; } catch (e) { return {}; } }
+function useSave(u) { try { localStorage.setItem('aurUse', JSON.stringify(u)); } catch (e) {} }
+function useDay(u) { const d = T(); u[d] = u[d] || { sec: {}, adds: 0, checks: 0, moms: 0, opens: 0 }; return u[d]; }
+function useCount(k) { try { const u = useLoad(); useDay(u)[k]++; useSave(u); } catch (e) {} }
+function useKey() {
+  if (document.hidden || !S || !S.onboarded) return null;
+  if (V.card) { const c = cardById(V.card); return c && c.sh ? 'spolu' : 'spaces'; }
+  if (V.settingsOpen) return null;
+  return { home: 'home', plan: 'plan', spaces: 'spaces', board: 'board' }[V.tab] || null;
+}
+function useTick() {
+  const now = Date.now(); const dt = USE.at ? Math.min(15, (now - USE.at) / 1000) : 0; USE.at = now;
+  const k = useKey(); if (!k || dt <= 0) return;
+  const u = useLoad(); const day = useDay(u); day.sec[k] = Math.round(((day.sec[k] || 0) + dt) * 10) / 10; useSave(u);
+}
+function usePlat() {
   const ua = navigator.userAgent || '';
-  const plat = /iPhone|iPod/.test(ua) ? 'iphone' : (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'ipad' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : 'other';
+  return /iPhone|iPod/.test(ua) ? 'iphone' : (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'ipad' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : 'other';
+}
+async function accSeen(force) {
+  if (!accOn() || !syncOn() || !S.sync.dev || USE.busy) return;
+  const now = Date.now(); if (!force && now - USE.sentAt < 15 * 60000) return;
+  useTick(); const u = useLoad(); const days = Object.keys(u).sort().slice(-14).map(d => ({ d, ...u[d] }));
   const mode = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches) ? 'app' : 'web';
-  syncApi('/a/seen', { login: S.acc.login, sp: S.sync.sp, secret: S.sync.secret, dev: S.sync.dev, ver: VERSION, plat, mode })
-    .then(() => { try { localStorage.setItem('aurSeenA', k); } catch (e) {} }).catch(() => {});
+  USE.busy = true;
+  try {
+    await syncApi('/a/seen', { login: S.acc.login, sp: S.sync.sp, secret: S.sync.secret, dev: S.sync.dev, ver: VERSION, plat: usePlat(), mode, lang: lang(), pid: S.push && S.push.on && S.push.id ? S.push.id : '', days });
+    USE.sentAt = now;
+    // what was sent is gone from the device; anything counted meanwhile stays for next time
+    const after = useLoad(); for (const x of days) { const a = after[x.d]; if (!a) continue; for (const k in x.sec) a.sec[k] = Math.max(0, Math.round(((a.sec[k] || 0) - x.sec[k]) * 10) / 10); for (const k of ['adds', 'checks', 'moms', 'opens']) a[k] = Math.max(0, (a[k] || 0) - (x[k] || 0)); }
+    for (const d of Object.keys(after)) { const a = after[d]; if (d !== T() && !Object.values(a.sec).some(Boolean) && !a.adds && !a.checks && !a.moms && !a.opens) delete after[d]; }
+    useSave(after);
+  } catch (e) {} finally { USE.busy = false; }
+}
+/* how many days since the app was last opened (for "Welcome back") */
+function useBoot() {
+  if (!S) return; const td = T(); const last = S.lastOpenD;
+  S.awayDays = last && last < td ? Math.round((new Date(td + 'T12:00') - new Date(last + 'T12:00')) / 864e5) : 0;
+  if (last !== td) { S.lastOpenD = td; save(); }
+  useCount('opens'); USE.at = Date.now();
+  setInterval(useTick, 5000);
+  setInterval(() => accSeen(), 60000);
+  document.addEventListener('visibilitychange', () => {
+    useTick(); USE.at = Date.now();
+    if (!document.hidden) {
+      const td2 = T(); if (S.lastOpenD && S.lastOpenD < td2) { S.awayDays = Math.round((new Date(td2 + 'T12:00') - new Date(S.lastOpenD + 'T12:00')) / 864e5); S.lastOpenD = td2; save(); if (S.awayDays >= 2) render(); }
+      useCount('opens'); setTimeout(() => accSeen(), 1500);
+    }
+  });
 }

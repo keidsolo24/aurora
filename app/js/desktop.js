@@ -154,7 +154,7 @@ function cmdkPaint() {
         const it = { id: uid(), t: title, card: p.card || null, created: T(), date: p.date || T() };
         if (p.time) { it.time = p.time; it.dur = p.dur || 45; it.remind = S.push.def != null ? S.push.def : 10; }
         if (p.repeat) { it.repeat = p.repeat; if (p.repeat === 'days') it.days = p.days; it.doneDates = []; }
-        S.items.push(it); save(); render(); toast(esc(t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : ''))), { label: t('undo'), fn: () => { S.items = S.items.filter(x => x !== it); save(); render(); } }); } });
+        S.items.push(it); if (typeof useCount === 'function') useCount('adds'); save(); render(); toast(esc(t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : ''))), { label: t('undo'), fn: () => { S.items = S.items.filter(x => x !== it); save(); render(); } }); } });
       out.push({ kind: 'idea', icon: 'spark', t: cs ? 'Hodit jako nápad na Board' : 'Add as idea to Board', sub: cs ? 'bez dne · Tab' : 'no day · Tab', key: '⇥', run: () => { const m = { id: uid(), kind: 'note', card: p.card || null, note: q, d: T(), ts: Date.now() }; S.moments.push(m); save(); render(); toast(esc(t('ideaAdded'))); } });
       out.push({ kind: 'more', icon: 'edit', t: cs ? 'Upravit podrobně…' : 'Edit in detail…', sub: cs ? 'otevře přidávání s dlaždicemi' : 'opens the full add sheet', key: '', run: () => openAdd({ text: q }) });
     }
@@ -293,7 +293,7 @@ function planDrop(info, tg) {
     const m = S.moments.find(x => x.id === info.id); if (!m) return;
     const it = { id: uid(), t: (m.title || m.note || '').split('\n')[0].slice(0, 120) || momName(m), card: m.card || null, created: T(), date: tg.d, mom: m.id }; if (!it.card) it.color = COLORS[S.items.filter(i => !i.card).length % 7];
     if (tg.time && tg.time !== 'keep') { it.time = tg.time; it.dur = 45; it.remind = S.push.def != null ? S.push.def : 10; }
-    S.items.push(it); m.planned = it.id; save(); render();
+    S.items.push(it); m.planned = it.id; if (typeof useCount === 'function') useCount('adds'); save(); render();
     toast(esc(t('planned', dayName(it.date) + (it.time ? ' ' + it.time : ''))), { label: t('undo'), fn: () => { S.items = S.items.filter(x => x !== it); delete m.planned; save(); render(); } });
     return;
   }
@@ -443,7 +443,7 @@ ACT.dBType = el => { V.boardType = V.boardType === el.dataset.k ? 'all' : el.dat
 ACT.dQuickGo = () => {
   const q = $('#dQuick'); const v = (q && q.value || '').trim(); if (!v) { q && q.focus(); return; }
   const card = V.boardFilter !== 'all' && V.boardFilter !== 'none' ? V.boardFilter : null;
-  if (isURL(v)) addLink(v, '', card); else { S.moments.push({ id: uid(), kind: 'note', card, note: v, d: T(), ts: Date.now() }); save(); }
+  if (isURL(v)) addLink(v, '', card); else { if (typeof useCount === 'function') useCount('moms'); S.moments.push({ id: uid(), kind: 'note', card, note: v, d: T(), ts: Date.now() }); save(); }
   deskRender(); const q2 = $('#dQuick'); q2 && q2.focus(); toast(esc(isURL(v) ? (lang() === 'cs' ? 'Odkaz přidán' : 'Link added') : t('ideaAdded')));
 };
 async function addFiles(files) {
@@ -457,7 +457,7 @@ async function addFiles(files) {
       if (kind === 'photo') { blob = await compressImage(file, 2200); r = await imgRatio(blob); } else { const vi = await vidInfo(blob); r = vi.r; dur = vi.dur; }
       const key = await putMedia(blob); const m = { id: uid(), kind, card, note: '', d: T(), img: key, r, dur, ts: Date.now() + n };
       if (kind === 'video') { try { const th = await videoThumb(blob); if (th) { m.thumb = await putMedia(th); await mediaURL(m.thumb); } } catch (e) {} }
-      S.moments.push(m); n++;
+      S.moments.push(m); n++; if (typeof useCount === 'function') useCount('moms');
     } catch (e) {}
   }
   save(); render(); toast(esc((lang() === 'cs' ? 'Přidáno na Board: ' : 'Added to Board: ') + n));

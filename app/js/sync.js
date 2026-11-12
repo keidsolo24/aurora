@@ -223,7 +223,7 @@ async function fetchLinkMeta(m) {
 function addLink(url, note, card) {
   let site = ''; try { site = new URL(url).hostname.replace(/^www\./, ''); } catch (e) {}
   const m = { id: uid(), kind: 'link', url: url.trim(), title: site, site, image: null, card: card || null, note: note || '', d: T(), ts: Date.now() };
-  S.moments.push(m); save(); render(); fetchLinkMeta(m); return m;
+  S.moments.push(m); if (typeof useCount === 'function') useCount('moms'); save(); render(); fetchLinkMeta(m); return m;
 }
 
 /* keep in sync while the app is open */

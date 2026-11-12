@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aurora · Soukromí</title>
+<meta name="theme-color" content="#0b1320">
+<link rel="icon" href="app/icon-192.png">
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:800;font-display:swap;src:url(app/fonts/bricolage-grotesque-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:'Bricolage Grotesque';font-weight:800;font-display:swap;src:url(app/fonts/bricolage-grotesque-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-024F}
+@font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(app/fonts/inter-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(app/fonts/inter-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-024F}
+@font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(app/fonts/inter-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(app/fonts/inter-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-024F}
+:root{--ink:#f3ead8;--ink2:rgba(243,234,216,.74);--ink3:rgba(243,234,216,.5)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;font:400 16px/1.55 Inter,system-ui,sans-serif;color:var(--ink);background:#0b1320;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(8,14,24,.55),rgba(8,14,24,.8)),url(app/wall.jpg) center/cover;pointer-events:none}
+main{position:relative;max-width:640px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px 56px}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.top img{height:26px;width:auto}
+.lang{font:600 13px/1 Inter;color:var(--ink3);text-decoration:none;padding:9px 13px;border-radius:999px;background:rgba(243,234,216,.08)}
+h1{font:800 clamp(40px,10vw,56px)/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em;margin:0 0 14px}
+.lede{color:var(--ink2);font-size:17px;margin:0 0 26px}
+.cap{display:block;font:600 11.5px/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:24px 6px 10px}
+.grp{border-radius:22px;background:rgba(16,26,40,.5);-webkit-backdrop-filter:blur(24px) saturate(140%);backdrop-filter:blur(24px) saturate(140%);box-shadow:inset 0 0 0 1px rgba(243,234,216,.12);overflow:hidden}
+.row{padding:14px 18px;border-top:1px solid rgba(243,234,216,.08)}
+.row:first-child{border-top:0}
+.row b{display:block;font-weight:600}
+.row small{display:block;color:var(--ink3);font-size:14px;margin-top:2px}
+.foot{color:var(--ink3);font-size:13.5px;margin:22px 6px 0}
+[data-l]{display:none}
+html[lang=cs] [data-l=cs],html[lang=en] [data-l=en]{display:revert}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="./"><img src="app/logo.svg" alt="aurora" width="104" height="26"></a><a class="lang" id="sw" href="?lang=en">EN</a></div>
+
+  <div data-l="cs">
+    <h1>Soukromí</h1>
+    <p class="lede">Aurora je tvoje. Aby šla vylepšovat, posílá na server pár čísel o tom, jak se používá. Nic z toho, co do ní píšeš.</p>
+    <span class="cap">Posílá</span>
+    <div class="grp">
+      <div class="row"><b>Kdy appku otevřeš</b><small>čas, typ zařízení, verze appky</small></div>
+      <div class="row"><b>Kde v ní trávíš čas</b><small>Domov, Plán, Spaces, Board, Spolu, v minutách</small></div>
+      <div class="row"><b>Kolik věcí</b><small>kolik přidáš a odškrtneš, jen počet</small></div>
+    </div>
+    <span class="cap">Nikdy</span>
+    <div class="grp">
+      <div class="row"><b>Názvy, texty, poznámky</b></div>
+      <div class="row"><b>Fotky, videa, odkazy</b></div>
+      <div class="row"><b>Časy a obsah tvých plánů</b></div>
+    </div>
+    <span class="cap">Proč</span>
+    <div class="grp">
+      <div class="row"><b>Aby appka byla lepší</b><small>vidím, co lidi používají a co ne</small></div>
+      <div class="row"><b>Připomínka, když dlouho nejsi</b><small>po 2 dnech bez otevření, každý 2. den, nejvýš 3× za sebou. Jen když máš povolené notifikace. Vypneš je v Nastavení iPhonu → Aurora.</small></div>
+    </div>
+    <span class="cap">Jak dlouho</span>
+    <div class="grp">
+      <div class="row"><b>90 dní</b><small>pak se denní čísla smažou</small></div>
+      <div class="row"><b>Smazat všechno</b><small>napiš přes Nastavení → Napsat feedback a smažu tvůj účet i všechna data na serveru</small></div>
+    </div>
+    <p class="foot">Účet, sync a sdílení (Spolu) fungují dál jako dosud: tvoje data jsou uložená, aby byla na všech tvých zařízeních. Heslo neodchází z telefonu, server zná jen jeho otisk. Aurora je soukromá beta, kterou dělá Matěj (KEID).</p>
+  </div>
+
+  <div data-l="en">
+    <h1>Privacy</h1>
+    <p class="lede">Aurora is yours. To improve it, it sends a few numbers about how it is used. Nothing you write in it.</p>
+    <span class="cap">Sends</span>
+    <div class="grp">
+      <div class="row"><b>When you open the app</b><small>time, device type, app version</small></div>
+      <div class="row"><b>Where you spend time</b><small>Home, Plan, Spaces, Board, Together, in minutes</small></div>
+      <div class="row"><b>How many things</b><small>how many you add and check off, count only</small></div>
+    </div>
+    <span class="cap">Never</span>
+    <div class="grp">
+      <div class="row"><b>Titles, texts, notes</b></div>
+      <div class="row"><b>Photos, videos, links</b></div>
+      <div class="row"><b>Times and content of your plans</b></div>
+    </div>
+    <span class="cap">Why</span>
+    <div class="grp">
+      <div class="row"><b>To make the app better</b><small>I can see what people use and what they don't</small></div>
+      <div class="row"><b>A nudge when you are away</b><small>after 2 days without opening, every 2nd day, 3 times at most in a row. Only with notifications allowed. Turn them off in iPhone Settings → Aurora.</small></div>
+    </div>
+    <span class="cap">How long</span>
+    <div class="grp">
+      <div class="row"><b>90 days</b><small>then the daily numbers are deleted</small></div>
+      <div class="row"><b>Delete everything</b><small>write via Settings → Send feedback and I will delete your account and all data on the server</small></div>
+    </div>
+    <p class="foot">Account, sync and sharing (Together) work as before: your data is stored so it is on all your devices. Your password never leaves your phone, the server only knows its fingerprint. Aurora is a private beta made by Matěj (KEID).</p>
+  </div>
+</main>
+<script>
+const en = new URLSearchParams(location.search).get('lang') === 'en';
+document.documentElement.lang = en ? 'en' : 'cs';
+const sw = document.getElementById('sw'); sw.textContent = en ? 'CZ' : 'EN'; sw.href = en ? '?' : '?lang=en';
+document.title = en ? 'Aurora · Privacy' : 'Aurora · Soukromí';
+</script>
+</body>
+</html>

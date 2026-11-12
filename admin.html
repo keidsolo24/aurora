@@ -63,6 +63,70 @@ button,input{font:inherit;color:inherit}
 .ok{color:#8be0b0;font-weight:600}
 @media (max-width:900px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ur{grid-template-columns:36px minmax(0,1fr) auto}.ur>:nth-child(n+4){display:none}.ur .ls{display:block}}
+/* v19.5.3 · Users: live, chart, sections, sleeping */
+.wrap.wide{max-width:1180px}
+.stats .st.now b::after{content:"";display:inline-block;width:10px;height:10px;border-radius:5px;background:#8be0b0;margin-left:10px;vertical-align:8px;box-shadow:0 0 0 0 rgba(139,224,176,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(139,224,176,0)}100%{box-shadow:0 0 0 0 rgba(139,224,176,0)}}
+.duo{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-bottom:12px}
+.pn{border-radius:24px;padding:18px 20px;min-width:0}
+.pn header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
+.pn h3{margin:0;font:800 19px/1.1 'Bricolage Grotesque',sans-serif;letter-spacing:-.01em}
+.pn header span{color:var(--ink3);font-size:12.5px}
+.chart{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end;height:170px;padding-top:22px}
+.chart .c{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.chart .b{width:100%;border-radius:8px 8px 4px 4px;background:rgba(243,234,216,.22);min-height:4px;position:relative}
+.chart .c.td .b{background:var(--ink)}
+.chart .b em{position:absolute;top:-18px;left:0;right:0;text-align:center;font:600 11px/1 Inter;color:var(--ink2);font-style:normal}
+.chart small{font-size:10.5px;color:var(--ink3)}
+.sbar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin-bottom:14px}
+.sbar i{display:block;height:100%}
+.slist{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.slist div{display:flex;align-items:center;gap:8px;font-size:14px}
+.slist b{margin-left:auto;font-weight:600}
+.slist i{width:10px;height:10px;border-radius:5px;flex:none}
+.sleep{margin-bottom:12px}
+.sr{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(243,234,216,.08)}
+.sr:first-child{border-top:0;padding-top:0}
+.sr .nm small{display:block}
+.pill2{font:600 11.5px/1 Inter;padding:6px 9px;border-radius:999px;background:rgba(243,234,216,.08);color:var(--ink2);white-space:nowrap}
+.pill2.no{color:var(--ink3)}
+.nb{height:36px;padding:0 14px;border-radius:999px;border:0;background:var(--ink);color:#0e1a2b;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+.nb:disabled{background:rgba(243,234,216,.1);color:var(--ink3);cursor:default}
+.live{display:inline-flex;align-items:center;gap:7px;color:var(--ink3);font-size:12.5px}
+.live i{width:7px;height:7px;border-radius:4px;background:#8be0b0}
+.ur.v3{grid-template-columns:40px minmax(0,1.5fr) 1.1fr 1.15fr .9fr .9fr .7fr}
+.days{display:flex;gap:3px}
+.days i{width:7px;height:16px;border-radius:3px;background:rgba(243,234,216,.12)}
+.days i.on{background:#8be0b0}
+.ov{position:fixed;inset:0;background:rgba(4,8,14,.6);display:grid;place-items:center;padding:16px;z-index:8}
+.sheet{width:min(460px,100%);border-radius:28px;padding:22px}
+.sheet h3{margin:0 0 4px;font:800 24px/1.1 'Bricolage Grotesque',sans-serif}
+.opt{display:block;width:100%;text-align:left;padding:13px 16px;border-radius:16px;border:0;background:rgba(243,234,216,.07);margin-top:8px;cursor:pointer;font-size:14.5px;line-height:1.4}
+.opt.on{background:var(--ink);color:#0e1a2b}
+.opt small{display:block;opacity:.6;font-size:12px;margin-top:2px}
+.sheet textarea{width:100%;margin-top:8px;border-radius:16px;border:0;padding:12px 16px;background:rgba(243,234,216,.07);color:var(--ink);font:inherit;resize:none;outline:0}
+.act2{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.act2 button{height:42px;padding:0 18px;border-radius:999px;border:0;background:rgba(243,234,216,.1);font-weight:600;cursor:pointer}
+.act2 .pri{background:var(--ink);color:#0e1a2b}
+@media (max-width:900px){.duo{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .wrap{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+  h1{font-size:38px}
+  .stats{gap:8px}.st{padding:14px 15px;border-radius:20px}.st b{font-size:30px}
+  .slist{grid-template-columns:1fr}
+  .chart{gap:4px;height:120px}.chart small{font-size:9px}
+  .sr{grid-template-columns:34px minmax(0,1fr) auto}.sr .pill2{display:none}
+  .ub .q{min-width:0;flex-basis:100%}
+  .ut{background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;display:flex;flex-direction:column;gap:10px}
+  .ur.h{display:none}
+  .ur.v3{display:grid;grid-template-columns:36px minmax(0,1fr) auto;grid-template-areas:"av nm ls" "dy dy dy" "mt mt mt";row-gap:10px;border-radius:22px;border:0;padding:14px 16px;background:rgba(16,26,40,.55);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:inset 0 0 0 1px rgba(243,234,216,.12)}
+  .ur.v3>*{display:block!important}
+  .ur.v3.h{display:none!important}
+  .ur.v3>.av{display:grid!important}
+  .ur.v3 .av{grid-area:av}.ur.v3 .nm{grid-area:nm}.ur.v3 .lsc{grid-area:ls;text-align:right;font-size:13px}.ur.v3 .dyc{grid-area:dy}.ur.v3 .mt{grid-area:mt;display:flex!important;flex-wrap:wrap;gap:6px}
+  .ur.v3 .dsk{display:none!important}
+}
+.ur.v3 .mt{display:none}
 #big{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
 #big img{max-width:100%;max-height:100%;border-radius:12px}
 </style>
@@ -85,9 +149,15 @@ button,input{font:inherit;color:inherit}
   </div>
   <div id="users" hidden>
     <div class="stats" id="stats"></div>
-    <div class="ub"><input class="q" id="uq" placeholder="Hledat jméno nebo @login"><button class="cp" id="ucopy">Kopírovat pro Notion</button><button class="cp g" id="ureload" style="background:rgba(243,234,216,.1);color:var(--ink)">Obnovit</button></div>
+    <div class="duo">
+      <section class="pn g"><header><h3>Kolik lidí denně</h3><span id="dauSub"></span></header><div class="chart" id="dau"></div></section>
+      <section class="pn g"><header><h3>Kde lidi tráví čas</h3><span>posledních 7 dní</span></header><div id="secs"></div></section>
+    </div>
+    <section class="pn g sleep" id="sleepP"><header><h3>Usínají</h3><span>2+ dny nebyli v appce · automatika připomíná každý 2. den, max 3×</span></header><div id="sleep"></div></section>
+    <div class="ub"><input class="q" id="uq" placeholder="Hledat jméno nebo @login"><button class="cp" id="ucopy">Kopírovat pro Notion</button><span class="live" id="live"><i></i>živě · obnovuje se samo</span></div>
     <div class="ut g" id="ut"></div>
   </div>
+  <div id="nudge" class="ov" hidden><div class="sheet g"><h3 id="ngT">Připomenout</h3><p class="sub" id="ngS"></p><div id="ngL"></div><textarea id="ngX" rows="2" placeholder="Nebo napiš vlastní…"></textarea><div class="act2"><button id="ngC">Zrušit</button><button class="pri" id="ngGo">Poslat notifikaci</button></div></div></div>
 </div>
 <div id="big"><img alt=""></div>
 <script>
@@ -118,55 +188,97 @@ function draw() {
       + '<div class="act"><button data-done="' + i.id + '" data-v="' + (i.done ? 0 : 1) + '">' + (i.done ? 'Vrátit mezi nevyřešené' : 'Hotovo, vyřešeno') + '</button></div></article>'; }).join('') : '<div class="empty">Nic tu není.</div>';
   $('#sub').textContent = items.length + ' zpráv celkem · ' + items.filter(i => !i.done).length + ' nevyřešených';
 }
-/* ---------- v19.5.2 · Users tab ---------- */
+/* ---------- v19.5.3 · Users: live, chart, where people spend time, who is falling asleep ---------- */
 function show() {
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
   $('#main').hidden = tab !== 'fb'; $('#users').hidden = tab !== 'us';
+  document.querySelector('.wrap').classList.toggle('wide', tab === 'us');
   if (tab === 'fb') { $('#h1').textContent = 'Feedback'; draw(); } else { $('#h1').textContent = 'Uživatelé'; loadUsers(); }
 }
 const $$ = s => [...document.querySelectorAll(s)];
+let daily = [], uTimer = 0;
 async function loadUsers(force) {
   if (users && !force) return drawUsers();
-  $('#sub').textContent = 'Načítám…';
-  try { const j = await api('/a/list'); users = j.users || []; unow = j.now || Date.now(); drawUsers(); }
-  catch (e) { $('#sub').textContent = e.message === 'not found' ? 'Server ještě nemá /a/list: nasaď nový Worker (v19.5.2).' : 'Nepovedlo se načíst: ' + e.message; }
+  if (!users) $('#sub').textContent = 'Načítám…';
+  try { const j = await api('/a/list'); users = j.users || []; daily = j.daily || []; unow = j.now || Date.now(); drawUsers(); }
+  catch (e) { $('#sub').textContent = e.message === 'not found' ? 'Server ještě nemá /a/list: nasaď nový Worker.' : 'Nepovedlo se načíst: ' + e.message; }
+  clearTimeout(uTimer); uTimer = setTimeout(() => { if (tab === 'us' && !document.hidden && $('#nudge').hidden) loadUsers(true); }, 30000);
 }
-const DAY = 864e5;
+const DAY = 864e5, MIN = 6e4;
 const PLAT = { iphone: 'iPhone', ipad: 'iPad', android: 'Android', windows: 'PC', mac: 'Mac', other: 'jiné' };
 const COL = ['#8be0b0', '#ff8fb8', '#7fb3ff', '#f0a44b', '#f3ead8', '#b08cff', '#4cc9d9'];
+const SEC = [['plan', 'Plán', '#7fb3ff'], ['board', 'Board', '#f0a44b'], ['home', 'Domov', '#f3ead8'], ['spaces', 'Spaces', '#8be0b0'], ['spolu', 'Spolu', '#ff8fb8']];
+const WD = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
 function dd(at) { if (!at) return '—'; const d = new Date(at); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; }
 function rel(at) {
-  if (!at) return 'zatím ne'; const m = Math.round((unow - at) / 6e4);
-  if (m < 5) return 'teď'; if (m < 60) return 'před ' + m + ' min'; const h = Math.round(m / 60); if (h < 24) return 'před ' + h + ' h';
+  if (!at) return 'zatím ne'; const m = Math.round((unow - at) / MIN);
+  if (m < 15) return 'teď v appce'; if (m < 60) return 'před ' + m + ' min'; const h = Math.round(m / 60); if (h < 24) return 'před ' + h + ' h';
   const d = Math.round(h / 24); return d === 1 ? 'včera' : 'před ' + d + ' dny';
 }
-function devs(u) { const seen = new Set(); return u.devs.map(d => (PLAT[d.plat] || d.plat || '?') + (d.mode === 'app' && /iphone|ipad|android/.test(d.plat) ? '' : d.mode === 'web' && /iphone|ipad|android/.test(d.plat) ? ' (web)' : '')).filter(x => !seen.has(x) && seen.add(x)).join(' · ') || '—'; }
+const away = u => u.last ? (unow - u.last) / DAY : 99;
+function devs(u) { const seen = new Set(); return u.devs.map(d => (PLAT[d.plat] || d.plat || '?') + (d.mode === 'web' && /iphone|ipad|android/.test(d.plat) ? ' (web)' : '')).filter(x => !seen.has(x) && seen.add(x)).join(' · ') || '—'; }
 const verOf = u => (u.devs.slice().sort((a, b) => (b.last || 0) - (a.last || 0))[0] || {}).ver || '—';
+const topSec = u => { const s = u.sec || {}; const k = SEC.slice().sort((a, b) => (s[b[0]] || 0) - (s[a[0]] || 0))[0]; return (s[k[0]] || 0) ? k[1] : '—'; };
+const mins = x => x < 60 ? Math.round(x) + ' s' : x < 3600 ? Math.round(x / 60) + ' min' : (x / 3600).toFixed(1).replace('.', ',') + ' h';
+const av = u => '<span class="av" style="background:' + COL[(users.indexOf(u)) % COL.length] + '">' + esc((u.name || u.login)[0].toUpperCase()) + '</span>';
+const nmc = u => '<span class="nm"><b>' + esc(u.name || '—') + '</b><small>@' + esc(u.login) + '</small></span>';
 function drawUsers() {
-  const all = users || []; const act = n => all.filter(u => u.last && unow - u.last < n * DAY).length;
-  const nd = all.reduce((s, u) => s + u.devs.length, 0);
-  const st = [[all.length, 'účtů celkem'], [act(1), 'aktivní dnes'], [act(7), 'aktivní za 7 dní'], [all.filter(u => unow - (u.created || 0) < 7 * DAY).length, 'nových za 7 dní'], [nd, 'zařízení · ' + all.reduce((s, u) => s + u.devs.filter(d => /iphone|android/.test(d.plat)).length, 0) + ' telefon'], [all.filter(u => u.spolu).length, 've Spolu']];
-  $('#stats').innerHTML = st.map(([b, t]) => '<div class="st g"><b>' + b + '</b><span>' + esc(t) + '</span></div>').join('');
+  const all = users || []; const act = n => all.filter(u => away(u) < n).length;
+  const now = all.filter(u => u.last && unow - u.last < 15 * MIN).length;
+  const st = [[now, 'teď v appce', 'now'], [act(1), 'aktivní dnes'], [act(7), 'aktivní za 7 dní'], [all.length, 'účtů · ' + all.filter(u => unow - (u.created || 0) < 7 * DAY).length + ' nových za 7 dní'], [all.filter(u => u.notif).length, 's notifikacemi'], [all.filter(u => u.spolu).length, 've Spolu']];
+  $('#stats').innerHTML = st.map(([b, t, c]) => '<div class="st g' + (c ? ' ' + c : '') + '"><b>' + b + '</b><span>' + esc(t) + '</span></div>').join('');
+  // chart: people per day, last 14 days
+  const mx = Math.max(1, ...daily.map(d => d.n));
+  $('#dau').innerHTML = daily.map((d, k) => { const dt = new Date(d.d + 'T12:00'); return '<div class="c' + (k === daily.length - 1 ? ' td' : '') + '"><div class="b" style="height:' + Math.max(3, d.n / mx * 100) + '%"><em>' + (d.n || '') + '</em></div><small>' + (k === daily.length - 1 ? 'dnes' : WD[dt.getDay()]) + '</small></div>'; }).join('');
+  const wk = daily.slice(-7).reduce((s, d) => s + d.n, 0) / 7;
+  $('#dauSub').textContent = daily.length ? 'průměr ' + wk.toFixed(1).replace('.', ',') + ' / den za týden' : 'sbírá se od verze 19.5.3';
+  // sections
+  const tot = {}; all.forEach(u => SEC.forEach(([k]) => tot[k] = (tot[k] || 0) + ((u.sec || {})[k] || 0)));
+  const sum = Object.values(tot).reduce((a, b) => a + b, 0) || 1;
+  $('#secs').innerHTML = '<div class="sbar">' + SEC.map(([k, , c]) => '<i style="width:' + (tot[k] / sum * 100) + '%;background:' + c + '"></i>').join('') + '</div><div class="slist">' + SEC.map(([k, n, c]) => '<div><i style="background:' + c + '"></i>' + n + '<b>' + Math.round(tot[k] / sum * 100) + ' %</b></div>').join('') + '</div>';
+  // falling asleep
+  const zz = all.filter(u => away(u) >= 2 && away(u) < 60).sort((a, b) => away(a) - away(b));
+  $('#sleep').innerHTML = zz.length ? zz.map(u => '<div class="sr">' + av(u) + '<span class="nm"><b>' + esc(u.name || u.login) + '</b><small>' + esc(rel(u.last)) + ' · nejvíc ' + esc(topSec(u)) + (u.nudged ? ' · připomenuto ' + esc(rel(u.nudged)) + (u.nudges ? ' (' + u.nudges + '/3)' : '') : '') + '</small></span><span class="pill2' + (u.notif ? '' : ' no') + '">' + (u.notif ? 'notifikace zapnuté' : 'bez notifikací') + '</span><button class="nb" data-nudge="' + esc(u.login) + '"' + (u.notif ? '' : ' disabled') + '>Připomenout</button></div>').join('') : '<div class="empty">Nikdo neusíná. 🙌</div>';
+  // people
   const q = uq.trim().toLowerCase().replace(/^@/, '');
-  const rows = all.filter(u => !q || u.login.includes(q) || (u.name || '').toLowerCase().includes(q));
-  $('#ut').innerHTML = '<div class="ur h"><span></span><span>Jméno · login</span><span>Od</span><span>Naposledy</span><span>Zařízení</span><span>Spolu</span><span>Verze</span></div>'
-    + (rows.length ? rows.map((u, k) => { const fresh = u.last && unow - u.last < DAY;
-      return '<div class="ur"><span class="av" style="background:' + COL[(all.indexOf(u)) % COL.length] + '">' + esc((u.name || u.login)[0].toUpperCase()) + '</span><span class="nm"><b>' + esc(u.name || '—') + '</b><small>@' + esc(u.login) + '<span class="ls"> · ' + esc(rel(u.last)) + '</span></small></span><span>' + dd(u.created) + '</span><span><span class="dot" style="background:' + (fresh ? '#8be0b0' : 'rgba(243,234,216,.3)') + '"></span>' + esc(rel(u.last)) + '</span><span class="dv">' + esc(devs(u)) + '</span><span class="ok">' + (u.spolu ? '✓ ' + u.spolu : '') + '</span><span class="dv">' + esc(verOf(u)) + '</span></div>'; }).join('')
+  const rows = all.filter(u => !q || u.login.includes(q) || (u.name || '').toLowerCase().includes(q)).sort((a, b) => (b.last || 0) - (a.last || 0));
+  $('#ut').innerHTML = '<div class="ur v3 h"><span></span><span>Jméno · login</span><span>Naposledy</span><span>Posledních 14 dní</span><span>Nejvíc v</span><span>Za 7 dní</span><span>Zařízení</span></div>'
+    + (rows.length ? rows.map(u => { const fresh = u.last && unow - u.last < 15 * MIN; const days = (u.days || []).slice(-14);
+      const dy = '<span class="days">' + days.map(x => '<i' + (x ? ' class="on"' : '') + '></i>').join('') + '</span>';
+      return '<div class="ur v3">' + av(u) + nmc(u) + '<span class="lsc"><span class="dot" style="background:' + (!u.last ? 'rgba(243,234,216,.2)' : fresh ? '#8be0b0' : away(u) < 1 ? 'rgba(139,224,176,.45)' : away(u) >= 2 ? '#ffb4a6' : 'rgba(243,234,216,.3)') + '"></span>' + esc(rel(u.last)) + '</span><span class="dyc">' + dy + '</span><span class="dsk">' + esc(topSec(u)) + '</span><span class="dsk">' + (u.adds7 || 0) + ' přidal · ' + (u.checks7 || 0) + ' ✓</span><span class="dsk dv">' + esc(devs(u)) + '</span>'
+        + '<span class="mt">' + (u.last ? '<span class="pill2">nejvíc ' + esc(topSec(u)) + '</span><span class="pill2">' + (u.adds7 || 0) + ' přidal · ' + (u.checks7 || 0) + ' ✓</span><span class="pill2">' + esc(devs(u)) + ' · ' + esc(verOf(u)) + '</span>' : '<span class="pill2 no">ještě appku neotevřel</span>') + (u.spolu ? '<span class="pill2">Spolu</span>' : '') + '</span></div>'; }).join('')
       : '<div class="empty">' + (all.length ? 'Nikdo neodpovídá hledání.' : 'Zatím žádné účty.') + '</div>');
-  $('#sub').textContent = 'Účty v Auroře. Server vidí jen login, jméno, zařízení a kdy byl kdo naposledy aktivní, nikdy obsah. Aktivita se počítá od verze 19.5.2.';
+  $('#sub').textContent = 'Kdo je v Auroře a jak ji používá. Appka posílá jen čísla (kdy, kde, kolik), nikdy obsah.';
 }
 function tsv() {
-  const head = ['Jméno', 'Login', 'Účet od', 'Naposledy', 'Zařízení', 'Spolu', 'Verze'];
+  const head = ['Jméno', 'Login', 'Účet od', 'Naposledy', 'Aktivní dny (14)', 'Nejvíc v', 'Zařízení', 'Notifikace', 'Spolu', 'Verze'];
   const iso = at => at ? new Date(at).toISOString().slice(0, 10) : '';
-  return [head].concat((users || []).map(u => [u.name || '', '@' + u.login, iso(u.created), iso(u.last), devs(u), u.spolu ? 'ano' : 'ne', verOf(u)])).map(r => r.map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+  return [head].concat((users || []).map(u => [u.name || '', '@' + u.login, iso(u.created), iso(u.last), (u.days || []).filter(Boolean).length, topSec(u), devs(u), u.notif ? 'ano' : 'ne', u.spolu ? 'ano' : 'ne', verOf(u)])).map(r => r.map(x => String(x).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+}
+/* reminder by hand */
+const NUDGES = [['Co je jedna věc, kterou chceš zítra udělat? Hoď ji do Plánu.', 'Plán'], ['Máš nápad, co ti leží v hlavě? Hoď ho na Board, než uteče.', 'Board'], ['Jak vypadá tvůj týden? Stačí jedna věc a je rozjetý.', 'týden'], ['Aurora má novinky. Mrkni, co je nového.', 'update']];
+let nWho = null, nPick = 0;
+function nudgeOpen(login) {
+  nWho = (users || []).find(u => u.login === login); nPick = 0; if (!nWho) return;
+  $('#ngT').textContent = 'Připomenout · ' + (nWho.name || nWho.login);
+  $('#ngS').textContent = 'Přijde jako notifikace z Aurory. Naposledy v appce ' + rel(nWho.last) + '.';
+  $('#ngL').innerHTML = NUDGES.map(([t, k], i) => '<button class="opt' + (i === nPick ? ' on' : '') + '" data-pick="' + i + '">' + esc(t) + '<small>' + esc(k) + '</small></button>').join('');
+  $('#ngX').value = ''; $('#nudge').hidden = false;
 }
 $('#uq').addEventListener('input', e => { uq = e.target.value; drawUsers(); });
 $('#ucopy').onclick = async () => { const b = $('#ucopy'); try { await navigator.clipboard.writeText(tsv()); b.textContent = 'Zkopírováno ✓'; } catch (e) { b.textContent = 'Nejde kopírovat'; } setTimeout(() => { b.textContent = 'Kopírovat pro Notion'; }, 2200); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && tab === 'us' && users) loadUsers(true); });
 document.addEventListener('click', async e => {
+  const nb = e.target.closest('[data-nudge]'); if (nb) { nudgeOpen(nb.dataset.nudge); return; }
+  const pk = e.target.closest('[data-pick]'); if (pk) { nPick = +pk.dataset.pick; $$('#ngL .opt').forEach((b, i) => b.classList.toggle('on', i === nPick)); return; }
+  if (e.target.id === 'ngC' || e.target.id === 'nudge') { $('#nudge').hidden = true; return; }
+  if (e.target.id === 'ngGo') { const txt = $('#ngX').value.trim() || NUDGES[nPick][0]; const b = e.target; b.disabled = true; b.textContent = 'Posílám…';
+    try { await api('/a/nudge', { login: nWho.login, text: txt }); b.textContent = 'Posláno ✓'; nWho.nudged = Date.now(); setTimeout(() => { $('#nudge').hidden = true; b.disabled = false; b.textContent = 'Poslat notifikaci'; drawUsers(); }, 900); }
+    catch (er) { b.textContent = er.message === 'nodevice' ? 'Nemá zapnuté notifikace' : 'Nejde poslat (' + er.message + ')'; setTimeout(() => { b.disabled = false; b.textContent = 'Poslat notifikaci'; }, 2200); }
+    return; }
   const tb = e.target.closest('#tabs [data-t]'); if (tb) { tab = tb.dataset.t; show(); return; }
   const f = e.target.closest('[data-f]'); if (f) { filter = f.dataset.f; draw(); return; }
   if (e.target.id === 'reload') { load(); return; }
-  if (e.target.id === 'ureload') { loadUsers(true); return; }
   const d = e.target.closest('[data-done]'); if (d) { const id = +d.dataset.done, v = +d.dataset.v; await api('/fb/done', { id, done: v }); const it = items.find(x => x.id === id); if (it) it.done = v; draw(); return; }
   if (e.target.classList.contains('img')) { $('#big img').src = e.target.src; $('#big').style.display = 'flex'; return; }
   if (e.target.closest('#big')) $('#big').style.display = 'none';

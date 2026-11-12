@@ -960,3 +960,4 @@ body.kbopen #welcome .wchips,body.kbopen #welcome .acwhy{display:none}
 @media (max-width:360px){.acol .sw{width:22px;height:22px}.acol .sws{gap:5px}}
 /* v19.5.2 · time tile shows the range */
 .atile .v .tend{font-style:normal;font-size:.7em;letter-spacing:0;opacity:.62;margin-left:1px}
+.ver .plink{color:inherit;text-decoration:underline;text-underline-offset:2px}

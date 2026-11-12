@@ -122,6 +122,7 @@ function stackCards(M) {
   const at = typeof accTip === 'function' ? accTip() : null; if (at) c.acc = cardAcc(at);
   if (N) c.spolu = cardSpolu(N); if (tp) c.tip = cardTip(tp); if (bm) c.board = cardBoard(bm); if (h >= 18) c.eve = cardEvening(M);
   let order = h >= 18 ? (N && !N.seen ? ['spolu', 'eve', 'pak', 'week', 'tip', 'board'] : ['eve', 'pak', 'week', 'spolu', 'tip', 'board']) : N && !N.seen ? ['spolu', 'pak', 'week', 'tip', 'board'] : ['pak', 'week', 'tip', 'spolu', 'board'];
+  const wb = wakeCard(); if (wb) { c.wake = wb; order.unshift('wake'); }
   if (c.acc) order.unshift('acc');
   order = order.filter(k => c[k]);
   return { order, html: order.map(k => c[k]), news: N };
@@ -180,3 +181,13 @@ ACT.moveRest = () => {
   moved.forEach(i => i.date = to); save(); render();
   toast(esc(L2('Přesunuto na zítra: ' + moved.length, 'Moved to tomorrow: ' + moved.length)), { label: t('undo'), fn: () => { moved.forEach(i => i.date = d); save(); render(); } });
 };
+
+/* v19.5.3 · back after a few days: one calm step instead of a full Home */
+function wakeCard() {
+  const gap = S.awayDays || 0; if (gap < 2 || S.wakeX === T()) return null; const cs = lang() === 'cs';
+  return '<div class="lh"><span class="cap">' + esc(cs ? 'Vítej zpátky' : 'Welcome back') + '</span><button class="hx press" data-a="wakeX" aria-label="' + esc(cs ? 'Skrýt' : 'Hide') + '">' + ico('x', 14, 2.4) + '</button></div>'
+    + '<div class="hbig">' + esc(cs ? 'Jedna věc na dnešek?' : 'One thing for today?') + '</div><div class="hp">' + esc(cs ? 'Od posledního otevření ' + (gap >= 5 ? 'uběhlo ' + gap + ' dní' : 'uběhly ' + gap + ' dny') + '. Stačí jedna věc a jsi zpátky v rytmu.' : gap + ' days since you last opened Aurora. One thing is enough to get back in rhythm.') + '</div>'
+    + '<button class="hbtn press" data-a="wakeGo">' + esc(cs ? 'Přidat do Plánu' : 'Add to Plan') + '</button>';
+}
+ACT.wakeX = () => { S.wakeX = T(); save(); render(); };
+ACT.wakeGo = () => { S.wakeX = T(); save(); openAdd({ date: T() }); };

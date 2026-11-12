@@ -152,6 +152,7 @@ async function boot() {
   let st = null;
   try { st = await loadState(); } catch (e) {}
   S = migrate(st || blankState());
+  if (typeof useBoot === 'function') useBoot();
   V.planDay = T(); V.planWeek = weekStart(T());
   try { await warmMedia(); } catch (e) {}
   applyLook(); buildNav();

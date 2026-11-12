@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '19.5.2';
+const VERSION = '19.5.3';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -263,6 +263,7 @@ const overdueItems = () => S.items.filter(i => !i.repeat && i.date && i.date < T
 const undatedItems = () => S.items.filter(i => !i.repeat && !i.date && !i.done);
 function todayList() { const d = T(); return [...overdueItems(), ...itemsOn(d)]; }
 function setDone(i, d, val) {
+  if (val && typeof useCount === 'function') useCount('checks');
   if (i.repeat) {
     i.doneDates = i.doneDates || [];
     const has = i.doneDates.includes(d);

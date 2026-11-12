@@ -10,7 +10,7 @@ let A = null;
 const REM_OPTS = [['off', 'rOff'], [0, 'rAt'], [10, 'r10'], [30, 'r30'], [60, 'r60'], ['eve', 'rEve']];
 const QUICK_TIMES = ['08:00', '10:00', '12:00', '14:00', '18:00', '20:00'];
 function durLabel(m) { if (m < 60) return m + ' min'; if (!(m % 60)) return m / 60 + ' h'; if (!(m % 30)) return (m / 60).toString().replace('.', lang() === 'cs' ? ',' : '.') + ' h'; return Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
-const DUR_OPTS = [15, 30, 45, 60, 90, 120, 180, 240, 360, 480];
+const DUR_OPTS = [15, 30, 45, 60, 90, 120];
 const endOf = (time, dur) => mtime((tmin(time) + (dur || 45)) % 1440);
 function remLabel(r) { const o = REM_OPTS.find(x => x[0] === r); return o ? t(o[1]) : t('r10'); }
 function suggestCard(txt) {
@@ -313,7 +313,7 @@ async function saveAdd(o = {}) {
       it.repeat = rep; if (rep === 'days') it.days = A.days.slice(); else delete it.days;
       if (!it.date) it.date = T();
     } else if (it.repeat) { delete it.repeat; delete it.days; delete it.doneDates; it.done = false; }
-    if (isNew) S.items.push(it);
+    if (isNew) { S.items.push(it); if (typeof useCount === 'function') useCount('adds'); }
     if (A.fromMoment) { const m = S.moments.find(x => x.id === A.fromMoment); if (m) { m.planned = it.id; it.mom = m.id; } }
     const pid = A.partner; const cardSh = card && cardById(card) && cardById(card).sh;
     save(); closeSheet(true); render();
@@ -337,7 +337,7 @@ async function saveAdd(o = {}) {
   }
   if (!A.file) {
     const m = { id: uid(), kind: 'note', card, note: A.text.trim(), d: T(), ts: Date.now() };
-    S.moments.push(m); save(); render();
+    S.moments.push(m); if (typeof useCount === 'function') useCount('moms'); save(); render();
     if (o.keep) {
       A.text = ''; const ta = $('#aText'); if (ta) { ta.value = ''; ta.style.height = 'auto'; ta.focus({ preventScroll: true }); } const c = $('#aClr'); if (c) c.hidden = true; updAdd();
       toast(esc(t('ideaAdded')), { label: t('undo'), fn: () => { S.moments = S.moments.filter(x => x !== m); save(); render(); } });
@@ -354,7 +354,7 @@ async function saveAdd(o = {}) {
     const key = await putMedia(blob);
     const m = { id: uid(), kind: A.kind, card, note: A.text.trim(), d: T(), img: key, r, dur, ts: Date.now() };
     if (A.kind === 'video') { try { const th = await videoThumb(blob); if (th) { m.thumb = await putMedia(th); await mediaURL(m.thumb); } } catch (e) {} }
-    S.moments.push(m); save(); closeSheet(true); if (A.url) URL.revokeObjectURL(A.url);
+    S.moments.push(m); if (typeof useCount === 'function') useCount('moms'); save(); closeSheet(true); if (A.url) URL.revokeObjectURL(A.url);
     if (V.tab !== 'board' && !V.card) go('board'); else render();
     toast(esc(t('photoAdded')), { label: t('undo'), fn: () => { S.moments = S.moments.filter(x => x !== m); delMedia(key); if (m.thumb) delMedia(m.thumb); save(); render(); } });
   } catch (e) { if (sv) { sv.disabled = false; sv.textContent = saveLabel(); } toast(lang() === 'cs' ? 'Uložení se nepovedlo' : 'Could not save'); }
