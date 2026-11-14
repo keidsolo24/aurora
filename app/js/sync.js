@@ -14,6 +14,7 @@ function syncEnts() {
   for (const ch of S.shared || []) m.set('k:' + ch.sp, { sp: ch.sp, secret: ch.secret, kind: ch.kind, ref: ch.ref });
   m.set('p:prefs', { name: S.name || '', lang: S.lang, nudges: S.nudges, weekly: S.weekly, order: S.cards.map(c => c.id), me: S.me && S.me.id || null });
   for (const [sp, k] of Object.entries(S.kickedSp || {})) if (!m.has('k:' + sp)) m.set('k:' + sp, k); // v19.5.1: removed here ≠ removed on my other devices
+  m.set('p:look', { mode: S.mode === 'light' ? 'light' : 'dark', blur: S.blur ?? 0, dim: S.dim ?? 22, wall: S.wall || 'aurora', wallKey: S.wall === 'photo' ? S.wallKey || null : null }); // v19.6.3: one look on every device
   if (S.acc && S.acc.login) m.set('p:acc', { login: S.acc.login, id: S.acc.id }); // v19.5: who this account is
   return m;
 }
@@ -50,7 +51,8 @@ async function syncPush() {
     for (const e of part) { if (e.v == null) delete snap[e.k]; else snap[e.k] = e.v; }
   }
   // media previews (once per media key)
-  const keys = new Set(); S.moments.forEach(m => { if (typeof spaceOfMoment === 'function' && spaceOfMoment(m)) return; if (m.kind === 'photo' && m.img) keys.add(m.img); if (m.thumb) keys.add(m.thumb); });
+  const keys = new Set(); if (S.wall === 'photo' && S.wallKey) keys.add(S.wallKey); // wallpaper photo first
+  S.moments.forEach(m => { if (typeof spaceOfMoment === 'function' && spaceOfMoment(m)) return; if (m.kind === 'photo' && m.img) keys.add(m.img); if (m.thumb) keys.add(m.thumb); });
   let sent = 0;
   for (const key of keys) {
     if (snap['b:' + key]) continue; if (sent >= 6) { SY.again = true; break; }
@@ -91,6 +93,7 @@ async function syncPull() {
 function applyEnt(k, v) {
   const t = k[0], id = k.slice(2);
   if (k === 'p:prefs') { if (v) { const p = JSON.parse(v); S.name = p.name || S.name; if (p.lang) S.lang = p.lang; S.nudges = p.nudges !== false; S.weekly = p.weekly !== false; if (Array.isArray(p.order)) SY.order = p.order; if (p.me && !(S.acc && S.acc.id) && (!S.me || !S.me.id || !(S.shared || []).length)) S.me = { id: p.me }; } return; }
+  if (k === 'p:look') { if (v) { let o = null; try { o = JSON.parse(v); } catch (e) {} if (o) { S.mode = o.mode === 'light' ? 'light' : 'dark'; S.blur = clamp(+o.blur || 0, 0, 100); S.dim = clamp(o.dim ?? 22, 0, 70); if (o.wall === 'photo' && o.wallKey) { S.wall = 'photo'; S.wallKey = o.wallKey; } else if (o.wall && o.wall !== 'photo') S.wall = o.wall; } } return; }
   if (k === 'p:acc') { if (v) { let o = null; try { o = JSON.parse(v); } catch (e) {} if (o && o.id && o.login && (!S.acc || S.acc.id !== o.id || S.acc.login !== o.login)) { S.acc = { login: o.login, id: o.id }; if (typeof adoptId === 'function') adoptId(o.id); } } return; }
   if (t === 'k') {
     // a shared card / plan I am in (joined on my other device)
@@ -118,7 +121,7 @@ async function syncNow(opts = {}) {
     await syncPush();
     const r = await syncPull();
     if (r.changed) { S.sync.state = 'ok'; S.sync.last = Date.now(); S.sync.err = ''; await rawSave(); applyLook(); render(); }
-    else if (r.media) render();
+    else if (r.media) { applyLook(); render(); }
     S.sync.state = 'ok'; S.sync.last = Date.now(); S.sync.err = '';
     await rawSave();
     if (typeof accSeen === 'function') accSeen();

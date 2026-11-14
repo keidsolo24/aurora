@@ -61,7 +61,7 @@ ACT.toggle = el => {
 /* settings data actions */
 ACT.exportData = async () => { try { const ok = await exportBackup(); if (ok) toast(esc(t('exported'))); } catch (e) { toast('Export failed'); } };
 ACT.restoreData = () => $('#restoreIn').click();
-ACT.sampleData = () => confirmSheet(t('sureSample'), t('yes'), async () => { await DB.clear('media'); MEDIA_URL.clear(); const keep = { name: S.name, lang: S.lang, wall: S.wall === 'photo' ? 'aurora' : S.wall, surface: S.surface, aura: S.aura, dim: S.dim, nudges: S.nudges, weekly: S.weekly }; S = await sampleState(keep); save(); applyLook(); closeSettings(true); go('home'); toast(esc(t('saved'))); }, false);
+ACT.sampleData = () => confirmSheet(t('sureSample'), t('yes'), async () => { await DB.clear('media'); MEDIA_URL.clear(); const keep = { name: S.name, lang: S.lang, wall: S.wall === 'photo' ? 'aurora' : S.wall, surface: S.surface, mode: S.mode, blur: S.blur, aura: S.aura, dim: S.dim, nudges: S.nudges, weekly: S.weekly }; S = await sampleState(keep); save(); applyLook(); closeSettings(true); go('home'); toast(esc(t('saved'))); }, false);
 ACT.deleteAll = () => confirmSheet(t('sureDel'), t('deleteAll'), async () => { try { await DB.clear('media'); await DB.del('kv', 'state'); } catch (e) {} try { localStorage.removeItem('aurora-glass-state'); } catch (e) {} MEDIA_URL.clear(); const l = S.lang; S = blankState(); S.lang = l; applyLook(); closeSettings(true); V.tab = 'home'; showWelcome(); playIntro(); });
 ACT.importOld = () => confirmSheet(t('replaceQ'), t('importOld'), async () => {
   try {

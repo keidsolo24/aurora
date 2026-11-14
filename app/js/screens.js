@@ -4,13 +4,13 @@ const V = { tab: 'home', card: null, spacesMode: 'deck', deckFilter: 'all', deck
 const fmtDur = m => m >= 600 ? Math.round(m / 60) + 'h' : Math.floor(m / 60) + ':' + pad(m % 60);
 function deadlineText(dl) { const n = daysBetween(T(), dl); if (n === 0) return t('dueToday'); if (n === 1) return t('tomorrow').toLowerCase(); if (n < 0) return t('overdueBy', -n); return t('daysLeft', n); }
 function ruleOf(card) { if (card.type === 'habit') return goalText(goalOf(card)); const r = cardItems(card.id).find(i => i.repeat); return r ? repText(r) : ''; }
-function kickOf(card) { return '<span class="kick cap" style="color:var(--ink)"><span class="led" style="--c:' + card.color + '"></span>' + esc(card.type === 'habit' ? t('habit') : t('project')) + (card.type === 'habit' && ruleOf(card) ? ' · ' + esc(ruleOf(card)) : '') + '</span>'; }
+function kickOf(card) { if (card.type === 'month') return '<span class="kick cap" style="color:var(--ink)"><span class="led" style="--c:' + card.color + '"></span>' + esc((lang() === 'cs' ? 'Měsíčně · ' : 'Monthly · ') + winText(card.win)) + '</span>'; return '<span class="kick cap" style="color:var(--ink)"><span class="led" style="--c:' + card.color + '"></span>' + esc(card.type === 'habit' ? t('habit') : t('project')) + (card.type === 'habit' && ruleOf(card) ? ' · ' + esc(ruleOf(card)) : '') + '</span>'; }
 function checkBtn(i, d, color) { const on = isDone(i, d); return '<button class="c0' + (on ? ' on' : '') + '" style="--c:' + (color || itemColor(i)) + '" data-a="toggle" data-id="' + i.id + '" data-d="' + d + '" aria-label="' + esc(t('done')) + '" aria-pressed="' + on + '">' + ico('check', 14, 3) + '</button>'; }
 function itemRow(i, d, opts = {}) {
   const on = isDone(i, d); let right = '';
   if (opts.right !== undefined) right = opts.right;
   else if (!i.repeat && !i.date && !on) right = '<button class="r warn" data-a="when" data-id="' + i.id + '">' + esc(t('whenAdd')) + '</button>';
-  else { const late = !i.repeat && i.date && i.date < T() && !on; right = '<span class="r' + (late ? ' late' : '') + '">' + esc(whenLabel(i)) + '</span>'; }
+  else { const late = (!i.repeat && i.date && i.date < T() && !on) || (i.repeat === 'monthly' && mLate(i, d)); right = '<span class="r' + (late ? ' late' : '') + '">' + esc(whenLabel(i, d)) + '</span>'; }
   const sub = opts.sub !== undefined ? opts.sub : itemSub(i, opts.withCard !== false);
   const mu = i.mom && typeof momThumb === 'function' ? momThumb(S.moments.find(x => x.id === i.mom)) : '';
   return '<div class="irow' + (on ? ' done' : '') + '" role="button" tabindex="0" data-a="openItem" data-id="' + i.id + '">' + checkBtn(i, d) + (mu ? '<img class="imth" src="' + mu + '" alt="">' : '') + '<span class="tx"><span>' + esc(i.t) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + right + '</div>';
@@ -49,7 +49,10 @@ function chooseTiles() {
 function tileHTML(c) {
   const d = T();
   let num, small, sub, viz;
-  if (c.type === 'habit') {
+  if (c.type === 'month') {
+    const ms = monthStats(c, d); num = ms.done; small = '/ ' + ms.total; sub = monthLine(ms);
+    viz = '<span class="vd" style="--c:' + c.color + '">' + ms.its.map(i => '<i class="' + (isDone(i, d) ? 'on' : '') + '"></i>').join('') + '</span>';
+  } else if (c.type === 'habit') {
     const w = habitWeek(c.id), td = dow(d);
     num = w.filter(Boolean).length; small = '/ ' + goalOf(c); sub = t('thisWeek');
     viz = '<span class="vd" style="--c:' + c.color + '">' + w.map((on, k) => '<i class="' + (on ? 'on' : '') + (k === td && on ? ' td' : '') + '"></i>').join('') + '</span>';
@@ -140,7 +143,13 @@ function filteredCards() { return S.cards.filter(c => V.deckFilter === 'all' || 
 function deckCardHTML(c, idx, total) {
   const d = T();
   let ring, ringTx, sub, nextHTML, rows = '';
-  if (c.type === 'habit') {
+  if (c.type === 'month') {
+    const ms = monthStats(c, d); ring = ringSVG(66, ms.total ? ms.done / ms.total : 0, c.color); ringTx = ms.done + '/' + ms.total;
+    sub = esc(monthLine(ms));
+    const open = ms.its.filter(i => !isDone(i, d));
+    nextHTML = open[0] ? nextPill(open[0], d, c, lang() === 'cs' ? 'Na řadě' : 'Next up') : ms.total ? '<div class="nextp in"><span class="tx"><span style="white-space:normal">' + esc(lang() === 'cs' ? 'Tento měsíc hotovo. ✓' : 'All done this month. ✓') + '</span></span></div>' : emptyNext(c);
+    open.slice(1, 3).forEach(i => rows += itemRow(i, d, { withCard: false }));
+  } else if (c.type === 'habit') {
     const w = habitWeek(c.id); const n = w.filter(Boolean).length; const g = goalOf(c);
     ring = ringSVG(66, n / g, c.color); ringTx = n + '/' + g;
     const st = streakOf(c.id); sub = esc(t('streak')) + ' <b>' + st + ' ' + esc(st === 1 ? t('day1') : t('days')) + '</b> · ' + esc(t('best', bestStreak(c.id)));
@@ -166,7 +175,7 @@ function deckCardHTML(c, idx, total) {
 }
 function nextPill(i, d, c, label) {
   const on = isDone(i, d);
-  return '<div class="nextp in" role="button" data-a="openItem" data-id="' + i.id + '"><button class="ic" data-a="toggle" data-id="' + i.id + '" data-d="' + d + '" aria-label="' + esc(t('done')) + '">' + (on ? '<span style="width:24px;height:24px;border-radius:12px;background:' + c.color + ';display:flex;align-items:center;justify-content:center;color:#13233a">' + ico('check', 14, 3) + '</span>' : '<i style="--c:' + c.color + '"></i>') + '</button><span class="tx"><span class="cap" style="color:' + c.color + ';filter:brightness(1.35)">' + esc(label) + '</span><span' + (on ? ' style="text-decoration:line-through;opacity:.6"' : '') + '>' + esc(i.t) + '</span></span><span class="muted" style="font:400 13px/1 Inter;flex:none">' + esc(whenLabel(i) || '') + '</span></div>';
+  return '<div class="nextp in" role="button" data-a="openItem" data-id="' + i.id + '"><button class="ic" data-a="toggle" data-id="' + i.id + '" data-d="' + d + '" aria-label="' + esc(t('done')) + '">' + (on ? '<span style="width:24px;height:24px;border-radius:12px;background:' + c.color + ';display:flex;align-items:center;justify-content:center;color:#161616">' + ico('check', 14, 3) + '</span>' : '<i style="--c:' + c.color + '"></i>') + '</button><span class="tx"><span class="cap" style="color:' + c.color + ';filter:brightness(1.35)">' + esc(label) + '</span><span' + (on ? ' style="text-decoration:line-through;opacity:.6"' : '') + '>' + esc(i.t) + '</span></span><span class="muted" style="font:400 13px/1 Inter;flex:none">' + esc(whenLabel(i, d) || '') + '</span></div>';
 }
 function emptyNext(c) { return '<button class="nextp in press" data-a="add" data-card="' + c.id + '"><span class="ic">' + ico('plus', 18, 2.4) + '</span><span class="tx"><span style="white-space:normal;font:400 14px/1.35 Inter;color:var(--ink2)">' + esc(t('noTasksYet')) + '</span></span></button>'; }
 function renderSpaces() {
@@ -181,7 +190,8 @@ function renderSpaces() {
   } else {
     body = '<div class="stack">' + cs.map(c => {
       let sub, ring;
-      if (c.type === 'habit') { const n = habitWeek(c.id).filter(Boolean).length; const g = goalOf(c); ring = ringSVG(48, n / g, c.color, 3.5); sub = t('habit') + ' · ' + n + '/' + g + ' ' + t('thisWeek'); }
+      if (c.type === 'month') { const ms = monthStats(c); ring = ringSVG(48, ms.total ? ms.done / ms.total : 0, c.color, 3.5); sub = (lang() === 'cs' ? 'Měsíčně · ' : 'Monthly · ') + ms.done + '/' + ms.total + ' · ' + monthLine(ms); }
+      else if (c.type === 'habit') { const n = habitWeek(c.id).filter(Boolean).length; const g = goalOf(c); ring = ringSVG(48, n / g, c.color, 3.5); sub = t('habit') + ' · ' + n + '/' + g + ' ' + t('thisWeek'); }
       else { const ps = projectStats(c.id); ring = ringSVG(48, ps.total ? ps.done / ps.total : 0, c.color, 3.5); sub = t('project') + ' · ' + ps.open + ' ' + t('open') + (c.deadline ? ' · ' + deadlineText(c.deadline) : ''); }
       const shr = c.sh && typeof chOfCard === 'function' && chOfCard(c) ? members(chOfCard(c)) : null;
       if (shr) sub = sub.replace(/^([^·]+)·/, '$1· ' + (lang() === 'cs' ? 'Spolu' : 'Together') + ' ·');
@@ -221,7 +231,8 @@ function renderCard() {
   const el = $('#s-card'); const c = cardById(V.card); if (!c) { closeCard(); return; }
   const d = T(); let hero = '';
   const sch = c.sh && typeof chOfCard === 'function' ? chOfCard(c) : null;
-  if (sch && c.type === 'habit') hero = spoluHero(c) + spoluStats(c) + spoluHeat(c);
+  if (c.type === 'month') hero = monthHero(c, d);
+  else if (sch && c.type === 'habit') hero = spoluHero(c) + spoluStats(c) + spoluHeat(c);
   else if (c.type === 'habit') {
     const w = habitWeek(c.id); const n = w.filter(Boolean).length; const td = dow(d);
     const wd = w.map((on, k) => '<span><i class="' + (on ? 'on' : '') + (k === td ? ' td' : '') + (k > td ? ' fu' : '') + '"></i>' + WD1[lang()][k] + '</span>').join('');
@@ -240,14 +251,15 @@ function renderCard() {
       + '<div class="frost"><span class="cap">' + esc(t('moments')) + '</span><span class="num">' + mc + '</span></div></div>';
     if (ps.next) hero += nextPill(ps.next, ps.next.date || d, c, t('nextStep')).replace('class="nextp in"', 'class="nextp frost" style="margin-top:0"');
   }
-  const todays = cardItems(c.id).filter(i => occurs(i, d) || (!i.repeat && i.date && i.date < d && !i.done));
-  const todayHTML = '<div class="sec"><span class="cap">' + esc(t('todayCap')) + '</span><section class="frost solid" style="border-radius:26px;padding:4px 12px">' + (todays.length ? todays.map(i => itemRow(i, occurs(i, d) ? d : i.date, { withCard: false })).join('') : '<div class="irow"><span class="tx"><small style="font-size:13.5px">' + esc(t('noTodayCard')) + '</small></span><button class="r warn" data-a="add" data-card="' + c.id + '" data-ctx="today">' + esc(t('addToday')) + '</button></div>') + '</section></div>';
+  const isM = c.type === 'month'; const csM = lang() === 'cs';
+  const todays = isM ? monthItems(c.id).sort((a, b) => (isDone(a, d) ? 1 : 0) - (isDone(b, d) ? 1 : 0)) : cardItems(c.id).filter(i => occurs(i, d) || (!i.repeat && i.date && i.date < d && !i.done));
+  const todayHTML = '<div class="sec"><span class="cap">' + esc(isM ? (csM ? 'Tento měsíc · ' + MONF.cs[+d.slice(5, 7) - 1] : 'This month · ' + MONF.en[+d.slice(5, 7) - 1]) : t('todayCap')) + '</span><section class="frost solid" style="border-radius:26px;padding:4px 12px">' + (todays.length ? todays.map(i => itemRow(i, occurs(i, d) ? d : i.date, { withCard: false })).join('') : '<div class="irow"><span class="tx"><small style="font-size:13.5px">' + esc(t('noTodayCard')) + '</small></span><button class="r warn" data-a="add" data-card="' + c.id + '" data-ctx="today">' + esc(t('addToday')) + '</button></div>') + '</section></div>';
   const open = cardItems(c.id).filter(i => (i.repeat || !i.done) && !todays.includes(i)).sort((a, b) => (a.repeat ? 0 : 1) - (b.repeat ? 0 : 1) || (a.date || '9999').localeCompare(b.date || '9999'));
   const doneL = cardItems(c.id).filter(i => !i.repeat && i.done).sort((a, b) => (b.doneOn || '').localeCompare(a.doneOn || ''));
   const sd = V.showDone[c.id];
-  const tasks = '<div class="sec"><span class="cap" style="display:flex;justify-content:space-between;align-items:center">' + esc(t('tasks')) + (doneL.length ? '<button class="muted" style="letter-spacing:.06em;text-transform:none;font:500 12.5px/1 Inter" data-a="toggleShowDone">' + esc(sd ? t('hideDone') : t('showDone', doneL.length)) + ' ' + ico(sd ? 'chevL' : 'chevD', 12, 2.4) + '</button>' : '') + '</span><section class="frost solid" style="border-radius:26px;padding:4px 12px">'
+  const tasks = '<div class="sec"><span class="cap" style="display:flex;justify-content:space-between;align-items:center">' + esc(isM ? (csM ? 'Přidat' : 'Add') : t('tasks')) + (isM ? '<span class="mseg"><button class="' + (V.mOnce ? '' : 'on') + '" data-a="mOnce" data-k="">' + esc(csM ? 'Každý měsíc' : 'Every month') + '</button><button class="' + (V.mOnce ? 'on' : '') + '" data-a="mOnce" data-k="1">' + esc(csM ? 'Jen tento měsíc' : 'Just this month') + '</button></span>' : '') + (doneL.length ? '<button class="muted" style="letter-spacing:.06em;text-transform:none;font:500 12.5px/1 Inter" data-a="toggleShowDone">' + esc(sd ? t('hideDone') : t('showDone', doneL.length)) + ' ' + ico(sd ? 'chevL' : 'chevD', 12, 2.4) + '</button>' : '') + '</span><section class="frost solid" style="border-radius:26px;padding:4px 12px">'
     + open.map(i => itemRow(i, i.repeat ? d : (i.date || d), { withCard: false })).join('') + (sd ? doneL.map(i => itemRow(i, i.date || d, { withCard: false })).join('') : '')
-    + '<div class="addline"><span class="ci" style="width:24px;height:24px;border-radius:12px;border-style:dashed">' + ico('plus', 14, 2.4) + '</span><input id="addTaskIn" enterkeyhint="done" autocomplete="off" placeholder="' + esc(lang() === 'cs' ? 'Přidat úkol, např. test pá 14:00' : 'Add a task, e.g. quiz fri 2pm') + '" aria-label="' + esc(t('addTask')) + '"><button class="addgo cr press" id="addTaskGo" hidden aria-label="' + esc(t('addIt')) + '">' + ico('arrow', 15, 2.4) + '</button></div><div class="addhint" id="addTaskHint" hidden></div></section></div>';
+    + '<div class="addline"><span class="ci" style="width:24px;height:24px;border-radius:12px;border-style:dashed">' + ico('plus', 14, 2.4) + '</span><input id="addTaskIn" enterkeyhint="done" autocomplete="off" placeholder="' + esc(isM ? (V.mOnce ? (csM ? 'Jednorázově, např. STK' : 'One-off, e.g. car service') : (csM ? 'Přidat položku, např. Nájem' : 'Add an item, e.g. Rent')) : lang() === 'cs' ? 'Přidat úkol, např. test pá 14:00' : 'Add a task, e.g. quiz fri 2pm') + '" aria-label="' + esc(t('addTask')) + '"><button class="addgo cr press" id="addTaskGo" hidden aria-label="' + esc(t('addIt')) + '">' + ico('arrow', 15, 2.4) + '</button></div><div class="addhint" id="addTaskHint" hidden></div></section></div>';
   const ps = projectStats(c.id);
   const noticed = S.nudges && c.type === 'project' && ps.noDay ? '<div class="sec"><section class="noticed frost"><span class="tx"><span class="cap">' + esc(t('noted')) + '</span>' + esc(ps.noDay === 1 ? t('noDayTask1') : t('noDayTasks', ps.noDay)) + '</span><button class="chip cr press" data-a="when" data-id="' + cardItems(c.id).find(i => !i.repeat && !i.done && !i.date).id + '">' + esc(t('pickDay')) + '</button></section></div>' : '';
   const ms = cardMoments(c.id);
@@ -267,7 +279,7 @@ function renderCard() {
     else if (p.date) ch.push(ico('cal', 13, 2.2) + esc(dayShort(p.date)));
     if (p.time) ch.push(ico('clock', 13, 2.2) + p.time);
     hint.innerHTML = ch.length ? ch.map(x => '<span class="chip in">' + x + '</span>').join('') : '<span class="muted">' + esc(lang() === 'cs' ? 'Bez dne · den přidáš i později' : 'No day · add one later') + '</span>'; hint.hidden = false; };
-  const addIt = () => { const v = inp.value.trim(); if (!v) return; const p = NL(v); const it = { id: uid(), t: stripSpans(v, p.spans) || v, card: c.id, created: T() }; if (p.date) it.date = p.date; if (p.time) { it.time = p.time; it.dur = p.dur || 45; it.remind = S.push.def != null ? S.push.def : 10; } if (p.repeat) { it.repeat = p.repeat; if (p.repeat === 'days') it.days = p.days; it.doneDates = []; if (!it.date) it.date = T(); } S.items.push(it); if (typeof useCount === 'function') useCount('adds'); save(); const y = el.scrollTop; renderCard(); el.scrollTop = y; const ni = $('#addTaskIn'); ni && ni.focus({ preventScroll: true }); haptic(); toast(esc(it.date || it.repeat ? t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : '')) : t('undated'))); };
+  const addIt = () => { const v = inp.value.trim(); if (!v) return; const p = NL(v); const it = { id: uid(), t: stripSpans(v, p.spans) || v, card: c.id, created: T() }; if (p.date) it.date = p.date; if (p.time) { it.time = p.time; it.dur = p.dur || 45; it.remind = S.push.def != null ? S.push.def : 10; } if (p.repeat) { it.repeat = p.repeat; if (p.repeat === 'days') it.days = p.days; it.doneDates = []; if (!it.date) it.date = T(); } else if (c.type === 'month' && !p.date) { if (V.mOnce) it.date = T(); else Object.assign(it, { repeat: 'monthly', doneDates: [], date: T() }); } S.items.push(it); if (typeof useCount === 'function') useCount('adds'); save(); const y = el.scrollTop; renderCard(); el.scrollTop = y; const ni = $('#addTaskIn'); ni && ni.focus({ preventScroll: true }); haptic(); toast(esc(it.date || it.repeat ? t('planned', it.repeat ? repText(it) : dayName(it.date) + (it.time ? ' ' + it.time : '')) : t('undated'))); };
   inp.addEventListener('input', paintHint);
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addIt(); } });
   go2.addEventListener('click', e => { e.preventDefault(); addIt(); });
@@ -338,8 +350,8 @@ function weekNav() {
   return '<div class="wnav"><button class="frost press" data-a="weekShift" data-n="-1" aria-label="Previous week">' + ico('chevL', 15, 2.4) + '</button><span>' + esc(lbl) + (ws !== weekStart(T()) ? ' · <button data-a="weekToday" style="height:auto;padding:0;color:var(--ink);font-weight:600">' + esc(t('today')) + '</button>' : '') + '</span><button class="frost press" data-a="weekShift" data-n="1" aria-label="Next week">' + ico('chev', 15, 2.4) + '</button></div>';
 }
 function trow(i, d, nextId) {
-  const on = isDone(i, d); const late = !i.repeat && i.date < T() && !on;
-  return '<div class="trow' + (on ? ' done' : '') + (i.id === nextId ? ' next' : '') + (late ? ' late' : '') + '" role="button" data-a="openItem" data-id="' + i.id + '" style="--c:' + itemColor(i) + '"><span class="tm">' + (late ? esc(dayShort(i.date)) : i.time || esc(t('any'))) + '</span><span class="bar"></span>' + (i.mom && typeof momThumb === 'function' && momThumb(S.moments.find(x => x.id === i.mom)) ? '<img class="imth" src="' + momThumb(S.moments.find(x => x.id === i.mom)) + '" alt="">' : '') + '<span class="tx"><span>' + esc(i.t) + '</span><small>' + esc([itemSub(i), i.time ? i.time + '–' + endOf(i.time, i.dur) + (i.dur >= 120 ? ' · ' + durLabel(i.dur) : '') : ''].filter(Boolean).join(' · ') || (i.time ? '' : t('anyTime'))) + '</small></span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + checkBtn(i, d) + '</div>';
+  const on = isDone(i, d); const mo = i.repeat === 'monthly'; const late = (!i.repeat && i.date < T() && !on) || (mo && mLate(i, d));
+  return '<div class="trow' + (on ? ' done' : '') + (i.id === nextId ? ' next' : '') + (late ? ' late' : '') + '" role="button" data-a="openItem" data-id="' + i.id + '" style="--c:' + itemColor(i) + '"><span class="tm">' + (mo && !i.time ? '→ ' + (+mRange(i, d)[1].slice(8)) + '.' : late ? esc(dayShort(i.date)) : i.time || esc(t('any'))) + '</span><span class="bar"></span>' + (i.mom && typeof momThumb === 'function' && momThumb(S.moments.find(x => x.id === i.mom)) ? '<img class="imth" src="' + momThumb(S.moments.find(x => x.id === i.mom)) + '" alt="">' : '') + '<span class="tx"><span>' + esc(i.t) + '</span><small>' + esc([itemSub(i), i.time ? i.time + '–' + endOf(i.time, i.dur) + (i.dur >= 120 ? ' · ' + durLabel(i.dur) : '') : ''].filter(Boolean).join(' · ') || (i.time ? '' : t('anyTime'))) + '</small></span>' + (typeof shareAv === 'function' ? shareAv(i, d) : '') + checkBtn(i, d) + '</div>';
 }
 function renderPlan() {
   const el = $('#s-plan'); if (!V.planDay) V.planDay = T(); if (!V.planWeek) V.planWeek = weekStart(V.planDay); if (!V.monCursor) V.monCursor = T().slice(0, 7);
@@ -350,7 +362,7 @@ function renderPlan() {
     const nm = nowMin(); const nextT = isT ? its.find(i => i.time && !isDone(i, d) && tmin(i.time) + (i.dur || 45) > nm) : null;
     let rows = ''; let nowPlaced = !isT;
     const nowLine = '<div class="nowl"><b>' + mtime(nm) + '</b><span><i></i></span></div>';
-    its.forEach(i => { if (!nowPlaced && (!i.time || tmin(i.time) > nm)) { rows += nowLine; nowPlaced = true; } rows += trow(i, d, nextT && nextT.id); });
+    groupMonthly(its, d).forEach(i => { if (!nowPlaced && (!i.time || tmin(i.time) > nm)) { rows += nowLine; nowPlaced = true; } rows += i.grp ? trowGroup(i, d) : trow(i, d, nextT && nextT.id); });
     if (!nowPlaced && its.length) rows += nowLine;
     const left = its.filter(i => !isDone(i, d)).length + od.length;
     body = weekStrip() + weekNav()
@@ -455,15 +467,24 @@ const WALLS = {
   night: { css: 'radial-gradient(120% 80% at 80% 0%,#2f4f8f,transparent 60%),radial-gradient(100% 80% at 0% 100%,#1d6b6b,transparent 60%),#0b1424' },
 };
 function applyLook() {
-  document.body.classList.toggle('solidui', S.surface === 'solid');
+  /* v19.6.3: Sklo/Plné → Tmavý/Světlý; old 'solid' falls back to dark glass */
+  document.body.classList.remove('solidui');
+  const light = S.mode === 'light'; document.body.classList.toggle('lightui', light);
+  const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.content = '#0a0a0b';
   document.body.classList.add('noaura');
   const img = $('#wallImg'); const w = S.wall;
-  if (w === 'photo' && S.wallKey && mediaNow(S.wallKey)) { img.style.display = ''; img.src = mediaNow(S.wallKey); $('#bg').style.background = '#060b1c'; }
+  if (!img._lk) { img._lk = 1; img.addEventListener('load', () => applyLook()); } // orientation is known only after load
+  if (w === 'photo' && S.wallKey && mediaNow(S.wallKey)) { img.style.display = ''; const u = mediaNow(S.wallKey); if (img.src !== u) img.src = u; $('#bg').style.background = '#0a0a0b'; }
   else if (w === 'aurora' || !WALLS[w]) { const f = document.body.classList.contains('desk') ? 'wall-desk.jpg' : 'wall.jpg'; img.style.display = ''; if (!img.src.endsWith('/' + f)) img.src = f; $('#bg').style.background = '#6f9bb8'; }
   else { img.style.display = 'none'; $('#bg').style.background = WALLS[w].css; }
-  $('#wallDim').style.background = 'rgba(8,16,28,' + (clamp(S.dim ?? 22, 0, 70) / 100) + ')';
+  $('#wallDim').style.background = 'rgba(0,0,0,' + (clamp(S.dim ?? 22, 0, 70) / 100) + ')';
+  /* v19.6.3: one wallpaper on every device; a portrait photo on a computer is blurred at least 30 % so the crop never shows */
+  const desk = document.body.classList.contains('desk');
+  const bl = clamp(S.blur ?? 0, 0, 100), eff = deskAutoBlur() ? Math.max(bl, 30) : bl;
+  img.style.filter = eff ? 'blur(' + Math.round(eff * (desk ? .6 : .32)) + 'px)' : ''; img.style.transform = eff ? 'scale(' + (1 + eff * .0012).toFixed(3) + ')' : '';
   document.documentElement.lang = S.lang;
 }
+function deskAutoBlur() { const img = $('#wallImg'); return !!(img && document.body.classList.contains('desk') && S.wall === 'photo' && img.naturalWidth && img.naturalHeight > img.naturalWidth * 1.05); }
 function srow(a, label, right, extra = '') { return '<button class="srow" data-a="' + a + '"' + extra + '>' + label + '<span class="r">' + right + ico('chev', 15, 2.2) + '</span></button>'; }
 function renderSettings() {
   const el = $('#s-settings');
@@ -475,9 +496,11 @@ function renderSettings() {
     el.innerHTML = '<div class="hdr"><button class="cb frost press" data-a="settingsBack" aria-label="Back">' + ico('back', 20, 2.2) + '</button><span></span></div><h1 class="t1" style="margin-bottom:18px">' + esc(t('appearance')) + '</h1>'
       + '<div class="sec" style="margin-top:0"><span class="cap">' + esc(t('wallpaper')) + '</span><div class="walls">' + wl.map(([k, l, st]) => '<button class="' + (S.wall === k ? 'on' : '') + '" style="' + st + '" data-a="setWall" data-k="' + k + '">' + (l && k === 'photo' ? esc(l) : '') + '</button>').join('') + '</div>'
       + '<div class="wlabels" style="margin-top:10px">' + wl.map(([k, l]) => '<span class="muted" style="font:400 12px/1 Inter">' + esc(k === 'photo' ? t('photo') : l) + '</span>').join('') + '</div></div>'
-      + '<div class="sec"><span class="cap">' + esc(t('surfaces')) + '</span><div class="seg frost" style="display:grid;grid-template-columns:1fr 1fr;height:46px"><button class="' + (S.surface !== 'solid' ? 'on' : '') + '" style="height:40px" data-a="setSurface" data-k="glass">' + esc(t('glass')) + '</button><button class="' + (S.surface === 'solid' ? 'on' : '') + '" style="height:40px" data-a="setSurface" data-k="solid">' + esc(t('solid')) + '</button></div></div>'
-      + '<div class="sec"><section class="grp frost solid">'
-      + '<div class="srow" style="flex-wrap:wrap"><span class="tx">' + esc(t('dim')) + '</span><span class="r" style="margin-left:auto">' + (S.dim ?? 22) + ' %</span><input type="range" min="0" max="60" step="2" value="' + (S.dim ?? 22) + '" id="dimR" style="width:100%;accent-color:#ece9e1;margin:6px 0 4px" aria-label="' + esc(t('dim')) + '"></div></section></div>';
+      + '<div class="sec"><span class="cap">' + esc(lang() === 'cs' ? 'Režim' : 'Mode') + '</span><div class="seg frost" style="display:grid;grid-template-columns:1fr 1fr;height:46px"><button class="' + (S.mode !== 'light' ? 'on' : '') + '" style="height:40px" data-a="setMode" data-k="dark">' + ico('moon', 15, 2) + esc(lang() === 'cs' ? 'Tmavý' : 'Dark') + '</button><button class="' + (S.mode === 'light' ? 'on' : '') + '" style="height:40px" data-a="setMode" data-k="light">' + ico('sun', 15, 2) + esc(lang() === 'cs' ? 'Světlý' : 'Light') + '</button></div></div>'
+      + '<div class="sec"><span class="cap">' + esc(lang() === 'cs' ? 'Pozadí' : 'Background') + '</span><section class="grp frost solid">'
+      + '<div class="srow" style="flex-wrap:wrap"><span class="tx">' + esc(lang() === 'cs' ? 'Rozmazání' : 'Blur') + '</span><span class="r" style="margin-left:auto">' + (S.blur ?? 0) + ' %</span><input type="range" min="0" max="100" step="5" value="' + (S.blur ?? 0) + '" id="blurR" class="lrange" aria-label="' + esc(lang() === 'cs' ? 'Rozmazání' : 'Blur') + '">' + (deskAutoBlur() && (S.blur ?? 0) < 30 ? '<small class="lnote">' + esc(lang() === 'cs' ? 'Fotka na výšku je na počítači rozmazaná aspoň na 30 %.' : 'A portrait photo is blurred at least 30 % on a computer.') + '</small>' : '') + '</div>'
+      + '<div class="srow" style="flex-wrap:wrap"><span class="tx">' + esc(lang() === 'cs' ? 'Ztmavení' : 'Dim') + '</span><span class="r" style="margin-left:auto">' + (S.dim ?? 22) + ' %</span><input type="range" min="0" max="60" step="2" value="' + (S.dim ?? 22) + '" id="dimR" class="lrange" aria-label="' + esc(t('dim')) + '"></div></section></div>';
+    const rb = $('#blurR'); rb.addEventListener('input', () => { S.blur = +rb.value; applyLook(); rb.parentElement.querySelector('.r').textContent = S.blur + ' %'; }); rb.addEventListener('change', save);
     const r = $('#dimR'); r.addEventListener('input', () => { S.dim = +r.value; applyLook(); r.parentElement.querySelector('.r').textContent = S.dim + ' %'; }); r.addEventListener('change', save);
     return;
   }
@@ -485,7 +508,7 @@ function renderSettings() {
   el.innerHTML = '<div class="hdr"><button class="cb frost press" data-a="closeSettings" aria-label="Back">' + ico('back', 20, 2.2) + '</button><span></span></div><h1 class="t1" style="margin-bottom:18px">' + esc(t('settings')) + '</h1>'
     + '<button class="acct frost press" data-a="accPage"><span class="avatar">' + esc(initials) + '</span><span style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1"><span style="font:600 17px/1.1 Inter">' + esc(S.name || t('yourName')) + '</span><span class="muted" style="font:400 13px/1 Inter">' + esc(accOn() ? '@' + S.acc.login + (lang() === 'cs' ? ' · účet' : ' · account') : (lang() === 'cs' ? 'Bez účtu · vytvořit nebo přihlásit' : 'No account · create or log in')) + '</span></span>' + ico('chev', 16, 2.2) + '</button>'
     + '<div class="sec"><span class="cap">Beta</span><section class="grp frost solid"><button class="srow" data-a="feedback"><span class="ci" style="width:30px;height:30px;border-radius:15px;border:0;background:rgba(91,191,220,.16);color:#9fd6e8">' + ico('note', 15, 2) + '</span><span class="tx">' + esc(lang() === 'cs' ? 'Napsat feedback' : 'Send feedback') + '<small>' + esc(lang() === 'cs' ? 'Co tě potěšilo, co drhne, co chybí' : 'What you like, what is clunky, what is missing') + '</small></span><span class="r"><span class="betapill">v' + VERSION + (window.AUR_NS ? ' test' : '') + '</span>' + ico('chev', 15, 2.2) + '</span></button></section></div>'
-    + '<div class="sec"><span class="cap">' + esc(t('look')) + '</span><section class="grp frost solid"><button class="srow" data-a="lookPage" style="min-height:72px"><span style="flex:none;position:relative;width:34px;height:50px;border-radius:9px;overflow:hidden;' + (S.wall === 'photo' && S.wallKey ? 'background:url(' + mediaNow(S.wallKey) + ') center/cover' : S.wall !== 'aurora' && WALLS[S.wall] ? 'background:' + WALLS[S.wall].css : 'background:url(wall.jpg) center/cover') + ';box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)"><i style="position:absolute;left:4px;right:4px;top:8px;height:16px;border-radius:5px;background:rgba(255,255,255,.3)"></i><i style="position:absolute;left:4px;right:4px;bottom:5px;height:7px;border-radius:4px;background:rgba(255,255,255,.4)"></i></span><span class="tx">' + esc(t('appearance')) + '<small>' + esc((S.surface === 'solid' ? t('solid') : t('glass')) + ' · ' + (S.wall === 'photo' ? t('photo') : t('wall' + S.wall.charAt(0).toUpperCase() + S.wall.slice(1)))) + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button></section></div>'
+    + '<div class="sec"><span class="cap">' + esc(t('look')) + '</span><section class="grp frost solid"><button class="srow" data-a="lookPage" style="min-height:72px"><span style="flex:none;position:relative;width:34px;height:50px;border-radius:9px;overflow:hidden;' + (S.wall === 'photo' && S.wallKey ? 'background:url(' + mediaNow(S.wallKey) + ') center/cover' : S.wall !== 'aurora' && WALLS[S.wall] ? 'background:' + WALLS[S.wall].css : 'background:url(wall.jpg) center/cover') + ';box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)"><i style="position:absolute;left:4px;right:4px;top:8px;height:16px;border-radius:5px;background:rgba(255,255,255,.3)"></i><i style="position:absolute;left:4px;right:4px;bottom:5px;height:7px;border-radius:4px;background:rgba(255,255,255,.4)"></i></span><span class="tx">' + esc(t('appearance')) + '<small>' + esc((S.mode === 'light' ? (lang() === 'cs' ? 'Světlý' : 'Light') : (lang() === 'cs' ? 'Tmavý' : 'Dark')) + ' · ' + (S.wall === 'photo' ? t('photo') : t('wall' + S.wall.charAt(0).toUpperCase() + S.wall.slice(1)))) + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button></section></div>'
     + '<div class="sec"><span class="cap">' + esc(lang() === 'cs' ? 'Zařízení' : 'Devices') + '</span><section class="grp frost solid"><button class="srow" data-a="syncPage"><span class="ci" style="width:30px;height:30px;border-radius:15px;border:0;background:rgba(255,255,255,.08)">' + ico('sync', 15, 2) + '</span><span class="tx">' + esc(lang() === 'cs' ? 'Synchronizace' : 'Sync') + '<small>' + esc(syncOn() ? (lang() === 'cs' ? 'Propojeno · ' : 'Linked · ') + syncAgo() : (lang() === 'cs' ? 'Telefon a počítač se stejnými daty' : 'Phone and computer with the same data')) + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button>'
       + '<button class="srow" data-a="joinCodeSheet"><span class="ci" style="width:30px;height:30px;border-radius:15px;border:0;background:rgba(255,255,255,.08)">' + ico('users', 15, 2) + '</span><span class="tx">' + esc(lang() === 'cs' ? 'Pozvánka do karty' : 'Card invitation') + '<small>' + esc((S.shared || []).length ? (lang() === 'cs' ? 'Sdílíš ' + S.shared.length + '× · zadat kód' : 'Sharing ' + S.shared.length + ' · enter a code') : (lang() === 'cs' ? 'Zadat kód od parťáka' : 'Enter a code from a partner')) + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button>'
       + (window.innerWidth >= 700 ? '<button class="srow" data-a="layoutSheet"><span class="ci" style="width:30px;height:30px;border-radius:15px;border:0;background:rgba(255,255,255,.08)">' + ico('board', 15, 2) + '</span><span class="tx">' + esc(lang() === 'cs' ? 'Rozložení' : 'Layout') + '<small>' + esc(layoutLabel()) + '</small></span><span class="r">' + ico('chev', 15, 2.2) + '</span></button>' : '')
@@ -500,8 +523,57 @@ function renderSettings() {
 ACT.lookPage = () => { V.settingsPage = 'look'; renderSettings(); $('#s-settings').scrollTop = 0; };
 ACT.settingsBack = () => { V.settingsPage = 'main'; renderSettings(); };
 ACT.setWall = el => { const k = el.dataset.k; if (k === 'photo' && (!S.wallKey || S.wall === 'photo')) { $('#wallIn').click(); return; } S.wall = k; save(); applyLook(); renderSettings(); };
+ACT.setMode = el => { S.mode = el.dataset.k === 'light' ? 'light' : 'dark'; save(); applyLook(); renderSettings(); };
 ACT.setSurface = el => { S.surface = el.dataset.k; save(); applyLook(); renderSettings(); };
 ACT.toggleAura = () => { S.aura = !S.aura; save(); applyLook(); renderSettings(); };
 ACT.toggleNudges = () => { S.nudges = !S.nudges; save(); renderSettings(); };
 ACT.toggleWeekly = () => { S.weekly = !S.weekly; save(); renderSettings(); };
 
+
+/* ---------------- v19.6 · monthly card ---------------- */
+function monthLine(ms) {
+  const cs = lang() === 'cs'; const b = +ms.b.slice(8); const a = +ms.a.slice(8); const td = T();
+  if (!ms.total) return cs ? 'zatím nic' : 'nothing yet';
+  if (!ms.left) return cs ? 'tento měsíc hotovo' : 'done this month';
+  if (ms.before) { const n = daysBetween(td, ms.a); return n === 1 ? (cs ? 'okno začíná zítra' : 'window opens tomorrow') : (cs ? 'okno od ' + a + '.' : 'window from the ' + a + ordSuf(a)); }
+  if (ms.after) return cs ? 'po termínu · ' + ms.left : 'overdue · ' + ms.left;
+  const n = daysBetween(td, ms.b); return n === 0 ? (cs ? 'dnes je poslední den' : 'today is the last day') : (cs ? 'do ' + b + '. · zbývá ' + n + (n === 1 ? ' den' : n < 5 ? ' dny' : ' dní') : 'by the ' + b + ordSuf(b) + ' · ' + n + ' day' + (n === 1 ? '' : 's') + ' left');
+}
+function monthHero(c, d) {
+  const cs = lang() === 'cs'; const ms = monthStats(c, d); const mi = +d.slice(5, 7) - 1;
+  const segs = ms.its.map(i => '<i class="' + (isDone(i, d) ? 'on' : '') + '"></i>').join('');
+  const pct = ms.total ? Math.round(ms.done / ms.total * 100) : 0;
+  const hero = '<section class="hero frost mhero" style="--c:' + c.color + '"><span class="cap">' + esc((cs ? MONF.cs[mi] : MONF.en[mi]) + ' · ' + (cs ? 'okno ' : 'window ') + winText(c.win)) + '</span>'
+    + '<div class="num" style="font-size:60px;margin-top:14px">' + ms.done + '<small style="font-size:16px">/ ' + ms.total + ' ' + esc(cs ? 'hotovo' : 'done') + '</small></div>'
+    + (ms.total ? '<div class="mprog">' + segs + '</div>' : '') + '<div class="mwin' + (ms.after && ms.left ? ' late' : '') + '"><span class="dot"></span><span>' + esc(monthLine(ms)) + '</span></div>'
+    + '<div class="ringw">' + segRing(112, Math.max(1, ms.total), ms.its.map(i => isDone(i, d)), c.color, 5, -1) + '<span><span style="font:800 24px/1 \'Bricolage Grotesque\'">' + (ms.total && !ms.left ? '✓' : pct + '%') + '</span><span class="muted" style="font:400 11px/1 Inter">' + esc(cs ? 'tento měsíc' : 'this month') + '</span></span></div></section>';
+  const tiles = '<div class="grid2"><div class="tile frost" style="min-height:96px"><span class="top"><span class="ci">' + ico('check', 17, 1.9) + '</span><span class="fl"><span>' + esc(cs ? 'Včas' : 'On time') + '</span><small>' + esc(cs ? 'měsíců v řadě' : 'months in a row') + '</small></span></span><span class="bot"><span class="num">' + ms.onTime + '<small>' + esc(cs ? (ms.onTime === 1 ? 'měsíc' : ms.onTime > 1 && ms.onTime < 5 ? 'měsíce' : 'měsíců') : (ms.onTime === 1 ? 'month' : 'months')) + '</small></span></span></div>'
+    + '<div class="tile frost" style="min-height:96px"><span class="top"><span class="ci">' + ico('cal', 17, 1.7) + '</span><span class="fl"><span>' + esc(cs ? 'Obvykle hotovo' : 'Usually done') + '</span><small>' + esc(cs ? 'den v měsíci' : 'day of the month') + '</small></span></span><span class="bot"><span class="num">' + (ms.usual ? ms.usual + '.' : '—') + '<small>' + esc(cs ? '' : '') + '</small></span></span></div></div>';
+  const bars = '<section class="frost solid" style="border-radius:30px;padding:16px 18px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="cap">' + esc(cs ? 'Posledních 6 měsíců' : 'Last 6 months') + '</span><span class="muted" style="font:400 12px/1 Inter">' + esc(cs ? 'hotovo včas' : 'done on time') + '</span></div><div class="mmon" style="--c:' + c.color + '">'
+    + ms.bars.map((x, k) => '<div class="c"><div class="b' + (k === 5 ? ' td' : '') + (x.v == null ? ' na' : '') + '"><i style="height:' + Math.round((x.v || 0) * 100) + '%"></i></div><small>' + esc((cs ? MONS.cs : MONS.en)[+x.ym.slice(5) - 1]) + '</small></div>').join('')
+    + '</div><div class="muted" style="font:400 12.5px/1.4 Inter;margin-top:12px">' + esc(cs ? '1. v měsíci se všechno vynuluje. Co nestihneš do konce okna, svítí oranžově.' : 'Everything resets on the 1st. What misses the window turns orange.') + '</div></section>';
+  return hero + tiles + bars;
+}
+ACT.mOnce = el => { V.mOnce = !!el.dataset.k; const el2 = $('#s-card'); const y = el2.scrollTop; renderCard(); el2.scrollTop = y; const i = $('#addTaskIn'); i && i.focus({ preventScroll: true }); };
+
+/* ---------------- v19.6 · monthly items of one card = one row in Plan ---------------- */
+function groupMonthly(its, d) {
+  const out = []; const seen = {};
+  for (const i of its) {
+    if (i.repeat === 'monthly' && i.card && !i.time && cardById(i.card)) {
+      const k = i.card; const all = its.filter(x => x.repeat === 'monthly' && x.card === k && !x.time);
+      if (all.length >= 2) { if (!seen[k]) { seen[k] = 1; out.push({ grp: true, card: cardById(k), items: all, id: 'g:' + k }); } continue; }
+    }
+    out.push(i);
+  }
+  return out;
+}
+function trowGroup(g, d) {
+  const cs = lang() === 'cs'; const c = g.card; const all = monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const left = all.length - dn;
+  const end = mRange(all[0] || { repeat: 'monthly', card: c.id }, d)[1]; const late = left && d > end; const open = V.gOpen && V.gOpen[c.id + d];
+  const names = g.items.filter(i => !isDone(i, d)).map(i => i.t);
+  const lw = cs ? (left === 1 ? 'zbývá 1' : left < 5 ? 'zbývají ' + left : 'zbývá ' + left) : left + ' left';
+  return '<div class="trow grp' + (left ? '' : ' done') + (late ? ' late' : '') + '" role="button" data-a="mGrp" data-k="' + c.id + '" data-d="' + d + '" aria-expanded="' + !!open + '" style="--c:' + c.color + '"><span class="tm">→ ' + (+end.slice(8)) + '.</span><span class="bar"></span><span class="tx"><span>' + esc(c.name) + ' · ' + esc(left ? lw : (cs ? 'hotovo' : 'all done')) + '</span><small>' + esc((cs ? 'Měsíčně' : 'Monthly') + (names.length ? ' · ' + names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '') : '')) + '</small></span><span class="gp">' + dn + '/' + all.length + '</span><span class="gch">' + ico(open ? 'chevD' : 'chev', 14, 2.4) + '</span></div>'
+    + (open ? '<div class="tsub">' + g.items.map(i => trow(i, d, null)).join('') + '</div>' : '');
+}
+ACT.mGrp = el => { V.gOpen = V.gOpen || {}; const k = el.dataset.k + el.dataset.d; V.gOpen[k] = !V.gOpen[k]; haptic(); render(); };

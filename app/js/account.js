@@ -279,7 +279,7 @@ ACT.acLogout = () => {
     toast(esc(cs ? 'Ukládám do účtu…' : 'Saving to your account…'));
     try { await syncPush(); if (typeof spoluSyncAll === 'function') await spoluSyncAll(); }
     catch (e) { toast(esc(cs ? 'Nejsi online, odhlásit půjde, až se vše uloží.' : 'You are offline; log out once everything is saved.')); return; }
-    const keep = { lang: S.lang, wall: S.wall, wallKey: S.wallKey, surface: S.surface, dim: S.dim, push: S.push, tips: S.tips, tipsOff: S.tipsOff, me: S.me };
+    const keep = { lang: S.lang, wall: S.wall, wallKey: S.wallKey, surface: S.surface, mode: S.mode, blur: S.blur, dim: S.dim, push: S.push, tips: S.tips, tipsOff: S.tipsOff, me: S.me };
     for (const ch of S.shared || []) { try { DB.del('kv', 'snap:' + ch.sp); } catch (e) {} if (ch.subDev) { try { await syncApi('/s/sub', { sp: ch.sp, secret: ch.secret, dev: ch.subDev, off: true }); } catch (e) {} } }
     S = Object.assign(blankState(), keep, { onboarded: false });
     SY.snap = {}; await snapSave(); if (typeof SP !== 'undefined') SP.snaps = {}; save(); if (typeof pushSchedule === 'function') pushSchedule();

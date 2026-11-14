@@ -14,7 +14,7 @@ body.desk ::-webkit-scrollbar-track{background:none}
 
 .g12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px}
 .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:6px;background:rgba(255,255,255,.1);box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);font:600 11px/1 Inter;color:var(--ink2);letter-spacing:0;text-transform:none;white-space:nowrap}
-.cr .kbd{background:rgba(19,35,58,.12);color:rgba(19,35,58,.7);box-shadow:none}
+.cr .kbd{background:rgba(22,22,22,.12);color:rgba(22,22,22,.7);box-shadow:none}
 
 /* top bar */
 .dtop{height:84px;padding:0 40px;align-items:center}
@@ -26,8 +26,8 @@ body.desk ::-webkit-scrollbar-track{background:none}
 .dnav button.on{background:var(--cream);color:var(--navy);text-shadow:none}
 .drt{grid-column:10/13;justify-self:end;display:flex;align-items:center;gap:10px}
 .drt .cb{position:relative}
-.sdot{position:absolute;right:9px;top:9px;width:8px;height:8px;border-radius:4px;background:rgba(243,234,216,.3);box-shadow:0 0 0 2px rgba(10,18,30,.6)}
-.sdot[data-st="ok"]{background:var(--green);box-shadow:0 0 0 2px rgba(10,18,30,.6),0 0 8px var(--green)}
+.sdot{position:absolute;right:9px;top:9px;width:8px;height:8px;border-radius:4px;background:rgba(243,234,216,.3);box-shadow:0 0 0 2px rgba(16,16,18,.6)}
+.sdot[data-st="ok"]{background:var(--green);box-shadow:0 0 0 2px rgba(16,16,18,.6),0 0 8px var(--green)}
 .sdot[data-st="busy"]{background:var(--orange);animation:sdp 1s ease-in-out infinite alternate}
 .sdot[data-st="err"]{background:var(--late)}
 @keyframes sdp{to{opacity:.35}}
@@ -76,7 +76,7 @@ body.desk ::-webkit-scrollbar-track{background:none}
 .dsd i i{width:5px;height:5px;border-radius:3px;background:var(--c)}
 .dsd.tdy b{color:var(--green)}
 .dsd.on{background:var(--cream);color:var(--navy);text-shadow:none}
-.dsd.on span{color:rgba(19,35,58,.6)}
+.dsd.on span{color:rgba(22,22,22,.6)}
 .dsd.on.tdy b{color:var(--navy)}
 .pn .addday{flex:none}
 .krow{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:4px 0;text-align:left;border-radius:14px}
@@ -95,8 +95,8 @@ body.desk ::-webkit-scrollbar-track{background:none}
 /* ⌘K */
 #cmdk{position:fixed;inset:0;z-index:70;display:none}
 #cmdk.on{display:block}
-.ckscrim{position:absolute;inset:0;background:rgba(4,8,16,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:ckf .2s ease}
-.ckp{position:absolute;left:50%;top:13vh;width:680px;max-width:calc(100% - 80px);transform:translateX(-50%);border-radius:28px;background:rgba(16,26,40,.97);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.1);overflow:hidden;animation:ckin .26s var(--out)}
+.ckscrim{position:absolute;inset:0;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:ckf .2s ease}
+.ckp{position:absolute;left:50%;top:13vh;width:680px;max-width:calc(100% - 80px);transform:translateX(-50%);border-radius:28px;background:rgba(24,24,26,.97);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.1);overflow:hidden;animation:ckin .26s var(--out)}
 @keyframes ckf{from{opacity:0}}
 @keyframes ckin{from{opacity:0;transform:translate(-50%,-10px) scale(.98)}}
 .ckin{display:flex;align-items:center;gap:14px;height:70px;padding:0 20px 0 22px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -122,7 +122,7 @@ body.desk ::-webkit-scrollbar-track{background:none}
 /* spaces */
 .dcards{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
 .dcard{text-align:left;min-height:310px;padding:22px 24px}
-.dcard:hover{box-shadow:inset 0 0 0 1px rgba(243,234,216,.2),0 10px 26px rgba(4,10,20,.2)}
+.dcard:hover{box-shadow:inset 0 0 0 1px rgba(243,234,216,.2),0 10px 26px rgba(0,0,0,.2)}
 .kk{display:inline-flex;align-items:center;gap:8px}
 .dch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
 .dch b{font:800 28px/1.05 'Bricolage Grotesque';letter-spacing:-.02em;min-width:0;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -163,8 +163,12 @@ body.desk ::-webkit-scrollbar-track{background:none}
 /* card */
 .dcardv .dph{align-items:center}
 #dCardKick .kick{font:500 14px/1 Inter}
-#dC1 .cname{margin-top:0;font-size:52px}
-#dC1 .cnote{margin-top:10px}
+.dctitle{grid-column:1/-1;display:flex;flex-direction:column;gap:10px;min-width:0;margin-top:-10px}
+.dctitle .cname{margin:0;font-size:52px}
+.dctitle .cnote{margin-top:0}
+.dcardv{grid-template-rows:auto auto minmax(0,1fr)}
+#dC1>.dsp{margin-top:0;visibility:hidden}
+#dC1>.dsp+.stack{margin-top:0!important}
 #dC2>.sec:first-child,#dC3>.sec:first-child{margin-top:0}
 #dC3 .thumbs{flex-wrap:wrap;overflow:visible}
 #dC3 .th{width:84px;height:84px;border-radius:18px}
@@ -187,11 +191,11 @@ body.desk .addline input{font-size:15px}
 .wgh span{font:500 11px/1 Inter;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
 .wgh b{font:800 20px/1 'Bricolage Grotesque'}
 .wgh.tdy{background:var(--cream);color:var(--navy);text-shadow:none}
-.wgh.tdy span{color:rgba(19,35,58,.6)}
+.wgh.tdy span{color:rgba(22,22,22,.6)}
 .wadrow{margin:6px 0 8px}
 .wad{position:relative;min-height:34px;border-radius:10px;background:rgba(255,255,255,.035);padding:3px;display:flex;flex-direction:column;gap:3px;transition:background .15s,box-shadow .15s}
 .wad.over{background:rgba(243,234,216,.1);box-shadow:inset 0 0 0 1.5px rgba(243,234,216,.6)}
-.wac{height:24px;border-radius:7px;padding:0 8px;display:flex;align-items:center;gap:4px;font:500 12px/24px Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:color-mix(in srgb,var(--c) 34%,rgba(20,31,44,.8));box-shadow:inset 2px 0 0 var(--c);cursor:grab;user-select:none;-webkit-user-select:none}
+.wac{height:24px;border-radius:7px;padding:0 8px;display:flex;align-items:center;gap:4px;font:500 12px/24px Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:color-mix(in srgb,var(--c) 34%,rgba(28,28,30,.8));box-shadow:inset 2px 0 0 var(--c);cursor:grab;user-select:none;-webkit-user-select:none}
 .wac.done{opacity:.5;text-decoration:line-through}
 .dprev2{position:absolute;left:3px;right:3px;bottom:3px;height:24px;border-radius:7px;border:1.5px dashed rgba(243,234,216,.7);font:600 11px/21px Inter;padding:0 7px;white-space:nowrap;overflow:hidden;pointer-events:none}
 .wbody{flex:1;min-height:0;position:relative;overflow-y:auto;margin:0 -8px 0 0;padding:8px 8px 8px 0}
@@ -205,7 +209,7 @@ body.desk .addline input{font-size:15px}
 .wcols{position:absolute;top:0;bottom:0;left:50px;right:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .wgc{position:relative;border-radius:10px;background:rgba(255,255,255,.025)}
 .wgc.tdy{background:rgba(255,255,255,.055)}
-.wb{position:absolute;border-radius:9px;padding:5px 8px 5px 10px;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;background:color-mix(in srgb,var(--c) 30%,rgba(16,26,40,.92));box-shadow:inset 3px 0 0 var(--c),0 2px 8px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:3px;transition:opacity .15s,box-shadow .15s;z-index:1}
+.wb{position:absolute;border-radius:9px;padding:5px 8px 5px 10px;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;background:color-mix(in srgb,var(--c) 30%,rgba(24,24,26,.92));box-shadow:inset 3px 0 0 var(--c),0 2px 8px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:3px;transition:opacity .15s,box-shadow .15s;z-index:1}
 .wb:hover{box-shadow:inset 3px 0 0 var(--c),inset 0 0 0 1px rgba(243,234,216,.25),0 4px 14px rgba(0,0,0,.25);z-index:2}
 .wb>span{font:500 12.5px/1.2 Inter;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:20px}
 .wb>span em{font-style:normal;color:var(--ink2);font-weight:400}
@@ -261,7 +265,7 @@ body.ddragging,body.ddragging *{cursor:grabbing!important;user-select:none!impor
 .rvh{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:10px}
 .rvh span{font:500 11px/1 Inter;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
 .rvh b{font:800 20px/1 'Bricolage Grotesque'}
-.rvi{border-radius:12px;padding:8px 10px;margin-bottom:6px;background:color-mix(in srgb,var(--c) 24%,rgba(16,26,40,.85));box-shadow:inset 3px 0 0 var(--c);cursor:grab;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:5px}
+.rvi{border-radius:12px;padding:8px 10px;margin-bottom:6px;background:color-mix(in srgb,var(--c) 24%,rgba(24,24,26,.85));box-shadow:inset 3px 0 0 var(--c);cursor:grab;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:5px}
 .rvi.rep{cursor:default;opacity:.8}
 .rvi small{display:flex;align-items:center;gap:5px;font:400 11px/1 Inter;color:var(--ink2)}
 .rvi>span{font:500 13px/1.25 Inter;word-break:break-word}
@@ -286,7 +290,7 @@ body.ddragging,body.ddragging *{cursor:grabbing!important;user-select:none!impor
 .dempty2{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:90px 20px;text-align:center}
 .dempty2 b{font:700 22px/1 'Bricolage Grotesque'}
 .dempty2 .muted{font:400 14px/1.4 Inter;max-width:380px}
-.ddrop{position:absolute;inset:8px 24px 24px;border-radius:32px;border:2px dashed rgba(243,234,216,.6);background:rgba(8,14,24,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:20;pointer-events:none}
+.ddrop{position:absolute;inset:8px 24px 24px;border-radius:32px;border:2px dashed rgba(243,234,216,.6);background:rgba(12,12,14,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:20;pointer-events:none}
 .ddrop.on{display:flex}
 .ddrop>div{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .ddrop b{font:700 24px/1 'Bricolage Grotesque'}
@@ -306,16 +310,16 @@ body.desk #viewer .vcap,body.desk #viewer .vact{left:50%;right:auto;width:720px;
 body.desk #viewer .vnote{width:640px;margin:0 auto}
 
 /* settings = centred panel */
-body.desk.dset #app{pointer-events:auto;background:rgba(4,8,14,.5);animation:ckf .2s ease}
-body.desk #s-settings{left:50%;right:auto;top:32px;bottom:32px;width:640px;margin-left:-320px;border-radius:32px;background:rgba(14,23,36,.96);box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.08);padding:0 24px 32px}
+body.desk.dset #app{pointer-events:auto;background:rgba(0,0,0,.5);animation:ckf .2s ease}
+body.desk #s-settings{left:50%;right:auto;top:32px;bottom:32px;width:640px;margin-left:-320px;border-radius:32px;background:rgba(20,20,22,.96);box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.08);padding:0 24px 32px}
 body.desk #s-settings.on{animation:ckin2 .28s var(--out)}
 @keyframes ckin2{from{opacity:0;transform:translateY(10px) scale(.985)}}
 body.desk #s-settings>.hdr{padding-top:18px;min-height:76px}
-body.desk #s-settings>.hdr::before{background:linear-gradient(180deg,rgba(14,23,36,.98),rgba(14,23,36,.85) 70%,rgba(14,23,36,0))}
+body.desk #s-settings>.hdr::before{background:linear-gradient(180deg,rgba(20,20,22,.98),rgba(20,20,22,.85) 70%,rgba(20,20,22,0))}
 
 /* first-run welcome = centred card */
 body.desk:has(#welcome.on) #desk{filter:blur(14px) brightness(.55);pointer-events:none}
-body.desk #welcome{inset:auto;left:50%;top:50%;width:440px;height:min(800px,calc(100vh - 64px));transform:translate(-50%,-50%);border-radius:40px;padding:22px 0 26px;overflow:hidden;background:linear-gradient(180deg,rgba(14,23,36,.55),rgba(10,16,28,.82));-webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);box-shadow:0 40px 100px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.1)}
+body.desk #welcome{inset:auto;left:50%;top:50%;width:440px;height:min(800px,calc(100vh - 64px));transform:translate(-50%,-50%);border-radius:40px;padding:22px 0 26px;overflow:hidden;background:linear-gradient(180deg,rgba(20,20,22,.55),rgba(14,14,16,.82));-webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);box-shadow:0 40px 100px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.1)}
 .ph2 .cap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ph2 .lnk,.ph2 .muted{white-space:nowrap;flex:none}
 
@@ -350,8 +354,8 @@ body.desk #welcome{inset:auto;left:50%;top:50%;width:440px;height:min(800px,calc
 @media (prefers-reduced-motion:reduce){.dmain.enter>*{animation:none}}
 
 /* Sklo: overlays are glass too */
-body:not(.solidui) .ckp{background:rgba(16,26,40,.74);-webkit-backdrop-filter:blur(40px) saturate(140%);backdrop-filter:blur(40px) saturate(140%)}
-body:not(.solidui).desk #s-settings{background:rgba(14,23,36,.7);-webkit-backdrop-filter:blur(40px) saturate(140%);backdrop-filter:blur(40px) saturate(140%)}
+body:not(.solidui) .ckp{background:rgba(24,24,26,.74);-webkit-backdrop-filter:blur(40px) saturate(140%);backdrop-filter:blur(40px) saturate(140%)}
+body:not(.solidui).desk #s-settings{background:rgba(20,20,22,.7);-webkit-backdrop-filter:blur(40px) saturate(140%);backdrop-filter:blur(40px) saturate(140%)}
 body:not(.solidui).desk #s-settings>.hdr::before{background:none}
 
 /* v18: sheets opened from Settings on desktop must sit above the Settings panel */
@@ -370,3 +374,21 @@ body.desk .phnow.h19 .hwk{margin:6px 0 0}
 body.desk .phnow.h19 .hstack{flex:1 1 auto;height:auto;min-height:200px}
 body.desk .phnow.h19 .hcard{background:rgba(243,234,216,.05);box-shadow:inset 0 0 0 1px rgba(243,234,216,.08);-webkit-backdrop-filter:none;backdrop-filter:none}
 body.desk .phnow.h19 .hdots{right:-14px}
+
+/* ===== v19.6 · week: monthly chip, +N, popover ===== */
+.wad{max-height:none}
+.wac.grp{display:flex;cursor:pointer}.wac.grp b{margin-left:auto;padding-left:6px;font-weight:700;opacity:.9}
+.wac.late{box-shadow:inset 2px 0 0 #f0a44b}
+.wac.more{justify-content:center;font-weight:700;background:rgba(243,234,216,.13);box-shadow:none;color:var(--ink);cursor:pointer;width:100%;border:0}
+.wac.more:hover{background:rgba(243,234,216,.22)}
+.wpop{position:fixed;z-index:400;border-radius:20px;padding:12px;background:rgba(26,26,28,.94);-webkit-backdrop-filter:blur(26px) saturate(140%);backdrop-filter:blur(26px) saturate(140%);box-shadow:0 22px 60px rgba(0,0,0,.42),inset 0 0 0 1px rgba(243,234,216,.16);animation:wpopIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes wpopIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+.wpop .wph{display:flex;align-items:center;gap:10px;margin:0 2px 10px}
+.wpop .wph b{font:800 17px/1.1 'Bricolage Grotesque',sans-serif;color:var(--ink)}
+.wpop .wph span{color:var(--ink3);font:500 12px/1 Inter;margin-right:auto}
+.wpop .wph .cb{width:28px;height:28px;border-radius:14px;background:rgba(255,255,255,.08)}
+.wpop .wad{background:none;padding:0;min-height:0;max-height:60vh;overflow:auto}
+.wpop .wac{height:30px;font-size:13px}
+/* v19.6 · the desk never shifts: nothing can scroll the page itself (focus, find-in-page, a stray scrollIntoView) */
+body.desk,body.desk #desk{overflow:clip}
+html:has(body.desk){overflow:clip}

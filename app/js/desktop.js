@@ -55,6 +55,7 @@ function deskTop() {
     + '<button class="dadd cr press" data-a="add">' + ico('plus', 18, 2.4) + '<span class="dlbl">' + esc(t('addIt')) + '</span>' + kbd('N') + '</button></div></header>';
 }
 function deskRender(scrollTop) {
+  $$('.wpop').forEach(x => x.remove());
   if (!DESK.on || !S) return;
   if (DESK.drag) return; // a drop always renders afterwards
   const el = $('#desk');
@@ -94,7 +95,7 @@ function deskHome() {
   // middle: the day
   const its = itemsOn(day); const od = day === T() ? overdueItems() : [];
   let rows = '', placed = day !== T();
-  its.forEach(i => { if (!placed && (!i.time || tmin(i.time) > M.nm)) { rows += now; placed = true; } rows += trow(i, day, M.nextT && M.nextT.id); });
+  groupMonthly(its, day).forEach(i => { if (!placed && (!i.time || tmin(i.time) > M.nm)) { rows += now; placed = true; } rows += i.grp ? trowGroup(i, day) : trow(i, day, M.nextT && M.nextT.id); });
   if (!placed && its.length) rows += now;
   const strip = weekDays(day).map(d => '<button class="dsd' + (d === day ? ' on' : '') + (d === T() ? ' tdy' : '') + '" data-a="dHomeDay" data-d="' + d + '"><span>' + WD[lang()][dow(d)] + '</span><b>' + dOf(d).getDate() + '</b><i>' + dayDots(d) + '</i></button>').join('');
   const mid = '<section class="pn frost solid phday" style="grid-column:5/10"><div class="ph2"><b class="pt">' + esc(dayFull(day)) + '</b><span class="muted">' + (its.length + od.length ? esc(t('leftN', its.filter(i => !isDone(i, day)).length + od.length)) : '') + '</span></div>'
@@ -104,7 +105,7 @@ function deskHome() {
     + '<button class="addday in press" data-a="add" data-date="' + day + '">' + ico('plus', 16, 2.2) + esc(t('addTo', cs && Math.abs(daysBetween(T(), day)) <= 1 ? dayName(day).toLowerCase() : dayName(day))) + '</button></section>';
   // right: cards, no-day, ideas
   const cards = S.cards.slice(0, 4).map(c => { const hb = c.type === 'habit'; const g = hb ? goalOf(c) : 0; const k = hb ? habitWeek(c.id).filter(Boolean).length : projectStats(c.id).done; const tot = hb ? g : Math.max(1, projectStats(c.id).total);
-    return '<button class="krow press" data-a="openCard" data-id="' + c.id + '"><span class="kr">' + ringSVG(40, k / tot, c.color, 3.5) + '</span><span class="kt"><span>' + esc(c.name) + '</span><small>' + esc(hb ? (k >= g ? (cs ? 'cíl splněn ✓' : 'goal met ✓') : goalText(g)) : (c.deadline ? t('deadline') + ' ' + deadlineText(c.deadline) : projectStats(c.id).open + ' ' + t('open'))) + '</small></span><span class="num" style="font-size:22px">' + k + '<small>/' + tot + '</small></span></button>'; }).join('')
+    return '<button class="krow press" data-a="openCard" data-id="' + c.id + '"><span class="kr">' + ringSVG(40, k / tot, c.color, 3.5) + '</span><span class="kt"><span>' + esc(c.name) + '</span><small>' + esc(c.type === 'month' ? monthLine(monthStats(c)) : hb ? (k >= g ? (cs ? 'cíl splněn ✓' : 'goal met ✓') : goalText(g)) : (c.deadline ? t('deadline') + ' ' + deadlineText(c.deadline) : projectStats(c.id).open + ' ' + t('open'))) + '</small></span><span class="num" style="font-size:22px">' + k + '<small>/' + tot + '</small></span></button>'; }).join('')
     || '<button class="krow press" data-a="newCard"><span class="kr">' + ico('plus', 20, 1.9) + '</span><span class="kt"><span>' + esc(t('newCard')) + '</span><small>' + esc(t('newCardSub')) + '</small></span></button>';
   const nd = undatedItems();
   const ideas = S.moments.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 2);
@@ -199,10 +200,11 @@ function deskSpaces() {
     const g = hb ? goalOf(c) : Math.max(1, ps.total); const k = hb ? habitWeek(c.id).filter(Boolean).length : ps.done;
     const w = habitWeek(c.id);
     const nxt = hb ? (cardItems(c.id).find(i => occurs(i, d) && !isDone(i, d)) || cardItems(c.id).find(i => !i.repeat && !i.done)) : ps.next;
-    const sub = hb ? t('streak') + ' ' + streakOf(c.id) + ' ' + t('days') + ' · ' + t('best', bestStreak(c.id)) : (c.deadline ? t('deadline') + ' ' + dayShort(c.deadline) + ' · ' + deadlineText(c.deadline) : ps.open + ' ' + t('open') + (ps.noDay ? ' · ' + ps.noDay + (cs ? ' bez dne' : ' no day') : ''));
-    return '<button class="pn frost dcard press" data-a="openCard" data-id="' + c.id + '" style="--c:' + c.color + '"><div class="ph2"><span class="cap kk"><span class="led" style="--c:' + c.color + '"></span>' + esc((hb ? t('habit') + ' · ' + goalText(goalOf(c)) : t('project')) + (c.sh ? (lang() === 'cs' ? ' · Spolu' : ' · Together') : '')) + '</span>' + (c.sh && chOfCard(c) && members(chOfCard(c)).length > 1 ? avStack(members(chOfCard(c)), 24) : '<span class="muted">' + ico(cardIcon(c), 16, 1.8) + '</span>') + '</div>'
+    const sub = c.type === 'month' ? monthLine(monthStats(c, d)) : hb ? t('streak') + ' ' + streakOf(c.id) + ' ' + t('days') + ' · ' + t('best', bestStreak(c.id)) : (c.deadline ? t('deadline') + ' ' + dayShort(c.deadline) + ' · ' + deadlineText(c.deadline) : ps.open + ' ' + t('open') + (ps.noDay ? ' · ' + ps.noDay + (cs ? ' bez dne' : ' no day') : ''));
+    return '<button class="pn frost dcard press" data-a="openCard" data-id="' + c.id + '" style="--c:' + c.color + '"><div class="ph2"><span class="cap kk"><span class="led" style="--c:' + c.color + '"></span>' + esc((c.type === 'month' ? (cs ? 'Měsíčně · ' : 'Monthly · ') + winText(c.win) : hb ? t('habit') + ' · ' + goalText(goalOf(c)) : t('project')) + (c.sh ? (lang() === 'cs' ? ' · Spolu' : ' · Together') : '')) + '</span>' + (c.sh && chOfCard(c) && members(chOfCard(c)).length > 1 ? avStack(members(chOfCard(c)), 24) : '<span class="muted">' + ico(cardIcon(c), 16, 1.8) + '</span>') + '</div>'
       + '<div class="dch"><b>' + esc(c.name) + '</b><span class="dring">' + ringSVG(64, k / g, c.color, 4) + '<span>' + k + '/' + g + '</span></span></div><div class="muted dsub">' + esc(sub) + '</div>'
-      + '<span class="cap" style="margin-top:16px">' + esc(t('thisWeekCap')) + '</span><div class="dwk">' + w.map((on, j) => '<span><i class="' + (on ? 'on' : '') + (j === td ? ' td' : '') + '"></i>' + WD1[lang()][j] + '</span>').join('') + '</div>'
+      + (c.type === 'month' ? '<span class="cap" style="margin-top:16px">' + esc(cs ? 'Tento měsíc' : 'This month') + '</span><div class="mprog dm">' + monthItems(c.id).map(i => '<i class="' + (isDone(i, d) ? 'on' : '') + '"></i>').join('') + '</div>'
+        : '<span class="cap" style="margin-top:16px">' + esc(t('thisWeekCap')) + '</span><div class="dwk">' + w.map((on, j) => '<span><i class="' + (on ? 'on' : '') + (j === td ? ' td' : '') + '"></i>' + WD1[lang()][j] + '</span>').join('') + '</div>')
       + (nxt ? '<div class="dnext"><span class="cap" style="color:' + c.color + ';filter:brightness(1.3)">' + esc(t('nextStep')) + '</span><span>' + esc(nxt.t) + '</span><small class="muted">' + esc(whenLabel(nxt) || (cs ? 'bez dne' : 'no day')) + '</small></div>' : '<div class="dnext"><span class="muted">' + esc(t('noTasksYet')) + '</span></div>') + '</button>';
   };
   const cards = list.map(card).join('') + (list.length % 4 === 0 && list.length ? '' : '<button class="pn dcard dnew press" data-a="newCard"><span class="ci" style="width:56px;height:56px;border-radius:28px">' + ico('plus', 24, 1.8) + '</span><b>' + esc(t('newCard')) + '</b><span class="muted">' + esc(t('newCardSub')) + '</span></button>');
@@ -227,7 +229,7 @@ ACT.dDeck = el => { V.deckFilter = el.dataset.k; deskRender(); };
 
 /* ---------------- CARD ---------------- */
 function deskCard() { const c = cardById(V.card); const sh = c && c.sh && chOfCard(c); return '<main class="dmain g12 rows dcardv" id="dCardMain"><div class="dph"><div class="dgrp"><button class="cb frost press" data-a="closeCard" aria-label="Back">' + ico('back', 20, 2.2) + '</button><span id="dCardKick"></span></div><div class="dgrp">' + (sh ? '<button class="chip frost press" style="height:44px;border-radius:22px" data-a="spInvite" data-id="' + c.id + '">' + ico('users', 16, 2) + esc(lang() === 'cs' ? 'Pozvat' : 'Invite') + '</button>' : '') + '<button class="cb frost press" data-a="editCard" aria-label="' + esc(t('editCard')) + '">' + ico('more', 20, 2) + '</button></div></div>'
-  + '<section class="pn plain" id="dC1" style="grid-column:1/6"></section><section class="pn plain" id="dC2" style="grid-column:6/10"></section><section class="pn plain" id="dC3" style="grid-column:10/13"></section></main>'; }
+  + '<div class="dctitle" id="dCardTitle"></div><section class="pn plain" id="dC1" style="grid-column:1/6"></section><section class="pn plain" id="dC2" style="grid-column:6/10"></section><section class="pn plain" id="dC3" style="grid-column:10/13"></section></main>'; }
 function deskCardMount() {
   // the phone's card view is built (with its live inputs) and its parts are moved into the desktop columns
   const src = $('#s-card'); DESK.mounting = true; try { _renderCard(); } finally { DESK.mounting = false; }
@@ -235,8 +237,11 @@ function deskCardMount() {
   const kick = kids.find(x => x.classList.contains('kick')); const name = kids.find(x => x.classList.contains('cname')); const cnote = kids.find(x => x.classList.contains('cnote'));
   const stack = kids.find(x => x.classList.contains('stack')); const secs = kids.filter(x => x.classList.contains('sec'));
   const c1 = $('#dC1'), c2 = $('#dC2'), c3 = $('#dC3'); if (!c1) return;
-  if (kick) $('#dCardKick').appendChild(kick);
-  if (name) c1.appendChild(name); if (cnote) c1.appendChild(cnote); if (stack) c1.appendChild(stack);
+  const head = $('#dCardTitle');
+  if (kick) $('#dCardKick').appendChild(kick); if (name) head.appendChild(name); if (cnote) head.appendChild(cnote);
+  // v19.6: title lives in the header row, so all three columns start on one line; the spacer matches the captions of columns 2 and 3
+  c1.insertAdjacentHTML('beforeend', '<div class="sec dsp" aria-hidden="true"><span class="cap">&nbsp;</span></div>');
+  if (stack) c1.appendChild(stack);
   const cap = s => (s.querySelector('.cap') || {}).textContent || '';
   secs.forEach((s, k) => { const isMom = s.querySelector('.thumbs'); const isNote = s.querySelector('#cardNote'); const isSp = s.querySelector('.pact,[data-a="spLeave"]'); (isMom || isNote || isSp ? c3 : c2).appendChild(s); });
   const news = c3.querySelector('.pact'); if (news) c3.prepend(news.closest('.sec'));
@@ -359,7 +364,7 @@ function deskPlan() {
   if (isMon) return '<main class="dmain g12 rows">' + hdr + side + deskMonth() + '</main>';
   // grid
   const head = days.map(d => '<button class="wgh' + (d === T() ? ' tdy' : '') + '" data-a="dGoDay" data-d="' + d + '"><span>' + WD[lang()][dow(d)] + '</span><b>' + dOf(d).getDate() + '</b></button>').join('');
-  const allday = days.map(d => '<div class="wad" data-d="' + d + '">' + itemsOn(d).filter(i => !i.time).map(i => '<div class="wac' + (isDone(i, d) ? ' done' : '') + '" data-drag="item:' + i.id + '" data-d="' + d + '" style="--c:' + itemColor(i) + '">' + (i.repeat ? ico('repeat', 10, 2.6) : '') + esc(i.t) + '</div>').join('') + '</div>').join('');
+  const allday = days.map(d => '<div class="wad" data-d="' + d + '">' + wacList(d, 3) + '</div>').join('');
   const cols = days.map(d => {
     const bl = lanes(itemsOn(d).filter(i => i.time).map(i => ({ i, s: tmin(i.time), e: tmin(i.time) + (i.dur || 45) })));
     let h = bl.map(b => { const i = b.i; const on = isDone(i, d); const top = (Math.max(360, b.s) - 360) / 1080 * 100, ht = (Math.min(1440, b.e) - Math.max(360, b.s)) / 1080 * 100; const w = 100 / b.n;
@@ -490,3 +495,32 @@ setInterval(() => { if (!DESK.on || !S || document.hidden || V.tab !== 'home' ||
 
 /* this file can arrive after the app has already started (slow network): switch now */
 if (typeof S !== 'undefined' && S) deskCheck();
+
+/* ---------------- v19.6 · week "all day" cell: monthly cards as one chip, at most 3, then +N ---------------- */
+function wacHTML(x, d) {
+  if (x.grp) { const c = x.card; const all = monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const end = mRange(all[0], d)[1];
+    return '<div class="wac grp' + (dn === all.length ? ' done' : '') + (d > end && dn < all.length ? ' late' : '') + '" data-a="openCard" data-id="' + c.id + '" role="button" style="--c:' + c.color + '">' + esc(c.name) + ' → ' + (+end.slice(8)) + '.<b>' + dn + '/' + all.length + '</b></div>'; }
+  const i = x; return '<div class="wac' + (isDone(i, d) ? ' done' : '') + '" data-drag="item:' + i.id + '" data-d="' + d + '" style="--c:' + itemColor(i) + '">' + (i.repeat ? ico('repeat', 10, 2.6) : '') + esc(i.t) + '</div>';
+}
+function wacList(d, max) {
+  const xs = groupMonthly(itemsOn(d).filter(i => !i.time), d).sort((a, b) => (b.grp ? 1 : 0) - (a.grp ? 1 : 0));
+  if (!max || xs.length <= max) return xs.map(x => wacHTML(x, d)).join('');
+  return xs.slice(0, max - 1).map(x => wacHTML(x, d)).join('') + '<button class="wac more" data-a="wacMore" data-d="' + d + '">+' + (xs.length - max + 1) + '</button>';
+}
+ACT.wacMore = el => {
+  $$('.wpop').forEach(x => x.remove()); const d = el.dataset.d; const r = el.getBoundingClientRect(); const cs = lang() === 'cs';
+  const n = groupMonthly(itemsOn(d).filter(i => !i.time), d).length;
+  const p = document.createElement('div'); p.className = 'wpop'; p.setAttribute('role', 'dialog');
+  p.innerHTML = '<div class="wph"><b>' + esc(dayShort(d)) + '</b><span>' + n + (cs ? (n < 5 ? ' věci' : ' věcí') : ' things') + '</span><button class="cb press" data-a="wpopX" aria-label="' + esc(t('close')) + '">' + ico('x', 14, 2.4) + '</button></div><div class="wad" data-d="' + d + '">' + wacList(d, 0) + '</div>';
+  document.body.appendChild(p);
+  const w = 260; let left = r.left + r.width / 2 - w / 2; left = Math.max(12, Math.min(innerWidth - w - 12, left));
+  let top = r.bottom + 8; const ph = p.offsetHeight; if (top + ph > innerHeight - 12) top = Math.max(12, r.top - ph - 8);
+  p.style.left = left + 'px'; p.style.top = top + 'px'; p.style.width = w + 'px';
+  const off = e => { if (!p.contains(e.target) && !e.target.closest('[data-a="wacMore"]')) { p.remove(); document.removeEventListener('pointerdown', off, true); } };
+  setTimeout(() => document.addEventListener('pointerdown', off, true), 0);
+};
+ACT.wpopX = () => $$('.wpop').forEach(x => x.remove());
+
+/* v19.6 · if the browser ever scrolls the page itself (it should not), put it straight back */
+['scroll'].forEach(ev => { window.addEventListener(ev, () => { if (DESK.on && (scrollX || scrollY)) scrollTo(0, 0); }, { passive: true });
+  document.addEventListener(ev, e => { const t = e.target; if (DESK.on && (t === document.body || t === document.documentElement || (t && t.id === 'desk')) && (t.scrollTop || t.scrollLeft)) { t.scrollTop = 0; t.scrollLeft = 0; } }, { capture: true, passive: true }); });

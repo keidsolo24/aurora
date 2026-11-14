@@ -53,12 +53,31 @@ function h19Top(M) {
 /* ---------- the stack under the arc ---------- */
 function stripRow(html, d) { return html.replace(/<button class="c0[\s\S]*?<\/button>/, '<span class="chev">' + ico('chev', 14, 2.2) + '</span>').replace(/data-a="openItem" data-id="[^"]*"/, 'data-a="homeDay" data-d="' + d + '"'); }
 function cardPak(M) {
-  const rest = M.list.filter(i => !isDone(i, M.d) && i !== M.nextAny);
-  const rows = rest.slice(0, 3).map(i => stripRow(trow(i, i.date && i.date < M.d && !i.repeat ? i.date : M.d, null), M.d)).join('');
-  const more = rest.length > 3 ? L2('a další ' + (rest.length - 3) + ' v Plánu', '+' + (rest.length - 3) + ' more in Plan') : L2('Celý den v Plánu', 'Whole day in Plan');
+  const rest = groupMonthly(M.list.filter(i => !isDone(i, M.d) && i !== M.nextAny), M.d);
+  const rows = rest.slice(0, 12).map(i => i.grp ? trowGroup(i, M.d).replace(/data-a="mGrp" data-k="[^"]*" data-d="[^"]*"/, 'data-a="homeDay" data-d="' + M.d + '"') : stripRow(trow(i, i.date && i.date < M.d && !i.repeat ? i.date : M.d, null), M.d)).join('');
+  const more = pakMore(Math.max(0, rest.length - 12));
   return '<div class="lh"><span class="cap">' + esc(t('then')) + '</span><span class="muted">' + (rest.length ? esc(t('leftN', rest.length)) : '') + '</span></div>'
     + (rows || '<div class="hempty">' + esc(M.list.length ? t('nothingElse') : L2('Dnes nic naplánováno.', 'Nothing planned today.')) + '</div>')
-    + '<button class="hmore press" data-a="homeDay" data-d="' + M.d + '">' + esc(more) + ico('chev', 14, 2.2) + '</button>';
+    + '<button class="hmore press" data-a="homeDay" data-d="' + M.d + '" data-x="' + Math.max(0, rest.length - 12) + '"><span>' + esc(more) + '</span>' + ico('chev', 14, 2.2) + '</button>';
+}
+function pakMore(n) { return n ? L2('a další ' + n + ' v Plánu', '+' + n + ' more in Plan') : L2('Celý den v Plánu', 'Whole day in Plan'); }
+/* v19.6.1: the tile never hides behind the tab bar, and "Then" shows as many rows as fit, the rest goes to "+N" */
+function h19Fit(st) {
+  if (!st || !st.isConnected) return;
+  const nav = $('#nav'); const nr = nav && nav.offsetParent !== null ? nav.getBoundingClientRect() : null;
+  const sr = st.getBoundingClientRect();
+  const hide = nr && nr.height ? Math.max(0, Math.round(sr.bottom - (nr.top - 10))) : 0;
+  st.style.setProperty('--hide', Math.min(hide, Math.max(0, sr.height - 160)) + 'px');
+  const pk = st.querySelector('.hcard[data-k="pak"]'); if (!pk) return;
+  const mo = pk.querySelector('.hmore'); const rows = [...pk.children].filter(x => !x.matches('.lh,.hmore,.hempty'));
+  rows.forEach(r => { r.hidden = false; });
+  if (!mo || !rows.length) return;
+  const pb = parseFloat(getComputedStyle(pk).paddingBottom) || 0;
+  const limit = pk.getBoundingClientRect().bottom - pb - mo.offsetHeight + 1;
+  let n = 0; rows.forEach((r, k) => { if (k && r.getBoundingClientRect().bottom > limit) { r.hidden = true; n++; } });
+  /* once one row is cut, everything after it goes too */
+  let cut = false; rows.forEach(r => { if (r.hidden) cut = true; else if (cut) { r.hidden = true; n++; } });
+  const sp = mo.querySelector('span'); if (sp) sp.textContent = pakMore(n + (+mo.dataset.x || 0));
 }
 function cardWeek(M) {
   const days = weekDays(M.d); const vals = days.map(x => x <= M.d ? completionsOn(x) : 0); const mx = Math.max(1, ...vals);
@@ -141,6 +160,7 @@ function h19Mount(root, fill) {
     const room = root.clientHeight - (st.getBoundingClientRect().top - root.getBoundingClientRect().top) - pad + 24;
     st.style.height = Math.round(Math.max(196, Math.min(360, room))) + 'px';
   }
+  h19Fit(st); requestAnimationFrame(() => h19Fit(st)); setTimeout(() => h19Fit(st), 450);
   const page = () => sc.clientHeight + 12;
   const k = Math.min(H19.idx, H19.order.length - 1); H19.idx = Math.max(0, k);
   sc.scrollTop = H19.idx * page();

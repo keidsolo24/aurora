@@ -1,6 +1,6 @@
 'use strict';
 /* ============ CORE: utils, i18n, storage, model ============ */
-const VERSION = '19.5.3';
+const VERSION = '19.6';
 const PUSH_DEFAULT = 'https://calm-brook-f448.keidaurora.workers.dev'; // author's notification server, shared by testers
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -241,16 +241,44 @@ const cardById = id => S.cards.find(c => c.id === id);
 const cardColor = id => (cardById(id) || {}).color || '#9fb3c4';
 const itemColor = i => (i && i.card && cardById(i.card) ? cardById(i.card).color : i && i.color) || '#9fb3c4';
 const itemById = id => S.items.find(i => i.id === id);
+/* v19.6 · monthly: once a month inside a window (14.–20.), a single day, or the last day.
+   Not done → it stays in Plan from the window start to the month's end (late after the window).
+   Done → it shows only on the day it was done. The month key is the window's first day. */
+const dimOf = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).getDate(); };
+function mWin(i) {
+  if (i.mlast) return { last: true };
+  if (i.mfrom) return { from: i.mfrom, to: i.mto || i.mfrom };
+  const c = i.card ? cardById(i.card) : null; if (c && c.win) return c.win;
+  return { from: 1, to: 31 };
+}
+function mRange(i, d) {
+  const ym = d.slice(0, 7), n = dimOf(ym), w = mWin(i);
+  const a = w.last ? n : Math.min(w.from || 1, n), b = w.last ? n : Math.min(Math.max(w.to || w.from || 1, w.from || 1), n);
+  return [ym + '-' + pad(a), ym + '-' + pad(b)];
+}
+const mKey = (i, d) => mRange(i, d)[0];
+const mDoneOn = (i, d) => (i.mDone || {})[mKey(i, d)] || null;
+const dayShortNum = x => { const dt = new Date(x + 'T12:00'); return lang() === 'cs' ? dt.getDate() + '. ' + (dt.getMonth() + 1) + '.' : dt.getDate() + ' ' + MON3[dt.getMonth()]; };
+const MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const mLate = (i, d) => !isDone(i, d) && d > mRange(i, d)[1];
+function winText(w) { const cs = lang() === 'cs'; if (!w) return ''; if (w.last) return cs ? 'poslední den' : 'last day'; return w.to && w.to !== w.from ? (cs ? w.from + '.–' + w.to + '.' : w.from + '–' + w.to) : (cs ? w.from + '.' : w.from + ordSuf(w.from)); }
+const ordSuf = n => (n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th');
 function occurs(i, d) {
   if (!i.repeat) return i.date === d;
   const start = i.date || i.created || '2000-01-01';
-  if (d < start) return false;
+  if (d < start.slice(0, 7) + '-01' || (i.repeat !== 'monthly' && d < start)) return false;
+  if (i.repeat === 'monthly') {
+    const a = mKey(i, d); const on = (i.mDone || {})[a];
+    if (on) return on === d;
+    if ((i.doneDates || []).includes(a)) return false;
+    return d >= (start > a && start.slice(0, 7) === d.slice(0, 7) ? start : a);
+  }
   if (i.repeat === 'weekdays') return dow(d) < 5;
   if (i.repeat === 'weekly') return dow(d) === dow(start);
   if (i.repeat === 'days') return (i.days || []).includes(dow(d));
   return true;
 }
-const isDone = (i, d) => i.repeat ? (i.doneDates || []).includes(d) : !!i.done;
+const isDone = (i, d) => i.repeat === 'monthly' ? (i.doneDates || []).includes(mKey(i, d)) : i.repeat ? (i.doneDates || []).includes(d) : !!i.done;
 function itemsOn(d) {
   return S.items.filter(i => occurs(i, d)).sort((a, b) => {
     const ta = tmin(a.time), tb = tmin(b.time);
@@ -264,6 +292,7 @@ const undatedItems = () => S.items.filter(i => !i.repeat && !i.date && !i.done);
 function todayList() { const d = T(); return [...overdueItems(), ...itemsOn(d)]; }
 function setDone(i, d, val) {
   if (val && typeof useCount === 'function') useCount('checks');
+  if (i.repeat === 'monthly') { const k = mKey(i, d); i.mDone = i.mDone || {}; if (val) i.mDone[k] = T(); else delete i.mDone[k]; d = k; }
   if (i.repeat) {
     i.doneDates = i.doneDates || [];
     const has = i.doneDates.includes(d);
@@ -276,7 +305,8 @@ function completionsOn(d, cardId) {
   let n = 0;
   for (const i of S.items) {
     if (cardId !== undefined && i.card !== cardId) continue;
-    if (i.repeat) { if ((i.doneDates || []).includes(d)) n++; }
+    if (i.repeat === 'monthly') { if (Object.values(i.mDone || {}).includes(d)) n++; }
+    else if (i.repeat) { if ((i.doneDates || []).includes(d)) n++; }
     else if (i.done && i.doneOn === d) n++;
   }
   return n;
@@ -285,7 +315,8 @@ function cardDaySet(cardId) {
   const s = new Set();
   for (const i of S.items) {
     if (i.card !== cardId) continue;
-    if (i.repeat) (i.doneDates || []).forEach(x => s.add(x));
+    if (i.repeat === 'monthly') Object.values(i.mDone || {}).forEach(x => s.add(x));
+    else if (i.repeat) (i.doneDates || []).forEach(x => s.add(x));
     else if (i.done && i.doneOn) s.add(i.doneOn);
   }
   return s;
@@ -304,6 +335,8 @@ function bestStreak(cardId) {
 function monthCount(cardId) { const m = T().slice(0, 7); return [...cardDaySet(cardId)].filter(d => d.startsWith(m)).length; }
 function cardItems(cardId) { return S.items.filter(i => i.card === cardId); }
 function projectStats(cardId) {
+  const cm = cardById(cardId);
+  if (cm && cm.type === 'month') { const d = T(); const its = cardItems(cardId).filter(i => i.repeat === 'monthly'); const open = its.filter(i => !isDone(i, d)); return { total: its.length, open: open.length, done: its.length - open.length, next: open[0] || null, noDay: 0 }; }
   const its = cardItems(cardId).filter(i => !i.repeat);
   const open = its.filter(i => !i.done);
   const next = open.slice().sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (tmin(a.time) ?? 9999) - (tmin(b.time) ?? 9999))[0] || null;
@@ -314,10 +347,11 @@ function lastActive(cardId) { const s = [...cardDaySet(cardId)].sort(); return s
 function itemSub(i, withCard = true) {
   const p = [];
   if (withCard && i.card && cardById(i.card)) p.push(cardById(i.card).name);
-  if (i.repeat) p.push(repText(i));
+  if (i.repeat && !(i.repeat === 'monthly' && !withCard && !i.mfrom && !i.mlast)) p.push(repText(i));
   return p.join(' · ');
 }
-function whenLabel(i) {
+function whenLabel(i, d) {
+  if (i.repeat === 'monthly' && d) { const cs = lang() === 'cs'; const on = mDoneOn(i, d); if (on) return (cs ? 'hotovo ' : 'done ') + dayShortNum(on); const [, b] = mRange(i, d); return d > b ? (cs ? 'po termínu' : 'overdue') : (cs ? 'do ' + (+b.slice(8)) + '.' : 'by ' + (+b.slice(8)) + ordSuf(+b.slice(8))); }
   if (i.repeat) return (i.time ? i.time + ' · ' : '') + repText(i);
   if (!i.date) return '';
   return dayName(i.date) + (i.time ? ' ' + i.time : '');
@@ -332,6 +366,7 @@ function daysText(ds) {
 }
 function repText(i) {
   if (!i || !i.repeat) return '';
+  if (i.repeat === 'monthly') return (lang() === 'cs' ? 'měsíčně ' : 'monthly ') + winText(mWin(i));
   if (i.repeat === 'weekdays') return t('weekdays');
   if (i.repeat === 'weekly') return t('everyWeek');
   if (i.repeat === 'days') return daysText(i.days);
@@ -432,8 +467,8 @@ function stripSpans(text, spans) {
 const ART = {
   alps: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d95d8"/><stop offset=".6" stop-color="#f2c6a0"/><stop offset="1" stop-color="#f6dcc0"/></linearGradient></defs><rect width="600" height="800" fill="url(#s)"/><circle cx="440" cy="260" r="56" fill="#fff4dc" opacity=".9"/><path d="M0 520 L130 330 L215 430 L330 240 L475 445 L600 345 V800 H0z" fill="#5b6f9e"/><path d="M330 240 L290 302 L318 296 L344 326 L372 290z M130 330 L102 372 L138 360 L158 380z" fill="#fff"/><path d="M0 600 L170 490 L315 565 L480 470 L600 528 V800 H0z" fill="#33456f"/><rect x="240" y="555" width="124" height="76" rx="6" fill="#f3ead8"/><path d="M226 562 L302 512 L378 562z" fill="#8a4b3a"/><rect x="266" y="580" width="20" height="20" fill="#f0a44b"/><rect x="316" y="580" width="20" height="20" fill="#f0a44b"/></svg>',
   cafe: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><defs><radialGradient id="c" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#6b4430"/><stop offset="1" stop-color="#1e1612"/></radialGradient></defs><rect width="600" height="600" fill="url(#c)"/><circle cx="300" cy="300" r="190" fill="#efe6d6"/><circle cx="300" cy="300" r="150" fill="#7a4a2c"/><path d="M232 288 q68 -88 136 0 q-68 60 -136 0z" fill="#e9c9a3" opacity=".9"/><circle cx="510" cy="110" r="90" fill="#f0a44b" opacity=".35"/></svg>',
-  sketch: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700"><rect width="600" height="700" fill="#efe6d6"/><g fill="none" stroke="#13233a" stroke-width="10" stroke-linecap="round"><circle cx="300" cy="300" r="136"/><path d="M260 226 V370 H350"/></g><g fill="none" stroke="#13233a" stroke-width="3" opacity=".35"><circle cx="300" cy="300" r="170"/><path d="M100 300 H500 M300 100 V500"/></g><rect x="130" y="560" width="76" height="76" rx="14" fill="#f3ead8" stroke="#13233a" stroke-opacity=".2" stroke-width="3"/><rect x="226" y="560" width="76" height="76" rx="14" fill="#13233a"/><rect x="322" y="560" width="76" height="76" rx="14" fill="#f0a44b"/></svg>',
-  notes: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 760"><rect width="600" height="760" fill="#f4f1ea"/><g stroke="#9fb3c4" stroke-width="3">' + Array.from({ length: 11 }, (_, k) => '<path d="M48 ' + (130 + k * 60) + ' H552"/>').join('') + '</g><path d="M104 0 V760" stroke="#e8a0a0" stroke-width="4"/><g fill="none" stroke="#13233a" stroke-width="7" stroke-linecap="round" opacity=".75"><path d="M140 172 q34 -26 68 0 t68 0 t68 0"/><path d="M140 232 q48 -20 96 0 t96 0"/><path d="M140 352 q34 -26 68 0 t68 0 t68 0 t68 0"/><path d="M140 412 q40 -20 80 0"/><path d="M140 532 q34 -26 68 0 t68 0 t68 0"/></g><circle cx="440" cy="226" r="48" fill="none" stroke="#3fbf7f" stroke-width="8"/></svg>',
+  sketch: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700"><rect width="600" height="700" fill="#efe6d6"/><g fill="none" stroke="#161616" stroke-width="10" stroke-linecap="round"><circle cx="300" cy="300" r="136"/><path d="M260 226 V370 H350"/></g><g fill="none" stroke="#161616" stroke-width="3" opacity=".35"><circle cx="300" cy="300" r="170"/><path d="M100 300 H500 M300 100 V500"/></g><rect x="130" y="560" width="76" height="76" rx="14" fill="#f3ead8" stroke="#161616" stroke-opacity=".2" stroke-width="3"/><rect x="226" y="560" width="76" height="76" rx="14" fill="#161616"/><rect x="322" y="560" width="76" height="76" rx="14" fill="#f0a44b"/></svg>',
+  notes: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 760"><rect width="600" height="760" fill="#f4f1ea"/><g stroke="#9fb3c4" stroke-width="3">' + Array.from({ length: 11 }, (_, k) => '<path d="M48 ' + (130 + k * 60) + ' H552"/>').join('') + '</g><path d="M104 0 V760" stroke="#e8a0a0" stroke-width="4"/><g fill="none" stroke="#161616" stroke-width="7" stroke-linecap="round" opacity=".75"><path d="M140 172 q34 -26 68 0 t68 0 t68 0"/><path d="M140 232 q48 -20 96 0 t96 0"/><path d="M140 352 q34 -26 68 0 t68 0 t68 0 t68 0"/><path d="M140 412 q40 -20 80 0"/><path d="M140 532 q34 -26 68 0 t68 0 t68 0"/></g><circle cx="440" cy="226" r="48" fill="none" stroke="#3fbf7f" stroke-width="8"/></svg>',
 };
 async function sampleState(base) {
   const s = Object.assign(blankState(), base || {});
@@ -546,4 +581,52 @@ async function restoreBackup(file) {
   await DB.clear('media'); MEDIA_URL.clear();
   for (const [k, u] of Object.entries(data.media || {})) { const b = await (await fetch(u)).blob(); await DB.set('media', k, b); }
   S = migrate(data.state); S.onboarded = true; save(); await warmMedia();
+}
+
+/* ---------- v19.6 · monthly cards ---------- */
+const MONF = { cs: ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+const MONS = { cs: ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čvn', 'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'], en: MON3 };
+const monthItems = cid => S.items.filter(i => i.card === cid && i.repeat === 'monthly');
+function ymAdd(ym, k) { const [y, m] = ym.split('-').map(Number); const dt = new Date(y, m - 1 + k, 15); return dt.getFullYear() + '-' + pad(dt.getMonth() + 1); }
+function monthStats(c, d = T()) {
+  const its = monthItems(c.id); const done = its.filter(i => isDone(i, d)).length;
+  const w = c.win || { from: 1, to: 31 }; const probe = { repeat: 'monthly', card: c.id };
+  const [a, b] = mRange(probe, d);
+  // months on time in a row (finished months only, newest first)
+  const ym0 = d.slice(0, 7); let onTime = 0;
+  for (let k = 1; k <= 24; k++) {
+    const ym = ymAdd(ym0, -k); const mid = ym + '-15'; const end = ym + '-' + pad(dimOf(ym));
+    const live = its.filter(i => (i.created || i.date || '0000') <= end); if (!live.length) break;
+    const ok = live.every(i => { const on = (i.mDone || {})[mKey(i, mid)]; return on && on <= mRange(i, mid)[1]; });
+    if (!ok) break; onTime++;
+  }
+  // which day of the month it usually gets done
+  const days = []; its.forEach(i => Object.values(i.mDone || {}).forEach(x => { if (x >= ymAdd(ym0, -6) + '-01') days.push(+x.slice(8)); }));
+  const usual = days.length ? Math.round(days.reduce((s, x) => s + x, 0) / days.length) : null;
+  // last 6 months: share done (finished months: done on time)
+  const bars = [5, 4, 3, 2, 1, 0].map(k => { const ym = ymAdd(ym0, -k); const mid = ym + '-15'; const end = ym + '-' + pad(dimOf(ym)); const live = its.filter(i => (i.created || i.date || '0000') <= end);
+    if (!live.length) return { ym, v: null }; const n = live.filter(i => { const on = (i.mDone || {})[mKey(i, mid)]; return on && (k === 0 || on <= mRange(i, mid)[1]); }).length; return { ym, v: n / live.length }; });
+  return { its, total: its.length, done, left: its.length - done, a, b, before: d < a, after: d > b, onTime, usual, bars, w };
+}
+
+/* ---------- v19.6 · card templates ---------- */
+const TEMPLATES = [
+  { id: 'bills', type: 'month', color: '#3fbf7f', win: { from: 14, to: 20 }, cs: ['Platby', 'Měsíčně · 14.–20.', ['Nájem', 'Energie', 'Telefon', 'Internet', 'Pojištění', 'Předplatné']], en: ['Bills', 'Monthly · 14–20', ['Rent', 'Energy', 'Phone', 'Internet', 'Insurance', 'Subscriptions']] },
+  { id: 'train', type: 'habit', goal: 3, color: '#ff5c9a', rep: { repeat: 'days', days: [0, 2, 4], time: '18:00', dur: 60 }, cs: ['Trénink', 'Návyk · 3× týdně', ['Trénink']], en: ['Training', 'Habit · 3× a week', ['Workout']] },
+  { id: 'exam', type: 'project', dl: 30, color: '#f0a44b', cs: ['Zkouška', 'Projekt · termín', ['Projít materiály', 'Kapitoly 1–3', 'Opakování', 'Den před: shrnutí']], en: ['Exam', 'Project · deadline', ['Go through materials', 'Chapters 1–3', 'Revision', 'Day before: summary']] },
+  { id: 'home', type: 'habit', goal: 4, color: '#4cc9d9', reps: [[5], [2], [4], [3]], cs: ['Domácnost', 'Návyk · týdně', ['Úklid', 'Prádlo', 'Nákup', 'Odpad']], en: ['Home', 'Habit · weekly', ['Cleaning', 'Laundry', 'Groceries', 'Bins']] },
+  { id: 'trip', type: 'project', dl: 21, color: '#b08cff', cs: ['Výlet', 'Projekt · datum', ['Ubytování', 'Lístky', 'Balení', 'Doklady']], en: ['Trip', 'Project · date', ['Accommodation', 'Tickets', 'Packing', 'Documents']] },
+  { id: 'morning', type: 'habit', goal: 7, color: '#e8c547', rep: { repeat: 'daily' }, cs: ['Ranní rutina', 'Návyk · každý den', ['Sklenice vody', 'Protažení', '3 věci na dnešek']], en: ['Morning routine', 'Habit · every day', ['Glass of water', 'Stretch', '3 things for today']] },
+  { id: 'read', type: 'habit', goal: 5, color: '#6f8cff', rep: { repeat: 'daily' }, cs: ['Čtení', 'Návyk · 5× týdně', ['20 stran']], en: ['Reading', 'Habit · 5× a week', ['20 pages']] },
+  { id: 'client', type: 'project', dl: 14, color: '#9fb3c4', cs: ['Klientský projekt', 'Projekt · termín', ['Brief', 'Návrh', 'Revize', 'Předání', 'Vyfakturovat']], en: ['Client project', 'Project · deadline', ['Brief', 'Draft', 'Revisions', 'Hand-off', 'Send invoice']] },
+];
+function tplItems(tp, c, names) {
+  return names.map((t2, k) => {
+    const it = { id: uid(), t: t2, card: c.id, created: T(), date: T() };
+    if (tp.type === 'month') Object.assign(it, { repeat: 'monthly', doneDates: [] });
+    else if (tp.reps) Object.assign(it, { repeat: 'days', days: tp.reps[k] || [5], doneDates: [] });
+    else if (tp.rep) { Object.assign(it, tp.rep, { doneDates: [] }); if (it.time) it.remind = S.push && S.push.def != null ? S.push.def : 10; }
+    else delete it.date;
+    return it;
+  });
 }

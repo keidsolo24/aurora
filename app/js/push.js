@@ -81,6 +81,21 @@ function reminderList() {
       out.push({ k: i.id + '@' + d, at, title, body, url: './?item=' + encodeURIComponent(i.id) + '&d=' + d });
     }
   }
+  // v19.6 · monthly: one reminder per card at 9:00 on the window's first day, and 2 days before it ends
+  const groups = {};
+  for (const i of S.items) { if (i.repeat !== 'monthly') continue; const key = i.card && cardById(i.card) ? i.card : i.id; (groups[key] = groups[key] || []).push(i); }
+  for (const key of Object.keys(groups)) {
+    const its = groups[key]; const c = cardById(key); const name = c ? c.name : its[0].t;
+    for (let k = 0; k <= 14; k++) {
+      const d = addD(T(), k); const [a, b] = mRange(its[0], d); const open = its.filter(i => !isDone(i, d) && (i.date || '0000') <= b); if (!open.length) continue;
+      const pre = addD(b, -2); let title = null;
+      if (d === a) title = name + (cs ? ' · začíná okno' : ' · window opens');
+      else if (d === pre && pre > a) title = name + (cs ? ' · zbývá ' : ' · ') + open.length + (cs ? '' : ' left');
+      if (!title) continue;
+      const [y, m, dd] = d.split('-').map(Number); const at = new Date(y, m - 1, dd, 9, 0, 0, 0).getTime(); if (at < now - 60000) continue;
+      out.push({ k: 'm:' + key + '@' + d, at, title, body: open.slice(0, 4).map(i => i.t).join(' · ') + (open.length > 4 ? '…' : '') + (cs ? ' · do ' + (+b.slice(8)) + '.' : ' · by the ' + (+b.slice(8)) + ordSuf(+b.slice(8))), url: c ? './?card=' + encodeURIComponent(c.id) : './?tab=plan' });
+    }
+  }
   return out.sort((a, b) => a.at - b.at).slice(0, 250);
 }
 let pushT = null;
