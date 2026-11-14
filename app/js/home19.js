@@ -89,7 +89,7 @@ function cardWeek(M) {
   return '<div class="lh"><span class="cap">' + esc(L2('Tvůj týden', 'Your week')) + '</span><span class="muted">' + esc(L2(dn + ' z ' + tot + ' hotovo', dn + ' of ' + tot + ' done')) + '</span></div><div class="hbars">' + bars + '</div>' + (chips ? '<div class="hchips">' + chips + '</div>' : '');
 }
 /* the newest thing a partner did (from the shared spaces' news) */
-function spoluNews() {
+function homeSpoluNews() {
   if (typeof chs !== 'function') return null;
   const me = meId(); let best = null;
   for (const ch of chs()) for (const a of ch.act || []) {
@@ -136,7 +136,7 @@ function cardEvening(M) {
     + (movable.length ? '<button class="hbtn press" data-a="moveRest">' + esc(L2('Přesunout zbytek na zítra', 'Move the rest to tomorrow')) + '</button>' : '');
 }
 function stackCards(M) {
-  const h = new Date().getHours(); const N = spoluNews(); const tp = tipToday(); const bm = boardPick();
+  const h = new Date().getHours(); const N = homeSpoluNews(); const tp = tipToday(); const bm = boardPick();
   const c = { pak: cardPak(M), week: cardWeek(M) };
   const at = typeof accTip === 'function' ? accTip() : null; if (at) c.acc = cardAcc(at);
   if (N) c.spolu = cardSpolu(N); if (tp) c.tip = cardTip(tp); if (bm) c.board = cardBoard(bm); if (h >= 18) c.eve = cardEvening(M);

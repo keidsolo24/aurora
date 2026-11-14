@@ -181,7 +181,8 @@ async function boot() {
       let lastChk = Date.now();
       document.addEventListener('visibilitychange', () => { if (document.hidden) { if (V.updWait) V.updReload = true; return; }
         if (V.updReload) { location.reload(); return; }
-        if (Date.now() - lastChk > 30 * 60e3) { lastChk = Date.now(); reg.update().catch(() => {}); } });
+        if (Date.now() - lastChk > 5 * 60e3) { lastChk = Date.now(); reg.update().catch(() => {}); } }); /* v19.6.4: check for a new version every 5 min */
+      reg.update().catch(() => {});
     }).catch(() => {});
   }
   if (navigator.storage && navigator.storage.persist) { try { navigator.storage.persist(); } catch (e) {} }
