@@ -564,16 +564,21 @@ function groupMonthly(its, d) {
       const k = i.card; const all = its.filter(x => x.repeat === 'monthly' && x.card === k && !x.time);
       if (all.length >= 2) { if (!seen[k]) { seen[k] = 1; out.push({ grp: true, card: cardById(k), items: all, id: 'g:' + k }); } continue; }
     }
+    // v19.6.3: monthly items without a card fold into one "Monthly" row too
+    if (i.repeat === 'monthly' && !(i.card && cardById(i.card)) && !i.time) {
+      const all = its.filter(x => x.repeat === 'monthly' && !(x.card && cardById(x.card)) && !x.time);
+      if (all.length >= 2) { if (!seen._m) { seen._m = 1; out.push({ grp: true, loose: true, card: { id: '_m', name: lang() === 'cs' ? 'Měsíčně' : 'Monthly', color: '#9fb3c4' }, items: all, all: S.items.filter(x => x.repeat === 'monthly' && !(x.card && cardById(x.card)) && !x.time), id: 'g:_m' }); } continue; }
+    }
     out.push(i);
   }
   return out;
 }
 function trowGroup(g, d) {
-  const cs = lang() === 'cs'; const c = g.card; const all = monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const left = all.length - dn;
+  const cs = lang() === 'cs'; const c = g.card; const all = g.all || monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const left = all.length - dn;
   const end = mRange(all[0] || { repeat: 'monthly', card: c.id }, d)[1]; const late = left && d > end; const open = V.gOpen && V.gOpen[c.id + d];
   const names = g.items.filter(i => !isDone(i, d)).map(i => i.t);
   const lw = cs ? (left === 1 ? 'zbývá 1' : left < 5 ? 'zbývají ' + left : 'zbývá ' + left) : left + ' left';
-  return '<div class="trow grp' + (left ? '' : ' done') + (late ? ' late' : '') + '" role="button" data-a="mGrp" data-k="' + c.id + '" data-d="' + d + '" aria-expanded="' + !!open + '" style="--c:' + c.color + '"><span class="tm">→ ' + (+end.slice(8)) + '.</span><span class="bar"></span><span class="tx"><span>' + esc(c.name) + ' · ' + esc(left ? lw : (cs ? 'hotovo' : 'all done')) + '</span><small>' + esc((cs ? 'Měsíčně' : 'Monthly') + (names.length ? ' · ' + names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '') : '')) + '</small></span><span class="gp">' + dn + '/' + all.length + '</span><span class="gch">' + ico(open ? 'chevD' : 'chev', 14, 2.4) + '</span></div>'
+  return '<div class="trow grp' + (left ? '' : ' done') + (late ? ' late' : '') + '" role="button" data-a="mGrp" data-k="' + c.id + '" data-d="' + d + '" aria-expanded="' + !!open + '" style="--c:' + c.color + '"><span class="tm">→ ' + (+end.slice(8)) + '.</span><span class="bar"></span><span class="tx"><span>' + esc(c.name) + ' · ' + esc(left ? lw : (cs ? 'hotovo' : 'all done')) + '</span><small>' + esc((g.loose ? '' : (cs ? 'Měsíčně' : 'Monthly')) + (names.length ? (g.loose ? '' : ' · ') + names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '') : '')) + '</small></span><span class="gp">' + dn + '/' + all.length + '</span><span class="gch">' + ico(open ? 'chevD' : 'chev', 14, 2.4) + '</span></div>'
     + (open ? '<div class="tsub">' + g.items.map(i => trow(i, d, null)).join('') + '</div>' : '');
 }
 ACT.mGrp = el => { V.gOpen = V.gOpen || {}; const k = el.dataset.k + el.dataset.d; V.gOpen[k] = !V.gOpen[k]; haptic(); render(); };

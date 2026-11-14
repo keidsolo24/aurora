@@ -1009,136 +1009,136 @@ body.kbopen #welcome .wchips,body.kbopen #welcome .acwhy{display:none}
 @media (max-width:370px){.seg5 button{font-size:12px;padding:0 4px}.tpl .tc{width:132px}}
 
 /* v19.6.3 · Look (generated): cream/white hairlines, tracks and fills inside panels flip to black in light mode */
-body.lightui :where(.frost,.hcard) .solid{box-shadow:0 10px 30px rgba(0,0,0,.22),inset 0 0 0 1px rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .in{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .pbtn.ghost{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .tg{background:rgba(0,0,0,0.136);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .tg.on{box-shadow:0 0 12px rgba(63,191,127,.45),inset 0 1px 0 rgba(0,0,0,0.255)}
-body.lightui :where(.frost,.hcard) .c0{border:1.6px solid rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .ci{border:1px solid rgba(0,0,0,0.272)}
-body.lightui :where(.frost,.hcard) .fdots i{border:1px solid rgba(0,0,0,0.425)}
-body.lightui :where(.frost,.hcard) .fdots i.on{box-shadow:0 0 8px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .orb{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.102),0 10px 24px rgba(0,0,0,.18)}
-body.lightui :where(.frost,.hcard) .vd i{border:1px solid rgba(0,0,0,0.297)}
-body.lightui :where(.frost,.hcard) .bars i{background:rgba(0,0,0,0.357)}
-body.lightui :where(.frost,.hcard) .bars i.fu{border:1px dashed rgba(0,0,0,0.34)}
-body.lightui :where(.frost,.hcard) .pbar{background:rgba(0,0,0,0.136)}
-body.lightui :where(.frost,.hcard) .irow{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .th{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.153)}
-body.lightui :where(.frost,.hcard) .ddots i{background:rgba(0,0,0,0.34)}
-body.lightui :where(.frost,.hcard) .ddots i.on{box-shadow:0 0 8px rgba(0,0,0,0.425)}
-body.lightui :where(.frost,.hcard) .wdots i{border:1px solid rgba(0,0,0,0.297)}
-body.lightui :where(.frost,.hcard) .heat i{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .heat i.td{box-shadow:inset 0 0 0 2px var(--ink),0 0 10px rgba(0,0,0,0.34)}
-body.lightui :where(.frost,.hcard) .heat i.fu{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.136)}
-body.lightui :where(.frost,.hcard) .addline{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .mt{background:rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .mt .capg{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .wk7 .wday.tdy{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5),0 10px 30px rgba(0,0,0,.22)}
-body.lightui :where(.frost,.hcard) .mgrid button{background:rgba(0,0,0,0.043)}
-body.lightui :where(.frost,.hcard) .srow{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .avatar{box-shadow:inset 0 1px 1px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .walls button{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.17)}
-body.lightui :where(.frost,.hcard) .walls button.on{box-shadow:0 0 0 2.5px var(--cream),0 0 16px rgba(0,0,0,0.297)}
-body.lightui :where(.frost,.hcard) #sheet .grab i{background:rgba(0,0,0,0.383)}
-body.lightui :where(.frost,.hcard) .cols button{box-shadow:inset 0 0 0 2px rgba(0,0,0,0.212)}
-body.lightui :where(.frost,.hcard) #viewer .vcap{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .later .more{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .wg-body .hl{background:rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .wg-col{background:rgba(0,0,0,0.021)}
-body.lightui :where(.frost,.hcard) .wg-col.tdy{background:rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .vcard{box-shadow:0 10px 26px rgba(0,0,0,.25),inset 0 0 0 1px rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .clr{background:rgba(0,0,0,0.187)}
-body.lightui :where(.frost,.hcard) .amg button.td{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.425)}
-body.lightui :where(.frost,.hcard) .lrw{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .lrw .li{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .lrw[aria-expanded="true"]{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .lexp{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .nstat .ni{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .steps .st{border-top:1px solid rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .mt.link{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .mt.miss{background:rgba(0,0,0,0.043);border:1.5px dashed rgba(0,0,0,0.187)}
-body.lightui :where(.frost,.hcard) .pav.plus{background:rgba(0,0,0,0.085);box-shadow:0 0 0 2px rgba(20,20,22,.9),inset 0 0 0 1.5px rgba(0,0,0,0.383)}
-body.lightui :where(.frost,.hcard) .pwk .pw i{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .pwk .pw i.fu{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.136)}
-body.lightui :where(.frost,.hcard) .pjoin{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .pheat i.ph{background:rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .pact{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .kcol{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .kopt .oi{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .jwhat{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .fbth{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.128)}
-body.lightui :where(.frost,.hcard) .hwk button{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.187)}
-body.lightui :where(.frost,.hcard) .hwk button.t{background:rgba(0,0,0,0.5);box-shadow:0 0 16px rgba(0,0,0,0.34)}
-body.lightui :where(.frost,.hcard) .hmore{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .hb i{background:rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .hb.t i{box-shadow:0 0 0 2px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .hchip{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.102)}
-body.lightui :where(.frost,.hcard) .hbtn{background:rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .hbtn.ghost{background:rgba(0,0,0,0.102);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .himg{background:center/cover no-repeat rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .himg.note{background:color-mix(in srgb,var(--c) 30%,rgba(0,0,0,0.085))}
-body.lightui :where(.frost,.hcard) .hdots i{background:rgba(0,0,0,0.289)}
-body.lightui :where(.frost,.hcard) .hdots i.on{background:rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .sjh ol{background:rgba(0,0,0,0.051);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .prm{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) #viewer .vchip{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .acol{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .acol .sw{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.187)}
-body.lightui :where(.frost,.hcard) .mprog i{background:rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .mmon .b{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .mmon .b.na{background:rgba(0,0,0,0.034);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .mseg{background:rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .trow.grp .gp{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .tsub{border-left:1px dashed rgba(0,0,0,0.119)}
-body.lightui :where(.frost,.hcard) .tpl .tc{background:rgba(0,0,0,0.06);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .wdays button{background:rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .kx{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .kbd{background:rgba(0,0,0,0.085);box-shadow:inset 0 -1px 0 rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .dnav button:hover{background:rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .sdot{background:rgba(0,0,0,0.255)}
-body.lightui :where(.frost,.hcard) #desk .sep{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .dsd{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .dsd:hover{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .krow:hover{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .ckp{box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .ckin{border-bottom:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .ckr.on{background:rgba(0,0,0,0.076)}
-body.lightui :where(.frost,.hcard) .ckr:hover{background:rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .cki{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .ckfoot{border-top:1px solid rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .dcard:hover{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.17),0 10px 26px rgba(0,0,0,.2)}
-body.lightui :where(.frost,.hcard) .dwk i{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .dnew{border:1.5px dashed rgba(0,0,0,0.238)}
-body.lightui :where(.frost,.hcard) .pt2{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .hc i{background:rgba(0,0,0,0.068)}
-body.lightui :where(.frost,.hcard) .dsrc{background:rgba(0,0,0,0.051);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.051)}
-body.lightui :where(.frost,.hcard) .dsrc:hover{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .wgh:hover{background:rgba(0,0,0,0.043)}
-body.lightui :where(.frost,.hcard) .wad{background:rgba(0,0,0,0.03)}
-body.lightui :where(.frost,.hcard) .wad.over{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .dprev2{border:1.5px dashed rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .whl{border-top:1px solid rgba(0,0,0,0.06)}
-body.lightui :where(.frost,.hcard) .whl.minor{border-color:rgba(0,0,0,0.03)}
-body.lightui :where(.frost,.hcard) .wgc{background:rgba(0,0,0,0.021)}
-body.lightui :where(.frost,.hcard) .wgc.tdy{background:rgba(0,0,0,0.047)}
-body.lightui :where(.frost,.hcard) .wb:hover{box-shadow:inset 3px 0 0 var(--c),inset 0 0 0 1px rgba(0,0,0,0.212),0 4px 14px rgba(0,0,0,.25)}
-body.lightui :where(.frost,.hcard) .wb .rz::after{background:rgba(0,0,0,0.297)}
-body.lightui :where(.frost,.hcard) .dprev{border:2px dashed rgba(0,0,0,0.5);background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .dmc{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .dmc.tdy{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.425)}
-body.lightui :where(.frost,.hcard) .dmc.over{background:rgba(0,0,0,0.119);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .dmd:hover{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .rvb i{background:rgba(0,0,0,0.34)}
-body.lightui :where(.frost,.hcard) .cg>i{background:rgba(0,0,0,0.085)}
-body.lightui :where(.frost,.hcard) .rvd{background:rgba(0,0,0,0.034)}
-body.lightui :where(.frost,.hcard) .rvd.over{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .dmason .mt:hover{box-shadow:0 0 0 1.5px rgba(0,0,0,0.255)}
-body.lightui :where(.frost,.hcard) .ddrop{border:2px dashed rgba(0,0,0,0.5)}
-body.lightui :where(.frost,.hcard) .wac.more{background:rgba(0,0,0,0.111)}
-body.lightui :where(.frost,.hcard) .wac.more:hover{background:rgba(0,0,0,0.187)}
-body.lightui :where(.frost,.hcard) .wpop{box-shadow:0 22px 60px rgba(0,0,0,.42),inset 0 0 0 1px rgba(0,0,0,0.136)}
-body.lightui :where(.frost,.hcard) .wpop .wph .cb{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .solid{box-shadow:0 10px 30px rgba(0,0,0,.22),inset 0 0 0 1px rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .in{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .pbtn.ghost{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .tg{background:rgba(0,0,0,0.136);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .tg.on{box-shadow:0 0 12px rgba(63,191,127,.45),inset 0 1px 0 rgba(0,0,0,0.255)}
+:where(body.lightui .frost, body.lightui .hcard) .c0{border:1.6px solid rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .ci{border:1px solid rgba(0,0,0,0.272)}
+:where(body.lightui .frost, body.lightui .hcard) .fdots i{border:1px solid rgba(0,0,0,0.425)}
+:where(body.lightui .frost, body.lightui .hcard) .fdots i.on{box-shadow:0 0 8px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .orb{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.102),0 10px 24px rgba(0,0,0,.18)}
+:where(body.lightui .frost, body.lightui .hcard) .vd i{border:1px solid rgba(0,0,0,0.297)}
+:where(body.lightui .frost, body.lightui .hcard) .bars i{background:rgba(0,0,0,0.357)}
+:where(body.lightui .frost, body.lightui .hcard) .bars i.fu{border:1px dashed rgba(0,0,0,0.34)}
+:where(body.lightui .frost, body.lightui .hcard) .pbar{background:rgba(0,0,0,0.136)}
+:where(body.lightui .frost, body.lightui .hcard) .irow{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .th{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.153)}
+:where(body.lightui .frost, body.lightui .hcard) .ddots i{background:rgba(0,0,0,0.34)}
+:where(body.lightui .frost, body.lightui .hcard) .ddots i.on{box-shadow:0 0 8px rgba(0,0,0,0.425)}
+:where(body.lightui .frost, body.lightui .hcard) .wdots i{border:1px solid rgba(0,0,0,0.297)}
+:where(body.lightui .frost, body.lightui .hcard) .heat i{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .heat i.td{box-shadow:inset 0 0 0 2px var(--ink),0 0 10px rgba(0,0,0,0.34)}
+:where(body.lightui .frost, body.lightui .hcard) .heat i.fu{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.136)}
+:where(body.lightui .frost, body.lightui .hcard) .addline{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .mt{background:rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .mt .capg{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .wk7 .wday.tdy{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5),0 10px 30px rgba(0,0,0,.22)}
+:where(body.lightui .frost, body.lightui .hcard) .mgrid button{background:rgba(0,0,0,0.043)}
+:where(body.lightui .frost, body.lightui .hcard) .srow{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .avatar{box-shadow:inset 0 1px 1px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .walls button{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.17)}
+:where(body.lightui .frost, body.lightui .hcard) .walls button.on{box-shadow:0 0 0 2.5px var(--cream),0 0 16px rgba(0,0,0,0.297)}
+:where(body.lightui .frost, body.lightui .hcard) #sheet .grab i{background:rgba(0,0,0,0.383)}
+:where(body.lightui .frost, body.lightui .hcard) .cols button{box-shadow:inset 0 0 0 2px rgba(0,0,0,0.212)}
+:where(body.lightui .frost, body.lightui .hcard) #viewer .vcap{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .later .more{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .wg-body .hl{background:rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .wg-col{background:rgba(0,0,0,0.021)}
+:where(body.lightui .frost, body.lightui .hcard) .wg-col.tdy{background:rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .vcard{box-shadow:0 10px 26px rgba(0,0,0,.25),inset 0 0 0 1px rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .clr{background:rgba(0,0,0,0.187)}
+:where(body.lightui .frost, body.lightui .hcard) .amg button.td{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.425)}
+:where(body.lightui .frost, body.lightui .hcard) .lrw{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .lrw .li{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .lrw[aria-expanded="true"]{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .lexp{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .nstat .ni{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .steps .st{border-top:1px solid rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .mt.link{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .mt.miss{background:rgba(0,0,0,0.043);border:1.5px dashed rgba(0,0,0,0.187)}
+:where(body.lightui .frost, body.lightui .hcard) .pav.plus{background:rgba(0,0,0,0.085);box-shadow:0 0 0 2px rgba(20,20,22,.9),inset 0 0 0 1.5px rgba(0,0,0,0.383)}
+:where(body.lightui .frost, body.lightui .hcard) .pwk .pw i{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .pwk .pw i.fu{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.136)}
+:where(body.lightui .frost, body.lightui .hcard) .pjoin{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .pheat i.ph{background:rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .pact{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .kcol{background:rgba(0,0,0,0.068);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .kopt .oi{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .jwhat{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .fbth{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.128)}
+:where(body.lightui .frost, body.lightui .hcard) .hwk button{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.187)}
+:where(body.lightui .frost, body.lightui .hcard) .hwk button.t{background:rgba(0,0,0,0.5);box-shadow:0 0 16px rgba(0,0,0,0.34)}
+:where(body.lightui .frost, body.lightui .hcard) .hmore{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .hb i{background:rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .hb.t i{box-shadow:0 0 0 2px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .hchip{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.102)}
+:where(body.lightui .frost, body.lightui .hcard) .hbtn{background:rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .hbtn.ghost{background:rgba(0,0,0,0.102);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .himg{background:center/cover no-repeat rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .himg.note{background:color-mix(in srgb,var(--c) 30%,rgba(0,0,0,0.085))}
+:where(body.lightui .frost, body.lightui .hcard) .hdots i{background:rgba(0,0,0,0.289)}
+:where(body.lightui .frost, body.lightui .hcard) .hdots i.on{background:rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .sjh ol{background:rgba(0,0,0,0.051);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .prm{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) #viewer .vchip{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .acol{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .acol .sw{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.187)}
+:where(body.lightui .frost, body.lightui .hcard) .mprog i{background:rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .mmon .b{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .mmon .b.na{background:rgba(0,0,0,0.034);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .mseg{background:rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .trow.grp .gp{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .tsub{border-left:1px dashed rgba(0,0,0,0.119)}
+:where(body.lightui .frost, body.lightui .hcard) .tpl .tc{background:rgba(0,0,0,0.06);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .wdays button{background:rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .kx{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .kbd{background:rgba(0,0,0,0.085);box-shadow:inset 0 -1px 0 rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .dnav button:hover{background:rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .sdot{background:rgba(0,0,0,0.255)}
+:where(body.lightui .frost, body.lightui .hcard) #desk .sep{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .dsd{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .dsd:hover{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .krow:hover{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .ckp{box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .ckin{border-bottom:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .ckr.on{background:rgba(0,0,0,0.076)}
+:where(body.lightui .frost, body.lightui .hcard) .ckr:hover{background:rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .cki{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .ckfoot{border-top:1px solid rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .dcard:hover{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.17),0 10px 26px rgba(0,0,0,.2)}
+:where(body.lightui .frost, body.lightui .hcard) .dwk i{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .dnew{border:1.5px dashed rgba(0,0,0,0.238)}
+:where(body.lightui .frost, body.lightui .hcard) .pt2{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .hc i{background:rgba(0,0,0,0.068)}
+:where(body.lightui .frost, body.lightui .hcard) .dsrc{background:rgba(0,0,0,0.051);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.051)}
+:where(body.lightui .frost, body.lightui .hcard) .dsrc:hover{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .wgh:hover{background:rgba(0,0,0,0.043)}
+:where(body.lightui .frost, body.lightui .hcard) .wad{background:rgba(0,0,0,0.03)}
+:where(body.lightui .frost, body.lightui .hcard) .wad.over{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .dprev2{border:1.5px dashed rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .whl{border-top:1px solid rgba(0,0,0,0.06)}
+:where(body.lightui .frost, body.lightui .hcard) .whl.minor{border-color:rgba(0,0,0,0.03)}
+:where(body.lightui .frost, body.lightui .hcard) .wgc{background:rgba(0,0,0,0.021)}
+:where(body.lightui .frost, body.lightui .hcard) .wgc.tdy{background:rgba(0,0,0,0.047)}
+:where(body.lightui .frost, body.lightui .hcard) .wb:hover{box-shadow:inset 3px 0 0 var(--c),inset 0 0 0 1px rgba(0,0,0,0.212),0 4px 14px rgba(0,0,0,.25)}
+:where(body.lightui .frost, body.lightui .hcard) .wb .rz::after{background:rgba(0,0,0,0.297)}
+:where(body.lightui .frost, body.lightui .hcard) .dprev{border:2px dashed rgba(0,0,0,0.5);background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .dmc{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .dmc.tdy{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.425)}
+:where(body.lightui .frost, body.lightui .hcard) .dmc.over{background:rgba(0,0,0,0.119);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .dmd:hover{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .rvb i{background:rgba(0,0,0,0.34)}
+:where(body.lightui .frost, body.lightui .hcard) .cg>i{background:rgba(0,0,0,0.085)}
+:where(body.lightui .frost, body.lightui .hcard) .rvd{background:rgba(0,0,0,0.034)}
+:where(body.lightui .frost, body.lightui .hcard) .rvd.over{background:rgba(0,0,0,0.085);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .dmason .mt:hover{box-shadow:0 0 0 1.5px rgba(0,0,0,0.255)}
+:where(body.lightui .frost, body.lightui .hcard) .ddrop{border:2px dashed rgba(0,0,0,0.5)}
+:where(body.lightui .frost, body.lightui .hcard) .wac.more{background:rgba(0,0,0,0.111)}
+:where(body.lightui .frost, body.lightui .hcard) .wac.more:hover{background:rgba(0,0,0,0.187)}
+:where(body.lightui .frost, body.lightui .hcard) .wpop{box-shadow:0 22px 60px rgba(0,0,0,.42),inset 0 0 0 1px rgba(0,0,0,0.136)}
+:where(body.lightui .frost, body.lightui .hcard) .wpop .wph .cb{background:rgba(0,0,0,0.068)}
 
 /* v19.6.3 · Look: wallpaper blur + light mode (white glass, black ink). Text sitting right on the wallpaper stays light. */
 #bg .wall{transition:filter .3s,transform .3s}
@@ -1166,7 +1166,7 @@ html body.lightui .frost .nowl b{color:#141414}
 html body.lightui .frost .nowl span{background:linear-gradient(90deg,#141414,rgba(20,20,20,0))}
 html body.lightui .frost .nowl span i{background:#141414;box-shadow:0 0 0 3px rgba(255,255,255,.9)}
 html body.lightui .frost [style*="filter:brightness(1.35)"]{filter:brightness(.62) saturate(1.3)!important}
-html body.lightui .frost .noticed .cap,html body.lightui .hk.live{color:#1e8a55}
+html body.lightui .noticed .cap,html body.lightui .hk.live{color:#1e8a55}
 html body.lightui .wdays button:not(.in):not(.edge){background:rgba(0,0,0,.05)}
 html body.lightui .wdays button.in{background:color-mix(in srgb,#3fbf7f 38%,transparent);color:#0c1a12}
 html body.lightui .wdays button.edge{background:#161616;color:#f6f4ef}
@@ -1174,3 +1174,17 @@ html body.lightui .frost .betapill{background:rgba(0,0,0,.06);color:#141414}
 @media (prefers-reduced-transparency:reduce){html body.lightui .frost,html body.lightui .hcard{background:rgba(252,251,248,.97)!important}}
 
 .lnote{display:block;width:100%;font:400 12.5px/1.4 Inter;color:var(--ink3);margin:2px 0 4px}
+
+/* v19.6.3 · Light = glass: sheen on panels, neutral glass buttons everywhere (no black, no colour) */
+html body.lightui .frost,html body.lightui .hcard{box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.55),inset 0 -1px 0 rgba(0,0,0,.05),0 14px 32px rgba(0,0,0,.18)!important}
+html body.lightui .frost::before{display:block!important;background:linear-gradient(180deg,rgba(255,255,255,.6) 0,rgba(255,255,255,.14) 34%,rgba(255,255,255,0) 58%),radial-gradient(120% 60% at 15% 0%,rgba(255,255,255,.35),transparent 60%)!important}
+
+html body.lightui{--gB:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.66));--gS:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(0,0,0,.08),0 8px 20px rgba(0,0,0,.20)}
+html body.lightui :is(.seg button.on,.frost .pbtn.cr,.frost .chip.cr,.hbtn,.nav .tab.on,.nav .plus,.hwk button.t,.hdone .ic,.wdays button.edge,#sheet .sh .save.cr,.nextp .ic,.wd.on,.wg-head button.tdy,.dnav button.on,.dadd.cr,.dsd.on,.wgh.tdy,.dmc.tdy .dmd){background:var(--gB)!important;color:#141414!important;--navy:#141414;box-shadow:var(--gS)!important;-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);text-shadow:none}
+html body.lightui :is(.wd.on,.wg-head button.tdy,.dsd.on,.wgh.tdy) *{color:#141414}
+html body.lightui .nextp .ic{background:var(--gB)!important}
+html body.lightui :is(.frost,.hcard,#s-settings){--panel:#fbfaf7}
+html body.lightui .frost .wac,html body.lightui .frost .wb{background:color-mix(in srgb,var(--c) 24%,rgba(255,255,255,.88))!important;color:#141414}
+html body.lightui .frost .wac.more{background:rgba(0,0,0,.06)!important}
+html body.lightui.desk #s-settings{--ink:#141414;--ink2:rgba(20,20,20,.74);--ink3:rgba(20,20,20,.58);--ink4:rgba(20,20,20,.38);--cream:#161616;--navy:#f6f4ef;color:var(--ink);text-shadow:none;background:rgba(248,247,244,.84)!important;box-shadow:inset 0 1px 0 #fff,0 30px 80px rgba(0,0,0,.35)!important}
+html body.lightui.desk #s-settings .t1,html body.lightui.desk #s-settings .cap{color:var(--ink)}

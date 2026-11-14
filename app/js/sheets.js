@@ -560,7 +560,17 @@ function saveCardSheet() {
     }), 420);
   } else if (!k.id && c.type === 'habit' && k.who !== 'spolu' && typeof askPartner === 'function') setTimeout(() => askPartner(c), 900);
 }
-ACT.kDelete = () => { const id = K.id; confirmSheet(t('sureCard'), t('del'), () => { S.cards = S.cards.filter(c => c.id !== id); S.items.forEach(i => { if (i.card === id) i.card = null; }); S.moments.forEach(m => { if (m.card === id) m.card = null; }); save(); closeCard(); render(); toast(esc(t('deleted'))); }); };
+/* v19.6.3: deleting a card deletes its plans and tasks too; moments stay on Board without a card; one tap undoes it */
+ACT.kDelete = () => {
+  const id = K.id; const cs = lang() === 'cs'; const n = S.items.filter(i => i.card === id).length;
+  const q = n ? (cs ? 'Smazat kartu? Smaže se i ' + n + (n === 1 ? ' plán' : n < 5 ? ' plány' : ' plánů') + ' a úkolů z ní. Momenty zůstanou na Boardu.' : 'Delete this card? Its ' + n + (n === 1 ? ' plan' : ' plans') + ' and tasks go too. Moments stay on Board.') : t('sureCard');
+  confirmSheet(q, t('del'), () => {
+    const snap = { card: S.cards.find(c => c.id === id), at: S.cards.findIndex(c => c.id === id), items: S.items.filter(i => i.card === id), moms: S.moments.filter(m => m.card === id).map(m => m.id) };
+    S.cards = S.cards.filter(c => c.id !== id); S.items = S.items.filter(i => i.card !== id); S.moments.forEach(m => { if (m.card === id) m.card = null; });
+    save(); closeCard(); render();
+    toast(esc(cs ? 'Karta smazána' : 'Card deleted'), { label: cs ? 'Vrátit' : 'Undo', fn: () => { if (!snap.card || S.cards.some(c => c.id === id)) return; S.cards.splice(Math.max(0, snap.at), 0, snap.card); S.items.push(...snap.items); S.moments.forEach(m => { if (snap.moms.includes(m.id)) m.card = id; }); save(); render(); } });
+  });
+};
 ACT.newCard = el => { if (el && el._suppress && Date.now() - el._suppress < 500) return; openCardSheet(null); };
 ACT.editCard = () => openCardSheet(V.card);
 

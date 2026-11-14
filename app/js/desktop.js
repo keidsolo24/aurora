@@ -498,8 +498,8 @@ if (typeof S !== 'undefined' && S) deskCheck();
 
 /* ---------------- v19.6 · week "all day" cell: monthly cards as one chip, at most 3, then +N ---------------- */
 function wacHTML(x, d) {
-  if (x.grp) { const c = x.card; const all = monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const end = mRange(all[0], d)[1];
-    return '<div class="wac grp' + (dn === all.length ? ' done' : '') + (d > end && dn < all.length ? ' late' : '') + '" data-a="openCard" data-id="' + c.id + '" role="button" style="--c:' + c.color + '">' + esc(c.name) + ' → ' + (+end.slice(8)) + '.<b>' + dn + '/' + all.length + '</b></div>'; }
+  if (x.grp) { const c = x.card; const all = x.all || monthItems(c.id); const dn = all.filter(i => isDone(i, d)).length; const end = mRange(all[0], d)[1];
+    return '<div class="wac grp' + (dn === all.length ? ' done' : '') + (d > end && dn < all.length ? ' late' : '') + '" ' + (x.loose ? 'data-a="wacMore" data-d="' + d + '"' : 'data-a="openCard" data-id="' + c.id + '"') + ' role="button" style="--c:' + c.color + '">' + esc(c.name) + ' → ' + (+end.slice(8)) + '.<b>' + dn + '/' + all.length + '</b></div>'; }
   const i = x; return '<div class="wac' + (isDone(i, d) ? ' done' : '') + '" data-drag="item:' + i.id + '" data-d="' + d + '" style="--c:' + itemColor(i) + '">' + (i.repeat ? ico('repeat', 10, 2.6) : '') + esc(i.t) + '</div>';
 }
 function wacList(d, max) {

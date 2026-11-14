@@ -83,7 +83,7 @@ const L = {
   choosePhoto: ['Take or choose photo / video', 'Vyfotit nebo vybrat fotku / video'], change: ['Change', 'Změnit'],
   editItem: ['Edit', 'Upravit'], title: ['Title', 'Název'], deleteItem: ['Delete', 'Smazat'], markDone: ['Mark done', 'Označit hotové'], markUndone: ['Mark not done', 'Vrátit jako nehotové'],
   cardName: ['Name', 'Název'], cardNamePh: ['e.g. Learning, Studio Lumen', 'např. UČIT SE, Studio Lumen'], type: ['Type', 'Typ'], color: ['Color', 'Barva'],
-  editCard: ['Edit card', 'Upravit kartu'], deleteCard: ['Delete card', 'Smazat kartu'], sureCard: ['Delete this card? Its tasks and moments stay without a card.', 'Smazat kartu? Úkoly a momenty zůstanou bez karty.'],
+  editCard: ['Edit card', 'Upravit kartu'], deleteCard: ['Delete card', 'Smazat kartu'], sureCard: ['Delete this card? Moments stay on Board.', 'Smazat kartu? Momenty zůstanou na Boardu.'],
   cardNote: ['Description', 'Popis'], deadlineOpt: ['Deadline (optional)', 'Deadline (nepovinné)'], clear: ['Clear', 'Smazat'],
   welcomeT: ['Your day,<br>in one place.', 'Tvůj den<br>na jednom místě.'], welcomeP: ['Cards for what matters, a plan for when, a board for what you saw. Everything stays on this phone.', 'Karty pro to, na čem záleží, plán pro kdy a board pro to, co jsi viděl. Všechno zůstává v telefonu.'],
   startSample: ['Start with an example', 'Začít s ukázkou'], startEmpty: ['Start empty', 'Začít prázdné'], watchTour: ['Watch the 1-minute tour', 'Pustit 1minutovou prohlídku'],
@@ -178,6 +178,8 @@ function migrate(s) {
   const o = Object.assign(b, s || {});
   o.cards = (o.cards || []).filter(Boolean); o.items = (o.items || []).filter(Boolean); o.moments = (o.moments || []).filter(Boolean);
   o.items.forEach(i => { if (i.repeat && !Array.isArray(i.doneDates)) i.doneDates = []; if (i.repeat === 'days' && !Array.isArray(i.days)) i.days = [dow(i.date || T())]; if (i.time && i.remind === undefined) i.remind = 10; });
+  // v19.6.3: once, drop monthly plans left behind by a deleted Monthly card (no card, no own window)
+  if (!o.mig1963) { o.items = o.items.filter(i => !(i.repeat === 'monthly' && !i.card && !i.mfrom && !i.mlast)); o.mig1963 = 1; }
   o.push = Object.assign({ on: false, url: PUSH_DEFAULT, key: '', id: null, secret: null, def: 10, asked: false }, o.push || {});
   o.shared = Array.isArray(o.shared) ? o.shared.filter(x => x && x.sp && x.secret) : [];
   if (!o.push.url) o.push.url = PUSH_DEFAULT;
