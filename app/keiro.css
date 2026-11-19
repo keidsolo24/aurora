@@ -308,3 +308,17 @@ body.kvon #toast{top:calc(var(--st) + 122px);bottom:auto}
 .kdp.enter .kd4>*,.kdp.enter .kd2>*{animation:dIn .55s var(--out,cubic-bezier(.2,.8,.2,1)) both}
 .kdp.enter .kd4>*:nth-child(2),.kdp.enter .kd2>*:nth-child(2){animation-delay:.06s}.kdp.enter .kd4>*:nth-child(3){animation-delay:.12s}.kdp.enter .kd4>*:nth-child(4){animation-delay:.18s}
 @media (prefers-reduced-motion:reduce){.fx-in,.fx-go .kcb,.fx-go .kct,.kbb,.kdp.enter .kd4>*,.kdp.enter .kd2>*{animation:none}}
+.kla{color:inherit;text-decoration:underline;text-decoration-color:rgba(243,234,216,.3);text-underline-offset:3px} .kla:hover{text-decoration-color:currentColor}
+.kleg>span:first-child:not(:has(i)){font-weight:500;color:var(--ink3)}
+/* ---- v2011: projects ---- */
+.kpt{display:flex;margin:14px 0 0;width:100%}
+.kpt button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;padding:0 10px}
+.kpt button>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpt .kpd{flex:none;width:8px;height:8px;border-radius:50%}
+.kpt small{flex:none;font:600 12px/1 Inter;opacity:.65;font-variant-numeric:tabular-nums}
+.kpt .krec{flex:none;width:8px;height:8px;border-radius:50%;background:#ff3b4e;box-shadow:0 0 0 3px rgba(255,59,78,.25);animation:kpulse 1.6s infinite}
+.kpt .kpn{flex:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--kc,#ff4f7b);color:#fff;font:700 11px/18px Inter;text-align:center}
+.kpt.kptd{width:auto;margin:0} .kpt.kptd button{flex:none;padding:0 14px}
+.kpinfo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 4px 0;font:500 13px/1.3 Inter;color:var(--ink2)} .kpinfo b{color:var(--ink);font-weight:600}
+.kpc.cr{width:auto;padding:0 10px;gap:5px;display:inline-flex;align-items:center;background:rgba(243,234,216,.92);color:#141414;font-weight:700;text-decoration:none}
+@media (prefers-reduced-motion:reduce){.kpt .krec{animation:none}}
